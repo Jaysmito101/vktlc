@@ -10,8 +10,48 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# Use FindVulkan module added with CMAKE 3.7
+if(NOT CMAKE_VERSION VERSION_LESS 3.7.0)
+    message(STATUS "Using module to find Vulkan")
+    find_package(Vulkan)
+endif()
+
+IF(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+ENDIF()
+
+IF(WIN32)
+    IF(NOT Vulkan_FOUND)
+        find_library(Vulkan_LIBRARY NAMES vulkan-1 vulkan PATHS ${CMAKE_SOURCE_DIR}/libs/vulkan)
+
+        IF(Vulkan_LIBRARY)
+            set(Vulkan_FOUND ON)
+            MESSAGE("Using bundled Vulkan library version")
+        ENDIF()
+    ENDIF()
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_WIN32_KHR")
+ELSEIF(LINUX)
+    IF(NOT Vulkan_FOUND)
+        find_library(Vulkan_LIBRARY NAMES vulkan HINTS "$ENV{VULKAN_SDK}/lib" "${CMAKE_SOURCE_DIR}/libs/vulkan" REQUIRED)
+
+        IF(Vulkan_LIBRARY)
+            set(Vulkan_FOUND ON)
+            MESSAGE("Using bundled Vulkan library version")
+        ENDIF()
+    ENDIF()
+ENDIF()
+
+IF(NOT Vulkan_FOUND)
+    message(FATAL_ERROR "Could not find Vulkan library!")
+ELSE()
+    message(STATUS ${Vulkan_LIBRARY})
+ENDIF()
+
 include_directories(
-    ./tlc/include
+    ./tlc
+    ./dep/glfw/include
+    PUBLIC "$ENV{VULKAN_SDK}/include"
 )
 
 if (MSVC)
@@ -20,8 +60,24 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
+add_subdirectory(./dep/glfw)
+
 add_executable(tlc
+# core
+    ./tlc/core/Logger.cpp
+    ./tlc/core/Utils.cpp
+    ./tlc/core/Window.cpp
+    ./tlc/core/EventManager.cpp
+    ./tlc/core/Application.cpp
+# vulkan
+    ./tlc/vulkan/VulkanContext.cpp
+# main
     ./tlc/Main.cpp
+)
+
+target_link_libraries(tlc
+    glfw
+    ${Vulkan_LIBRARY}
 )
 
 if (WIN32)

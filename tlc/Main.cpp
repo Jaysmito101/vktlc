@@ -1,7 +1,14 @@
-#include <Windows.h>
+#include "core/Core.hpp"
+#include "core/Application.hpp"
 
 int main()
 {
-    MessageBoxA(0, "Hello, World!", "Hello, World!", 0);
+    tlc::Logger::Init();
+
+    auto app = tlc::Application::Get();
+    app->Run();
+    tlc::Application::Shutdown();
+
+    tlc::Logger::Shutdown();
     return 0;
 }

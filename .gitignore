@@ -11,6 +11,8 @@ CTestTestfile.cmake
 _deps
 Debug
 Release
+.vs
+.vscode
 
 *.suo
 *.user
