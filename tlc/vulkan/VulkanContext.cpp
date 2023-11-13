@@ -28,7 +28,7 @@ namespace tlc
 
 		return VK_FALSE;
 	}
-
+	 
 	Scope<VulkanContext> VulkanContext::s_Instance = nullptr;
 
 	VulkanContext::VulkanContext()
@@ -60,6 +60,13 @@ namespace tlc
 		if (!CreateInstance())
 		{
 			log::Fatal("Failed to create Vulkan instance");
+		}
+
+		const auto physicalDevice = QueryPhysicalDevices();
+		log::Trace("Available Vulkan devices:");
+		for (const auto& device : physicalDevice)
+		{
+			log::Trace("\tDevice: {}", device.getProperties().deviceName.data());
 		}
 		
 		log::Info("VulkanContext created");
@@ -111,6 +118,40 @@ namespace tlc
 		return layers;
 	}
 
+	List<vk::PhysicalDevice> VulkanContext::QueryPhysicalDevices()
+	{
+		List<vk::PhysicalDevice> devices;
+
+		U32 deviceCount = 0;
+		VkCall(m_Instance.enumeratePhysicalDevices(&deviceCount, nullptr));
+
+		if (deviceCount == 0)
+		{
+			log::Fatal("No Vulkan devices found");
+		}
+
+		devices.resize(deviceCount);
+		VkCall(m_Instance.enumeratePhysicalDevices(&deviceCount, devices.data()));
+
+		return devices;
+	}
+
+	vk::PhysicalDevice VulkanContext::PickPhysicalDevice()
+	{
+		const auto devices = QueryPhysicalDevices();
+
+		for (const auto& device : devices)
+		{
+			if (device.getProperties().deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+			{
+				return device;
+			}
+		}
+
+		log::Fatal("No suitable Vulkan device found");
+		return nullptr;
+	}
+
 	Bool VulkanContext::CreateInstance()
 	{
 		vk::ApplicationInfo appInfo = vk::ApplicationInfo()
@@ -157,9 +198,13 @@ namespace tlc
 			log::Warn("Not all validation layers available");
 		}
 
+		m_Layers = validationLayers;
+
 		createInfo.setEnabledLayerCount(static_cast<U32>(validationLayers.size()))
 			.setPpEnabledLayerNames(validationLayers.data());
 #endif
+
+		m_Extensions = extensions;
 
 		createInfo.setEnabledExtensionCount(static_cast<U32>(extensions.size()))
 			.setPpEnabledExtensionNames(extensions.data());
@@ -216,6 +261,14 @@ namespace tlc
 			log::Warn("Failed to destroy Vulkan debug messenger");
 		}
 
+	}
+
+	VulkanDevice* VulkanContext::CreateDevice(vk::PhysicalDevice physicalDevice, Bool requireGraphics, Bool requireCompute)
+	{
+		(void)physicalDevice; (void)requireGraphics; (void)requireCompute;
+		//m_Devices.push_back(CreateScope<VulkanDevice>(physicalDevice, requireGraphics, requireCompute));
+		//return m_Devices.back().get();
+		return nullptr;
 	}
 
 }

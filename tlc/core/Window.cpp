@@ -14,55 +14,50 @@ namespace tlc
 	static void GLFWWindowPosCallback(GLFWwindow* window, I32 x, I32 y)
 	{
 		(void)window;
-		auto pos = MakePair<I32, I32>(x, y);
-		EventManager::Get()->RaiseEvent("WindowPos", &pos);
+		EventManager<EventType::WindowPos, I32, I32>::Get()->RaiseEvent(x, y);
 	}
 
 	static void GLFWWindowSizeCallback(GLFWwindow* window, I32 width, I32 height)
 	{
 		(void)window;
 		auto size = MakePair<I32, I32>(width, height);
-		EventManager::Get()->RaiseEvent("WindowSize", &size);
+		EventManager<EventType::WindowSize, I32, I32>::Get()->RaiseEvent(width, height);
 	}
 
 	static void GLFWWindowCloseCallback(GLFWwindow* window)
 	{
 		(void)window;
-		EventManager::Get()->RaiseEvent("WindowClose");
+		EventManager<EventType::WindowClose>::Get()->RaiseEvent();
 	}
 
 	static void GLFWWindowCursorPosCallback(GLFWwindow* window, F64 x, F64 y)
 	{
 		(void)window;
-		auto pos = MakePair<F32, F32>(static_cast<F32>(x), static_cast<F32>(y));
-		EventManager::Get()->RaiseEvent("WindowCursorPos", &pos);
+		EventManager<EventType::WindowCursorPos, F64, F64>::Get()->RaiseEvent(x, y);
 	}
 
 	static void GLFWWindowMouseButtonCallback(GLFWwindow* window, I32 button, I32 action, I32 mods)
 	{
-		(void)window; (void)mods;
-		auto data = MakePair<I32, I32>(button, action);
-		EventManager::Get()->RaiseEvent("WindowMouseButton", &data);
+		(void)window;
+		EventManager<EventType::WindowMouseButton, I32, I32, I32>::Get()->RaiseEvent(button, action, mods);
 	}
 
 	static void GLFWWindowKeyCallback(GLFWwindow* window, I32 key, I32 scancode, I32 action, I32 mods)
 	{
-		(void)window; (void)scancode; (void)mods;
-		auto data = MakePair<I32, I32>(key, action);
-		EventManager::Get()->RaiseEvent("WindowKey", &data);
+		(void)window;
+		EventManager<EventType::WindowKey, I32, I32, I32, I32>::Get()->RaiseEvent(key, scancode, action, mods);
 	}
 
 	static void GLFWWindowCharCallback(GLFWwindow* window, U32 keycode)
 	{
 		(void)window;
-		EventManager::Get()->RaiseEvent("WindowChar", &keycode);
+		EventManager<EventType::WindowChar, U32>::Get()->RaiseEvent(keycode);
 	}
 
 	static void GLFWWindowScrollCallback(GLFWwindow* window, F64 xoffset, F64 yoffset)
 	{
 		(void)window;
-		auto data = MakePair<F32, F32>(static_cast<F32>(xoffset), static_cast<F32>(yoffset));
-		EventManager::Get()->RaiseEvent("WindowScroll", &data);
+		EventManager<EventType::WindowScroll, F64, F64>::Get()->RaiseEvent(xoffset, yoffset);
 	}
 
 	Window::Window()

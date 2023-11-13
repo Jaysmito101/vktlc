@@ -11,8 +11,9 @@ namespace tlc
 		Application();
 		virtual ~Application();
 
-		void Run();
+		void SetupVulkan();
 
+		void Run();
 
 		inline static Application* Get() { if (!s_Instance) s_Instance = CreateScope<Application>(); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }

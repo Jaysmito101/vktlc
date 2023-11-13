@@ -20,14 +20,12 @@ namespace tlc
 		m_Window = Window::Get();
 		log::Info("Application started");
 
-		EventManager::Get()->Subscribe("WindowClose", [this](void*) -> bool {
-			log::Info("Window close event recieved");
+		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> bool {
 			m_Running = false;
 			return true;
 		});
 
-		m_VulkanContext = VulkanContext::Get();
-
+		SetupVulkan();
 	}
 
 	Application::~Application()
@@ -36,6 +34,13 @@ namespace tlc
 		Window::Shutdown();
 		VulkanContext::Shutdown();
 		log::Info("Application shutdown");
+	}
+
+	void Application::SetupVulkan()
+	{
+		m_VulkanContext = VulkanContext::Get();
+
+		
 	}
 
 	void Application::Run()

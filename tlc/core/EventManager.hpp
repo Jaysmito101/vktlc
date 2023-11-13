@@ -12,27 +12,61 @@
 namespace tlc
 {
 
-	using EventReciever = std::function<bool(void*)>;
+	enum EventType
+	{
+		None = 0,
+		WindowClose, WindowSize, WindowPos, WindowCursorPos, WindowMouseButton,
+		WindowKey, WindowChar, WindowScroll
 
+	};
+
+
+	template<EventType Type, typename... ParamsData>
 	class EventManager
 	{
 	public:
 		EventManager() = default;
 		~EventManager() = default;
 
-		void Subscribe(CString eventName, EventReciever callback, const String& callbackID = "");
-		void Unsubscribe(CString recieverName, const String& callbackName);
-		void UnsubscribeAll(CString recieverName);
+		void Subscribe(std::function<bool(ParamsData...)> callback, String callbackID = "")
+		{
+			if (callbackID.empty())
+				callbackID = "callback" + std::to_string(rand());
 
-		void RaiseEvent(CString eventName, void* paramsPtr = nullptr);
+			m_EventSubscribers.emplace(callbackID, callback);
+		}
 
-		inline static EventManager* Get() { if (!s_Instance) s_Instance = CreateScope<EventManager>(); return s_Instance.get(); }
+		void Unsubscribe(const String& callbackName)
+		{
+			auto it = m_EventSubscribers.find(callbackName);
+			if (it != m_EventSubscribers.end())
+				m_EventSubscribers.erase(it);
+		}
+
+		void UnsubscribeAll()
+		{
+			m_EventSubscribers.clear();
+		}
+
+		void RaiseEvent(ParamsData ...params)
+		{
+			for (auto& callback : m_EventSubscribers)
+			{
+				if (callback.second(params...))
+					break;
+			}
+		}
+
+		inline static EventManager* Get() { if (!s_Instance) s_Instance = CreateScope<EventManager<Type, ParamsData...>>(); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }
 
 	private:
-		UnorderedMap<StringView, UnorderedMap<String, EventReciever>> m_EventSubscribers;
+		UnorderedMap<String, std::function<bool(ParamsData...)>> m_EventSubscribers;
 
-		static Scope<EventManager> s_Instance;
+		static Scope<EventManager<Type, ParamsData...>> s_Instance;
 	};
 
+
+	template<EventType Type, typename... ParamsData>
+	Scope<EventManager<Type, ParamsData...>> EventManager<Type, ParamsData...>::s_Instance = nullptr;
 }
