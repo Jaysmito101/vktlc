@@ -5,6 +5,8 @@
 
 namespace tlc
 {
+	class Window;
+
 	class VulkanContext
 	{
 	public:
@@ -17,10 +19,18 @@ namespace tlc
 		List<vk::PhysicalDevice> QueryPhysicalDevices();
 		vk::PhysicalDevice PickPhysicalDevice();
 
-		VulkanDevice* CreateDevice(vk::PhysicalDevice physicalDevice, Bool requireGraphics = true, Bool requireCompute = true);
+		VulkanDevice* CreateDevice(vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings = VulkanDeviceSettings());
+		const vk::SurfaceKHR& CreateSurface(Window* window);
 
 		inline static VulkanContext* Get() { if (!s_Instance) s_Instance = CreateScope<VulkanContext>(); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }
+
+		inline const vk::Instance& GetInstance() const { return m_Instance; }
+
+		inline const List<CString>& GetExtensions() const { return m_Extensions; }
+		inline const List<CString>& GetLayers() const { return m_Layers; }
+
+		inline const vk::SurfaceKHR& GetSurface() const { return m_Surface; }
 
 	private:
 		Bool CreateInstance();
@@ -31,6 +41,8 @@ namespace tlc
 	private:
 		vk::Instance m_Instance = VK_NULL_HANDLE;
 		vk::Device m_Device = VK_NULL_HANDLE;
+		vk::SurfaceKHR m_Surface = VK_NULL_HANDLE;
+
 		List<CString> m_Extensions;
 		List<CString> m_Layers;
 		List<Scope<VulkanDevice>> m_Devices;

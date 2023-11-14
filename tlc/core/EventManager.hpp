@@ -16,8 +16,7 @@ namespace tlc
 	{
 		None = 0,
 		WindowClose, WindowSize, WindowPos, WindowCursorPos, WindowMouseButton,
-		WindowKey, WindowChar, WindowScroll
-
+		WindowKey, WindowChar, WindowScroll, WindowFocus, WindowFramebufferSize
 	};
 
 
@@ -28,7 +27,7 @@ namespace tlc
 		EventManager() = default;
 		~EventManager() = default;
 
-		void Subscribe(std::function<bool(ParamsData...)> callback, String callbackID = "")
+		void Subscribe(std::function<void(ParamsData...)> callback, String callbackID = "")
 		{
 			if (callbackID.empty())
 				callbackID = "callback" + std::to_string(rand());
@@ -52,8 +51,7 @@ namespace tlc
 		{
 			for (auto& callback : m_EventSubscribers)
 			{
-				if (callback.second(params...))
-					break;
+				callback.second(params...);
 			}
 		}
 
@@ -61,7 +59,7 @@ namespace tlc
 		inline static void Shutdown() { s_Instance.reset(); }
 
 	private:
-		UnorderedMap<String, std::function<bool(ParamsData...)>> m_EventSubscribers;
+		UnorderedMap<String, std::function<void(ParamsData...)>> m_EventSubscribers;
 
 		static Scope<EventManager<Type, ParamsData...>> s_Instance;
 	};

@@ -60,6 +60,18 @@ namespace tlc
 		EventManager<EventType::WindowScroll, F64, F64>::Get()->RaiseEvent(xoffset, yoffset);
 	}
 
+	static void GLFWWindowFocusCallback(GLFWwindow* window, I32 focused)
+	{
+		(void)window;
+		EventManager<EventType::WindowFocus, I32>::Get()->RaiseEvent(focused);
+	}
+
+	static void GLFWWindowFramebufferSizeCallback(GLFWwindow* window, I32 width, I32 height)
+	{
+		(void)window;
+		EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->RaiseEvent(width, height);
+	}
+
 	Window::Window()
 	{
 		if (s_Instance != nullptr)
@@ -172,6 +184,13 @@ namespace tlc
 		return MakePair<I32, I32>(width, height);
 	}
 
+	Pair<I32, I32> Window::GetFramebufferSize()
+	{
+		I32 width = 0, height = 0;
+		glfwGetFramebufferSize(m_Handle, &width, &height);
+		return MakePair<I32, I32>(width, height);
+	}
+
 	Pair<I32, I32> Window::GetPosition()
 	{
 		I32 x = 0, y = 0;
@@ -227,6 +246,8 @@ namespace tlc
 		glfwSetWindowSizeCallback(m_Handle, GLFWWindowSizeCallback);
 		glfwSetWindowPosCallback(m_Handle, GLFWWindowPosCallback);
 		glfwSetWindowCloseCallback(m_Handle, GLFWWindowCloseCallback);
+		glfwSetWindowFocusCallback(m_Handle, GLFWWindowFocusCallback);
+		glfwSetFramebufferSizeCallback(m_Handle, GLFWWindowFramebufferSizeCallback);
 	}
 
 	

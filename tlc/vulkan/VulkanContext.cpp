@@ -1,4 +1,5 @@
 #include "vulkan/VulkanContext.hpp"
+#include "core/Window.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -41,6 +42,7 @@ namespace tlc
 		log::Debug("Creating VulkanContext");
 
 
+#if !defined(NDEBUG)
 		// print available extensions
 		const auto extensions = QueryAvailableExtensions();
 		log::Trace("Available Vulkan extensions:");
@@ -56,18 +58,21 @@ namespace tlc
 		{
 			log::Trace("\t{}", layer);
 		}
+#endif
 
 		if (!CreateInstance())
 		{
 			log::Fatal("Failed to create Vulkan instance");
 		}
 
+#if !defined(NDEBUG)
 		const auto physicalDevice = QueryPhysicalDevices();
 		log::Trace("Available Vulkan devices:");
 		for (const auto& device : physicalDevice)
 		{
 			log::Trace("\tDevice: {}", device.getProperties().deviceName.data());
 		}
+#endif
 		
 		log::Info("VulkanContext created");
 	}
@@ -75,6 +80,20 @@ namespace tlc
 	VulkanContext::~VulkanContext()
 	{
 		log::Debug("Shutting down VulkanContext");
+
+		for (I32 i = 0 ; i < m_Devices.size() ; i++)
+		{
+			m_Devices[i].reset();
+		}
+		m_Devices.clear();
+
+		if (m_Surface != static_cast<vk::SurfaceKHR>(VK_NULL_HANDLE))
+		{
+			log::Debug("Destroying Window Surface");
+			m_Instance.destroySurfaceKHR(m_Surface);
+			log::Info("Window Surface destroyed");
+		}
+
 #if !defined(NDEBUG)
 		DestroyDebugMessenger();
 #endif
@@ -136,6 +155,7 @@ namespace tlc
 		return devices;
 	}
 
+	// TODO: Make this more robust
 	vk::PhysicalDevice VulkanContext::PickPhysicalDevice()
 	{
 		const auto devices = QueryPhysicalDevices();
@@ -263,12 +283,24 @@ namespace tlc
 
 	}
 
-	VulkanDevice* VulkanContext::CreateDevice(vk::PhysicalDevice physicalDevice, Bool requireGraphics, Bool requireCompute)
+	VulkanDevice* VulkanContext::CreateDevice(vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings)
 	{
-		(void)physicalDevice; (void)requireGraphics; (void)requireCompute;
-		//m_Devices.push_back(CreateScope<VulkanDevice>(physicalDevice, requireGraphics, requireCompute));
-		//return m_Devices.back().get();
-		return nullptr;
+		m_Devices.push_back(CreateScope<VulkanDevice>(this, physicalDevice, settings));
+		return m_Devices.back().get();
+	}
+
+	const vk::SurfaceKHR& VulkanContext::CreateSurface(Window* window)
+	{
+		log::Debug("Creating Window Surface");
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
+		if (glfwCreateWindowSurface(m_Instance, window->GetHandle(), nullptr, &surface) != VK_SUCCESS)
+		{
+			log::Fatal("Failed to create window surface");
+		}
+		m_Surface = surface;
+		log::Info("Window Surface created");
+
+		return m_Surface;
 	}
 
 }

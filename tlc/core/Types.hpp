@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <unordered_map>
 #include <memory>
 #include <functional>
@@ -53,6 +54,9 @@ namespace tlc
 
 	template<typename Key, typename Value>
 	using UnorderedMap = std::unordered_map<Key, Value>;
+
+	template<typename T>
+	using Set = std::set<T>;
 
 	template<typename A, typename B>
 	struct Pair 

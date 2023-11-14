@@ -12,6 +12,15 @@
 // windows includes
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 #elif defined(PLATFORM_LINUX)
 // linux includes
 #include <unistd.h>
@@ -56,7 +65,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-
+#include <limits>
 
 // core includes
 #include "core/Types.hpp"

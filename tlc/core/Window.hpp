@@ -18,6 +18,7 @@ namespace tlc
 		void SetCursorPos(F32 x, F32 y);
 
 		Pair<I32, I32> GetSize();
+		Pair<I32, I32> GetFramebufferSize();
 		Pair<I32, I32> GetPosition();
 		Pair<F32, F32> GetCursorPos();
 

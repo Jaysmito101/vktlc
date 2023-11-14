@@ -67,10 +67,11 @@ add_executable(tlc
     ./tlc/core/Logger.cpp
     ./tlc/core/Utils.cpp
     ./tlc/core/Window.cpp
-    ./tlc/core/EventManager.cpp
     ./tlc/core/Application.cpp
 # vulkan
     ./tlc/vulkan/VulkanContext.cpp
+    ./tlc/vulkan/VulkanDevice.cpp
+    ./tlc/vulkan/VulkanSwapchain.cpp
 # main
     ./tlc/Main.cpp
 )
