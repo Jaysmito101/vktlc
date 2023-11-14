@@ -15,6 +15,9 @@ namespace tlc
 		void SetupVulkan();
 
 		void Run();
+		
+		inline Bool IsRunning() const { return m_Running; }
+		inline Bool IsPaused() const { return m_Paused; }
 
 		inline static Application* Get() { if (!s_Instance) s_Instance = CreateScope<Application>(); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }

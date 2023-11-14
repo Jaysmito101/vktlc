@@ -19,7 +19,10 @@ namespace tlc
 	VulkanSwapchain::~VulkanSwapchain()
 	{
 		log::Debug("Destroying swapchain");
-		m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
+		if (m_IsReady)
+		{
+			Cleanup();
+		}
 	}
 
 	Bool VulkanSwapchain::ChooseSufaceFormat()
@@ -117,9 +120,6 @@ namespace tlc
 			imageCount = capabilities.maxImageCount;
 		}
 		
-		m_Images.resize(imageCount);
-		m_ImageViews.resize(imageCount);
-
 		vk::SwapchainCreateInfoKHR createInfo = vk::SwapchainCreateInfoKHR()
 			.setSurface(m_Context->GetSurface())
 			.setMinImageCount(imageCount)
@@ -158,9 +158,65 @@ namespace tlc
 			return false;
 		}
 
+		if (!QuerySwapchainImages())
+		{
+			log::Error("Failed to query swapchain images");
+			return false;
+		}
+
 		m_IsReady = true;
 
 		return true;
+	}
+
+	Bool VulkanSwapchain::QuerySwapchainImages()
+	{
+		m_Images = m_Device->GetDevice().getSwapchainImagesKHR(m_Swapchain);
+		return true;
+	}
+
+	Bool VulkanSwapchain::CreateImageViews()
+	{
+		m_ImageViews.resize(m_Images.size());
+
+		for (U32 i = 0; i < m_Images.size(); i++)
+		{
+			VkImageSubresourceRange subresourceRange = vk::ImageSubresourceRange()
+				.setAspectMask(vk::ImageAspectFlagBits::eColor)
+				.setBaseMipLevel(0)
+				.setLevelCount(1)
+				.setBaseArrayLayer(0)
+				.setLayerCount(1);
+
+			vk::ImageViewCreateInfo createInfo = vk::ImageViewCreateInfo()
+				.setImage(m_Images[i])
+				.setViewType(vk::ImageViewType::e2D)
+				.setFormat(m_SwapchainImageFormat.format)
+				.setComponents(vk::ComponentMapping())
+				.setSubresourceRange(subresourceRange);
+
+			m_ImageViews[i] = m_Device->GetDevice().createImageView(createInfo);
+
+			if (m_ImageViews[i] == static_cast<vk::ImageView>(VK_NULL_HANDLE))
+			{
+				log::Error("Failed to create image view");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void VulkanSwapchain::Cleanup()
+	{
+
+		for (auto& imageView : m_ImageViews)
+		{
+			m_Device->GetDevice().destroyImageView(imageView);
+		}
+
+		m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
+		m_IsReady = false;
 	}
 
 }

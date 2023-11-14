@@ -72,6 +72,8 @@ add_executable(tlc
     ./tlc/vulkan/VulkanContext.cpp
     ./tlc/vulkan/VulkanDevice.cpp
     ./tlc/vulkan/VulkanSwapchain.cpp
+    ./tlc/vulkan/VulkanShader.cpp
+    ./tlc/vulkan/VulkanGraphicsPipeline.cpp
 # main
     ./tlc/Main.cpp
 )

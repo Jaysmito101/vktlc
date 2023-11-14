@@ -16,12 +16,18 @@ namespace tlc
 		~VulkanSwapchain();
 
 		inline Bool GetIsReady() const { return m_IsReady; }
+		inline const vk::SurfaceFormatKHR& GetSurfaceFormat() const { return m_SwapchainImageFormat; }
+		inline const vk::Extent2D& GetExtent() const { return m_SwapchainExtent; }
 
 	private:
 		Bool ChooseSufaceFormat();
 		Bool ChoosePresentMode();
 		Bool ChooseExtent();
 		Bool RecreateSwapchain();
+		Bool QuerySwapchainImages();
+		Bool CreateImageViews();
+
+		void Cleanup();
 
 	private:
 		VulkanContext* m_Context;

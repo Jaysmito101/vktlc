@@ -1,5 +1,6 @@
 #include "vulkan/VulkanDevice.hpp"
 #include "vulkan/VulkanContext.hpp"
+#include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
 
 namespace tlc
@@ -41,6 +42,16 @@ namespace tlc
 		}
 		m_Swapchains.push_back(CreateScope<VulkanSwapchain>(this, window));
 		return m_Swapchains.back().get();
+	}
+
+	Scope<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U8>& shaderCode)
+	{
+		if (!m_IsReady)
+		{
+			log::Error("Device is not ready");
+			return nullptr;
+		}
+		return CreateScope<VulkanShaderModule>(this, shaderCode);
 	}
 
 	Bool VulkanDevice::CreateDevice()

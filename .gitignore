@@ -21,4 +21,5 @@ Release
 *.vcxproj.user
 *.vcproj
 *.sln
+*.spv
 Makefile
