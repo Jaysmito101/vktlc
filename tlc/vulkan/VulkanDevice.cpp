@@ -44,14 +44,24 @@ namespace tlc
 		return m_Swapchains.back().get();
 	}
 
-	Scope<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U8>& shaderCode)
+	Ref<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U8>& shaderCode)
 	{
 		if (!m_IsReady)
 		{
 			log::Error("Device is not ready");
 			return nullptr;
 		}
-		return CreateScope<VulkanShaderModule>(this, shaderCode);
+		return CreateRef<VulkanShaderModule>(this, shaderCode);
+	}
+
+	Ref<VulkanGraphicsPipeline> VulkanDevice::CreateGraphicsPipeline(const VulkanGraphicsPipelineSettings& settings)
+	{
+		if (!m_IsReady)
+		{
+			log::Error("Device is not ready");
+			return nullptr;
+		}
+		return CreateRef<VulkanGraphicsPipeline>(this, settings);
 	}
 
 	Bool VulkanDevice::CreateDevice()

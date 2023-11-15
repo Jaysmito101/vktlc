@@ -1,12 +1,12 @@
 #pragma once
 
 #include "vulkan/VulkanBase.hpp"
+#include "vulkan/VulkanGraphicsPipeline.hpp"
 
 namespace tlc
 {
 	class VulkanSwapchain;
 	class VulkanContext;
-	class VulkanPipeline;
 	class VulkanShaderModule;
 	class Window;
 
@@ -47,7 +47,8 @@ namespace tlc
 
 		VulkanSwapchain* CreateSwapchain(Window* window);
 
-		Scope<VulkanShaderModule> CreateShaderModule(const List<U8>& shaderCode);
+		Ref<VulkanShaderModule> CreateShaderModule(const List<U8>& shaderCode);
+		Ref<VulkanGraphicsPipeline> CreateGraphicsPipeline(const VulkanGraphicsPipelineSettings& settings = VulkanGraphicsPipelineSettings());
 
 		inline I32 GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamilyIndex; }
 		inline I32 GetComputeQueueFamilyIndex() const { return m_ComputeQueueFamilyIndex; }
@@ -59,7 +60,6 @@ namespace tlc
 		inline void WaitIdle() { m_Device.waitIdle(); }
 		inline VulkanContext* GetParentContext() const { return m_ParentContext; }
 		inline const vk::Device GetDevice() const { return m_Device; }
-		inline const vk::PhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		inline const vk::PhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 
 		friend class VulkanContext;

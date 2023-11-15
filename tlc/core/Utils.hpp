@@ -7,5 +7,7 @@ namespace tlc
 	{
 		String GetExecutablePath();
 		String GetExecutableDirectory();
+
+		List<U8> ReadBinaryFie(const String& filepath);
 	}
 }

@@ -8,11 +8,11 @@ namespace tlc
 
 
 
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDevice* device, VulkanSwapchain* swapchain = nullptr)
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDevice* device, const VulkanGraphicsPipelineSettings& settings)
 	{
 		m_Context = device->GetParentContext();
 		m_Device = device;
-		m_Swapchain = swapchain;
+		m_Settings = settings;
 	}
 
 	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
@@ -20,55 +20,63 @@ namespace tlc
 		Cleanup();
 	}
 
-	void VulkanGraphicsPipeline::Recreate(vk::Extent2D swapchainExtent)
+	Bool VulkanGraphicsPipeline::Recreate()
 	{
+		Cleanup();
 
-		auto dynamicStateCreateInfo = GetDynamicStateCreateInfo();
-		auto vertexInputStateCreateInfo = GetVertexInputStateCreateInfo();
-		auto inputAssemblyStateCreateInfo = GetInputAssemblyStateCreateInfo();
-		auto [viewport, scissor] = GetViewportAndScissor(swapchainExtent);
-		auto rasterizationStateCreateInfo = GetRasterizationStateCreateInfo();	
-		auto multisampleStateCreateInfo = GetMultisampleStateCreateInfo();
-		auto colorBlendStateCreateInfo = GetColorBlendStateCreateInfo();
-		auto depthStencilStateCreateInfo = GetDepthStencilStateCreateInfo();
-
+		m_Properties.dynamicStateCreateInfo = GetDynamicStateCreateInfo();
+		m_Properties.vertexInputStateCreateInfo = GetVertexInputStateCreateInfo();
+		m_Properties.inputAssemblyStateCreateInfo = GetInputAssemblyStateCreateInfo();
+		auto viewportAndScissor = GetViewportAndScissor();
+		m_Properties.viewport = viewportAndScissor.x;
+		m_Properties.scissor = viewportAndScissor.y;
+		m_Properties.rasterizationStateCreateInfo = GetRasterizationStateCreateInfo();
+		m_Properties.multisampleStateCreateInfo = GetMultisampleStateCreateInfo();
+		m_Properties.colorBlendStateCreateInfo = GetColorBlendStateCreateInfo();
+		m_Properties.depthStencilStateCreateInfo = GetDepthStencilStateCreateInfo();
+		
 		m_PipelineLayout = CreatePipelineLayout();
 		m_RenderPass = CreateRenderPass();
 
-		auto viewportStateCreateInfo = vk::PipelineViewportStateCreateInfo()
+		m_Properties.viewportStateCreateInfo = vk::PipelineViewportStateCreateInfo()
 			.setViewportCount(1)
-			.setPViewports(&viewport)
+			.setPViewports(&m_Properties.viewport)
 			.setScissorCount(1)
-			.setPScissors(&scissor);
+			.setPScissors(&m_Properties.scissor);
+		
+		m_Properties.shaderStages = {
+			m_Settings.vertexShaderModule->GetShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex),
+			m_Settings.fragmentShaderModule->GetShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment)
+		};
 
-
-		auto pipelineCreateInfo = vk::GraphicsPipelineCreateInfo()
-			// .setStageCount(static_cast<uint32_t>(m_ShaderStages.size()))
-			// .setPStages(m_ShaderStages.data())
-
-			.setPVertexInputState(&vertexInputStateCreateInfo)
-			.setPInputAssemblyState(&inputAssemblyStateCreateInfo)
-			.setPViewportState(&viewportStateCreateInfo)
-			.setPRasterizationState(&rasterizationStateCreateInfo)
-			.setPMultisampleState(&multisampleStateCreateInfo)
-			.setPDepthStencilState(&depthStencilStateCreateInfo)
-			.setPColorBlendState(&colorBlendStateCreateInfo)
-			.setPDynamicState(&dynamicStateCreateInfo)
+		m_Properties.pipelineCreateInfo = vk::GraphicsPipelineCreateInfo()
+			.setStageCount(static_cast<uint32_t>(m_Properties.shaderStages.size()))
+			.setPStages(m_Properties.shaderStages.data())
+			.setPVertexInputState(&m_Properties.vertexInputStateCreateInfo)
+			.setPInputAssemblyState(&m_Properties.inputAssemblyStateCreateInfo)
+			.setPViewportState(&m_Properties.viewportStateCreateInfo)
+			.setPRasterizationState(&m_Properties.rasterizationStateCreateInfo)
+			.setPMultisampleState(&m_Properties.multisampleStateCreateInfo)
+			.setPDepthStencilState(&m_Properties.depthStencilStateCreateInfo)
+			.setPColorBlendState(&m_Properties.colorBlendStateCreateInfo)
+			.setPDynamicState(&m_Properties.dynamicStateCreateInfo)
 			.setLayout(m_PipelineLayout)
 			.setRenderPass(m_RenderPass)
 			.setSubpass(0)
-			.setBasePipelineHandle(nullptr)
+			.setBasePipelineHandle(VK_NULL_HANDLE)
 			.setBasePipelineIndex(-1);
 		
-		auto [result, pipeline] = m_Device->GetDevice().createGraphicsPipeline(nullptr, pipelineCreateInfo);
+		auto res = m_Device->GetDevice().createGraphicsPipeline(nullptr, m_Properties.pipelineCreateInfo);
 
-		if (result != vk::Result::eSuccess)
+		if (res.result != vk::Result::eSuccess)
 		{
 			log::Error("Failed to create graphics pipeline");
-			return;
+			return false;
 		}
 
-		m_Pipeline = pipeline;
+		m_Pipeline = res.value;
+
+		return true;
 	}
 
 	vk::PipelineDynamicStateCreateInfo VulkanGraphicsPipeline::GetDynamicStateCreateInfo() const
@@ -105,19 +113,19 @@ namespace tlc
 		return inputAssemblyStateCreateInfo;
 	}
 
-	Pair<vk::Viewport, vk::Rect2D> VulkanGraphicsPipeline::GetViewportAndScissor(vk::Extent2D swapchainExtent) const
+	Pair<vk::Viewport, vk::Rect2D> VulkanGraphicsPipeline::GetViewportAndScissor() const
 	{
 		auto viewport = vk::Viewport()
 			.setX(0.0f)
 			.setY(0.0f)
-			.setWidth(static_cast<float>(swapchainExtent.width))
-			.setHeight(static_cast<float>(swapchainExtent.height))
+			.setWidth(static_cast<float>(m_Settings.extent.width))
+			.setHeight(static_cast<float>(m_Settings.extent.height))
 			.setMinDepth(0.0f)
 			.setMaxDepth(1.0f);
 
 		vk::Rect2D scissor = vk::Rect2D()
 			.setOffset({ 0, 0 })
-			.setExtent(swapchainExtent);
+			.setExtent(m_Settings.extent);
 
 		return { viewport, scissor };
 	}
@@ -253,6 +261,7 @@ namespace tlc
 	{
 		if (m_IsReady)
 		{
+			m_Device->GetDevice().destroyPipeline(m_Pipeline);
 			m_Device->GetDevice().destroyPipelineLayout(m_PipelineLayout);
 			m_Device->GetDevice().destroyRenderPass(m_RenderPass);
 		}
