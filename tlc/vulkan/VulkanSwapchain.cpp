@@ -82,7 +82,7 @@ namespace tlc
 
 		m_SwapchainExtent.setWidth(std::clamp(static_cast<U32>(width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width));
 		m_SwapchainExtent.setHeight(std::clamp(static_cast<U32>(height), capabilities.minImageExtent.height, capabilities.maxImageExtent.height));
-	
+
 
 		return true;
 	}
@@ -116,7 +116,7 @@ namespace tlc
 		{
 			imageCount = capabilities.maxImageCount;
 		}
-		
+
 		vk::SwapchainCreateInfoKHR createInfo = vk::SwapchainCreateInfoKHR()
 			.setSurface(m_Context->GetSurface())
 			.setMinImageCount(imageCount)
@@ -146,7 +146,7 @@ namespace tlc
 			.setPresentMode(m_PresentMode)
 			.setClipped(true)
 			.setOldSwapchain(m_Swapchain);
-		
+
 
 		m_Swapchain = m_Device->GetDevice().createSwapchainKHR(createInfo);
 
@@ -165,6 +165,12 @@ namespace tlc
 		if (!CreateImageViews())
 		{
 			log::Error("Failed to create image views");
+			return false;
+		}
+
+		if (!CreateRenderPass())
+		{
+			log::Error("Failed to create render pass");
 			return false;
 		}
 
@@ -217,11 +223,56 @@ namespace tlc
 		return true;
 	}
 
+	Bool VulkanSwapchain::CreateRenderPass()
+	{
+		auto attachment = vk::AttachmentDescription()
+			.setFormat(m_SwapchainImageFormat.format)
+			.setSamples(vk::SampleCountFlagBits::e1)
+			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setStoreOp(vk::AttachmentStoreOp::eStore)
+			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+			.setInitialLayout(vk::ImageLayout::eUndefined)
+			.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+
+		auto subpassAttachment = vk::AttachmentReference()
+			.setAttachment(0)
+			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+		auto subpass = vk::SubpassDescription()
+			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+			.setColorAttachmentCount(1)
+			.setPColorAttachments(&subpassAttachment)
+			.setPDepthStencilAttachment(nullptr)
+			.setPInputAttachments(nullptr)
+			.setPreserveAttachmentCount(0)
+			.setPResolveAttachments(nullptr);
+
+		auto renderPassCreateInfo = vk::RenderPassCreateInfo()
+			.setAttachmentCount(1)
+			.setPAttachments(&attachment)
+			.setSubpassCount(1)
+			.setPSubpasses(&subpass)
+			.setDependencyCount(0)
+			.setPDependencies(nullptr);
+
+		m_RenderPass = m_Device->GetDevice().createRenderPass(renderPassCreateInfo);
+
+		if (m_RenderPass == static_cast<vk::RenderPass>(VK_NULL_HANDLE))
+		{
+			log::Error("VulkanFramebuffer::RecreateRenderPass: failed to create render pass");
+			return false;
+		}
+
+		return true;
+	}
+
 	Bool VulkanSwapchain::CreateFramebuffers()
 	{
 		m_Framebuffers.clear();
 
 		auto settings = VulkanFramebufferSettings()
+			.SetRenderPass(m_RenderPass)
 			.SetSwapchain(this);
 
 		for (U32 i = 0; i < m_ImageViews.size(); i++)
@@ -245,6 +296,8 @@ namespace tlc
 		{
 			m_Device->GetDevice().destroyImageView(imageView);
 		}
+
+		m_Device->GetDevice().destroyRenderPass(m_RenderPass);
 		m_ImageViews.clear();
 		m_Framebuffers.clear();
 		m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);

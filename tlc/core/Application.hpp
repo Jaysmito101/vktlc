@@ -31,6 +31,8 @@ namespace tlc
 		VulkanDevice* m_VulkanDevice = nullptr;
 		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 
+		Ref<VulkanGraphicsPipeline> m_Pipeline;
+
 		static Scope<Application> s_Instance;
 	};
 }

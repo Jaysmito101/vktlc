@@ -21,6 +21,7 @@ namespace tlc
 		inline const vk::Extent2D& GetExtent() const { return m_SwapchainExtent; }
 		inline const List<vk::Image>& GetImages() const { return m_Images; }
 		inline const List<vk::ImageView>& GetImageViews() const { return m_ImageViews; }
+		inline const List<Ref<VulkanFramebuffer>>& GetFramebuffers() const { return m_Framebuffers; }
 
 	private:
 		Bool ChooseSufaceFormat();
@@ -29,6 +30,7 @@ namespace tlc
 		Bool RecreateSwapchain();
 		Bool QuerySwapchainImages();
 		Bool CreateImageViews();
+		Bool CreateRenderPass();
 		Bool CreateFramebuffers();
 
 		void Cleanup();
@@ -38,6 +40,7 @@ namespace tlc
 		VulkanDevice* m_Device;
 		Window* m_Window;
 
+		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
 		vk::SwapchainKHR m_Swapchain = VK_NULL_HANDLE;
 		vk::SurfaceFormatKHR m_SwapchainImageFormat = vk::Format::eUndefined;
 		vk::PresentModeKHR m_PresentMode = vk::PresentModeKHR::eFifo;

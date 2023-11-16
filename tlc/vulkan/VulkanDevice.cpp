@@ -2,6 +2,7 @@
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
+#include "vulkan/VulkanCommandBuffer.hpp"
 
 namespace tlc
 {
@@ -31,7 +32,10 @@ namespace tlc
 			m_Device.destroyCommandPool(commandPool);
 		}
 
-
+		for (auto& [key, value] : m_CommandBuffers)
+		{
+			key->Cleanup();
+		}
 
 		m_Device.destroy();
 	}
@@ -64,6 +68,18 @@ namespace tlc
 			return nullptr;
 		}
 		return CreateRef<VulkanFramebuffer>(this, settings);
+	}
+
+	Ref<VulkanCommandBuffer> VulkanDevice::CreateCommandBuffer(VulkanQueueType type)
+	{
+		if (!m_IsReady)
+		{
+			log::Error("Device is not ready");
+			return nullptr;
+		}
+		auto buffer = CreateRef<VulkanCommandBuffer>(this, type);
+		m_CommandBuffers[buffer.get()] = true;
+		return buffer;
 	}
 
 	Bool VulkanDevice::CreateDevice()
@@ -148,6 +164,11 @@ namespace tlc
 		}
 
 		return true;
+	}
+
+	void VulkanDevice::CommandBufferDeleted(VulkanCommandBuffer* buffer)
+	{
+		m_CommandBuffers.erase(buffer);
 	}
 
 	I32 VulkanDevice::FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos)

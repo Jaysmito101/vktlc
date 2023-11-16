@@ -34,6 +34,10 @@ namespace tlc
 	Application::~Application()
 	{
 		log::Debug("Shutting down application");
+
+
+		m_Pipeline.reset();
+
 		m_VulkanSwapchain.reset();
 		Window::Shutdown();
 		VulkanContext::Shutdown();
@@ -67,7 +71,9 @@ namespace tlc
 			.SetVertexShaderModule(vertModule)
 			.SetFragmentShaderModule(fragModule);
 
+		m_Pipeline = m_VulkanSwapchain->GetFramebuffers()[0]->CreateGraphicsPipeline(settings);
 
+		log::Info("Pipeline is ready ? : {}", m_Pipeline->IsReady());
 
 
 	}

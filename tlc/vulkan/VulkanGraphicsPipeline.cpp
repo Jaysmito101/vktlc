@@ -34,7 +34,6 @@ namespace tlc
 		m_Properties.scissor = viewportAndScissor.y;
 		m_Properties.rasterizationStateCreateInfo = GetRasterizationStateCreateInfo();
 		m_Properties.multisampleStateCreateInfo = GetMultisampleStateCreateInfo();
-		m_Properties.colorBlendStateCreateInfo = GetColorBlendStateCreateInfo();
 		m_Properties.depthStencilStateCreateInfo = GetDepthStencilStateCreateInfo();
 		
 		m_PipelineLayout = CreatePipelineLayout();
@@ -45,6 +44,15 @@ namespace tlc
 			.setScissorCount(1)
 			.setPScissors(&m_Properties.scissor);
 		
+		auto colorBlendAttachmentState = GetColorBlendAttachmentState();
+
+		m_Properties.colorBlendStateCreateInfo = vk::PipelineColorBlendStateCreateInfo()
+			.setLogicOpEnable(false)
+			.setLogicOp(vk::LogicOp::eCopy)
+			.setAttachmentCount(1)
+			.setPAttachments(&colorBlendAttachmentState)
+			.setBlendConstants({ 0.0f, 0.0f, 0.0f, 0.0f });
+
 		m_Properties.shaderStages = {
 			m_Settings.vertexShaderModule->GetShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex),
 			m_Settings.fragmentShaderModule->GetShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment)
@@ -67,7 +75,7 @@ namespace tlc
 			.setBasePipelineHandle(VK_NULL_HANDLE)
 			.setBasePipelineIndex(-1);
 		
-		auto res = m_Device->GetDevice().createGraphicsPipeline(nullptr, m_Properties.pipelineCreateInfo);
+ 		auto res = m_Device->GetDevice().createGraphicsPipeline(nullptr, m_Properties.pipelineCreateInfo);
 
 		if (res.result != vk::Result::eSuccess)
 		{
@@ -77,12 +85,14 @@ namespace tlc
 
 		m_Pipeline = res.value;
 
+		m_IsReady = true;
+
 		return true;
 	}
 
 	vk::PipelineDynamicStateCreateInfo VulkanGraphicsPipeline::GetDynamicStateCreateInfo() const
 	{
-		List<vk::DynamicState> dynamicStates = {
+		static List<vk::DynamicState> dynamicStates = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor
 		};
@@ -179,20 +189,6 @@ namespace tlc
 
 
 		return colorBlendAttachmentState;
-	}
-
-	vk::PipelineColorBlendStateCreateInfo VulkanGraphicsPipeline::GetColorBlendStateCreateInfo() const
-	{
-		auto colorBlendAttachmentState = GetColorBlendAttachmentState();
-
-		auto colorBlendStateCreateInfo = vk::PipelineColorBlendStateCreateInfo()
-			.setLogicOpEnable(false)
-			.setLogicOp(vk::LogicOp::eCopy)
-			.setAttachmentCount(1)
-			.setPAttachments(&colorBlendAttachmentState)
-			.setBlendConstants({ 0.0f, 0.0f, 0.0f, 0.0f });
-
-		return colorBlendStateCreateInfo;
 	}
 
 	vk::PipelineDepthStencilStateCreateInfo VulkanGraphicsPipeline::GetDepthStencilStateCreateInfo() const

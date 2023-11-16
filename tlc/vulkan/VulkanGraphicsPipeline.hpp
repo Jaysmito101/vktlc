@@ -54,6 +54,8 @@ namespace tlc
 		inline const VulkanGraphicsPipelineSettings& GetSettings() const { return m_Settings; }
 		inline VulkanGraphicsPipelineSettings& GetSettings() { return m_Settings; }
 
+		inline Bool IsReady() { return m_IsReady; }
+
 	private:
 
 		vk::PipelineDynamicStateCreateInfo GetDynamicStateCreateInfo() const;
@@ -63,7 +65,6 @@ namespace tlc
 		vk::PipelineRasterizationStateCreateInfo GetRasterizationStateCreateInfo() const;
 		vk::PipelineMultisampleStateCreateInfo GetMultisampleStateCreateInfo() const;
 		vk::PipelineColorBlendAttachmentState GetColorBlendAttachmentState() const;
-		vk::PipelineColorBlendStateCreateInfo GetColorBlendStateCreateInfo() const;
 		vk::PipelineDepthStencilStateCreateInfo GetDepthStencilStateCreateInfo() const;
 		vk::PipelineLayout CreatePipelineLayout() const;
 
