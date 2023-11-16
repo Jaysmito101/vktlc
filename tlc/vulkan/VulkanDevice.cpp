@@ -24,6 +24,15 @@ namespace tlc
 
 	VulkanDevice::~VulkanDevice()
 	{
+		m_Device.waitIdle();
+
+		for (auto& commandPool : m_CommandPools)
+		{
+			m_Device.destroyCommandPool(commandPool);
+		}
+
+
+
 		m_Device.destroy();
 	}
 
@@ -64,17 +73,17 @@ namespace tlc
 
 		List<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
-		if ((m_PresentQueueFamilyIndex = m_GraphicsQueueFamilyIndex = FindAndAddQueueCreateInfo(m_Settings.requireGraphicsQueue, vk::QueueFlagBits::eGraphics, &m_Settings.graphicsQueuePriority, queueCreateInfos)) == -1)
+		if ((m_QueueFamilyIndices[Present] = m_QueueFamilyIndices[Graphics] = FindAndAddQueueCreateInfo(m_Settings.requireGraphicsQueue, vk::QueueFlagBits::eGraphics, &m_Settings.graphicsQueuePriority, queueCreateInfos)) == -1)
 		{
 			log::Warn("Failed to find graphics queue family");
 		}
 
-		if ((m_ComputeQueueFamilyIndex = FindAndAddQueueCreateInfo(m_Settings.requireComputeQueue, vk::QueueFlagBits::eCompute, &m_Settings.computeQueuePriority, queueCreateInfos)) == -1)
+		if ((m_QueueFamilyIndices[Compute] = FindAndAddQueueCreateInfo(m_Settings.requireComputeQueue, vk::QueueFlagBits::eCompute, &m_Settings.computeQueuePriority, queueCreateInfos)) == -1)
 		{
 			log::Warn("Failed to find compute queue family");
 		}
 
-		if ((m_TransferQueueFamilyIndex = FindAndAddQueueCreateInfo(m_Settings.requireTransferQueue, vk::QueueFlagBits::eTransfer, &m_Settings.transferQueuePriority, queueCreateInfos)) == -1)
+		if ((m_QueueFamilyIndices[Transfer] = FindAndAddQueueCreateInfo(m_Settings.requireTransferQueue, vk::QueueFlagBits::eTransfer, &m_Settings.transferQueuePriority, queueCreateInfos)) == -1)
 		{
 			log::Warn("Failed to find transfer queue family");
 		}
@@ -106,11 +115,37 @@ namespace tlc
 			return false;
 		}
 
-		if (m_GraphicsQueueFamilyIndex != -1 && m_GraphicsQueueFamilyIndex != 1000) m_GraphicsQueue = m_Device.getQueue(m_GraphicsQueueFamilyIndex, 0);
-		if (m_PresentQueueFamilyIndex != -1 && m_PresentQueueFamilyIndex != 1000) m_PresentQueue = m_Device.getQueue(m_PresentQueueFamilyIndex, 0);
-		if (m_ComputeQueueFamilyIndex != -1 && m_ComputeQueueFamilyIndex != 1000) m_ComputeQueue = m_Device.getQueue(m_ComputeQueueFamilyIndex, 0);
-		if (m_TransferQueueFamilyIndex != -1 && m_TransferQueueFamilyIndex != 1000) m_TransferQueue = m_Device.getQueue(m_TransferQueueFamilyIndex, 0);
+		for (U32 i = 0; i < VulkanQueueType::Count; i++)
+		{
+			if (m_QueueFamilyIndices[i] == -1 || m_QueueFamilyIndices[i] == 1000) continue;
+			m_Queues[i] = m_Device.getQueue(m_QueueFamilyIndices[i], 0);
+			if (m_Queues[i] == static_cast<vk::Queue>(VK_NULL_HANDLE))
+			{
+				log::Error("Failed to get queue");
+				return false;
+			}
+		}
 
+		return true;
+	}
+
+	Bool VulkanDevice::CreateCommandPools()
+	{
+		auto poolCreateInfo = vk::CommandPoolCreateInfo()
+			.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+
+
+		for (U32 i = 0; i < VulkanQueueType::Count; i++)
+		{
+			if (m_QueueFamilyIndices[i] == -1) continue;
+			poolCreateInfo.setQueueFamilyIndex(m_QueueFamilyIndices[i]);
+			m_CommandPools[i] = m_Device.createCommandPool(poolCreateInfo);
+			if (m_CommandPools[i] == static_cast<vk::CommandPool>(VK_NULL_HANDLE))
+			{
+				log::Error("Failed to create command pool");
+				return false;
+			}
+		}
 
 		return true;
 	}

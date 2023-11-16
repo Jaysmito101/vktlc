@@ -15,10 +15,12 @@ namespace tlc
 	{
 		VulkanSwapchain* swapchain = nullptr;
 		I32 swapchainImageIndex = -1;
+		vk::RenderPass renderPass = VK_NULL_HANDLE;
 
 
 		inline VulkanFramebufferSettings& SetSwapchain(VulkanSwapchain* s) { this->swapchain = s; return *this; }
 		inline VulkanFramebufferSettings& SetSwapchainImageIndex(I32 i) { this->swapchainImageIndex = i; return *this; }
+		inline VulkanFramebufferSettings& SetRenderPass(vk::RenderPass r) { this->renderPass = r; return *this; }
 	};
 
 	class VulkanFramebuffer
@@ -29,7 +31,7 @@ namespace tlc
 
 		Bool Recreate();
 		
-		Ref<VulkanGraphicsPipeline> CreateGraphicsPipeline(const VulkanGraphicsPipelineSettings& settings = VulkanGraphicsPipelineSettings());
+		Ref<VulkanGraphicsPipeline> CreateGraphicsPipeline(VulkanGraphicsPipelineSettings settings = VulkanGraphicsPipelineSettings());
 
 		inline VulkanFramebufferSettings& GetSettings() { return m_Settings; }
 		inline const vk::Framebuffer GetFramebuffer() const { return m_Framebuffer; }
@@ -43,6 +45,8 @@ namespace tlc
 		VulkanDevice* m_Device;
 
 		VulkanFramebufferSettings m_Settings;
+
+		Bool m_IsRenderPassOwned = false;
 
 		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
 		vk::Framebuffer m_Framebuffer = VK_NULL_HANDLE;

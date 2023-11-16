@@ -62,13 +62,11 @@ namespace tlc
 		auto vertModule = m_VulkanDevice->CreateShaderModule(utils::ReadBinaryFie("vert.spv"));
 		auto fragModule = m_VulkanDevice->CreateShaderModule(utils::ReadBinaryFie("frag.spv"));
 
-		//auto settings = VulkanGraphicsPipelineSettings();
-			 //settings.SetExtent(m_VulkanSwapchain->GetExtent())
-			//.SetVertexShaderModule(vertModule)
-			//.SetFragmentShaderModule(fragModule);
+		auto settings = VulkanGraphicsPipelineSettings()
+			.SetExtent(m_VulkanSwapchain->GetExtent())
+			.SetVertexShaderModule(vertModule)
+			.SetFragmentShaderModule(fragModule);
 
-		//auto pipelinee = m_VulkanDevice->CreateGraphicsPipeline(settings);
-				
 
 
 

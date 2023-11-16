@@ -15,7 +15,7 @@ namespace tlc
 		vk::Extent2D extent = vk::Extent2D(0, 0);
 		Ref<VulkanShaderModule> vertexShaderModule;
 		Ref<VulkanShaderModule> fragmentShaderModule;
-		vk::RenderPass m_RenderPass;
+		vk::RenderPass renderPass;
 
 		VulkanGraphicsPipelineSettings() = default;
 		VulkanGraphicsPipelineSettings(const VulkanGraphicsPipelineSettings&) = default;
@@ -23,7 +23,7 @@ namespace tlc
 		inline VulkanGraphicsPipelineSettings& SetExtent(const vk::Extent2D& ex) { this->extent = ex; return *this; }
 		inline VulkanGraphicsPipelineSettings& SetVertexShaderModule(Ref<VulkanShaderModule> shModule) { this->vertexShaderModule = std::move(shModule); return *this; }
 		inline VulkanGraphicsPipelineSettings& SetFragmentShaderModule(Ref<VulkanShaderModule> shModule) { this->fragmentShaderModule = std::move(shModule); return *this; }
-		inline VulkanGraphicsPipelineSettings& SetRenderPass(vk::RenderPass renderPass) { this->m_RenderPass = renderPass; return *this; }
+		inline VulkanGraphicsPipelineSettings& SetRenderPass(vk::RenderPass r) { this->renderPass = r; return *this; }
 
 	};
 

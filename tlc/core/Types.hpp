@@ -58,6 +58,9 @@ namespace tlc
 	template<typename T>
 	using Set = std::set<T>;
 
+	template <typename T, int N>
+	using Array = std::array<T, N>;
+
 	template<typename A, typename B>
 	struct Pair 
 	{

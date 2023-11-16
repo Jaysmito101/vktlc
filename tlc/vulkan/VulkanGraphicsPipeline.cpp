@@ -62,7 +62,7 @@ namespace tlc
 			.setPColorBlendState(&m_Properties.colorBlendStateCreateInfo)
 			.setPDynamicState(&m_Properties.dynamicStateCreateInfo)
 			.setLayout(m_PipelineLayout)
-			.setRenderPass(m_Settings.m_RenderPass)
+			.setRenderPass(m_Settings.renderPass)
 			.setSubpass(0)
 			.setBasePipelineHandle(VK_NULL_HANDLE)
 			.setBasePipelineIndex(-1);

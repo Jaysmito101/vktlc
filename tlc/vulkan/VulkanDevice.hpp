@@ -10,6 +10,15 @@ namespace tlc
 	class VulkanShaderModule;
 	class Window;
 
+	enum VulkanQueueType : U8
+	{
+		Graphics = 0,
+		Compute,
+		Transfer,
+		Present,
+		Count
+	};;
+
 	struct VulkanDeviceSettings
 	{
 	public:
@@ -49,10 +58,10 @@ namespace tlc
 		Ref<VulkanShaderModule> CreateShaderModule(const List<U8>& shaderCode);
 		Ref<VulkanFramebuffer> CreateFramebuffer(const VulkanFramebufferSettings& settings = VulkanFramebufferSettings());
 
-		inline I32 GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamilyIndex; }
-		inline I32 GetComputeQueueFamilyIndex() const { return m_ComputeQueueFamilyIndex; }
-		inline I32 GetTransferQueueFamilyIndex() const { return m_TransferQueueFamilyIndex; }
-		inline I32 GetPresentQueueFamilyIndex() const { return m_PresentQueueFamilyIndex; }
+		inline I32 GetGraphicsQueueFamilyIndex() const { return m_QueueFamilyIndices[Graphics]; }
+		inline I32 GetComputeQueueFamilyIndex() const { return m_QueueFamilyIndices[Compute]; }
+		inline I32 GetTransferQueueFamilyIndex() const { return m_QueueFamilyIndices[Transfer]; }
+		inline I32 GetPresentQueueFamilyIndex() const { return m_QueueFamilyIndices[Present]; }
 
 		inline Bool IsReady() const { return m_IsReady; }
 
@@ -63,8 +72,8 @@ namespace tlc
 
 		friend class VulkanContext;
 	private:
-
 		Bool CreateDevice();
+		Bool CreateCommandPools();
 
 	private:
 		I32 FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos);
@@ -76,18 +85,15 @@ namespace tlc
 		vk::PhysicalDevice m_PhysicalDevice;
 		vk::Device m_Device;
 		
-		I32 m_GraphicsQueueFamilyIndex = -1;
-		I32 m_ComputeQueueFamilyIndex = -1;
-		I32 m_TransferQueueFamilyIndex = -1;
-		I32 m_PresentQueueFamilyIndex = -1;
+		Array<I32, VulkanQueueType::Count> m_QueueFamilyIndices;
 
-		vk::Queue m_GraphicsQueue;
-		vk::Queue m_ComputeQueue;
-		vk::Queue m_TransferQueue;
-		vk::Queue m_PresentQueue;
+		Array<vk::Queue, VulkanQueueType::Count> m_Queues;
+
+		Array<vk::CommandPool, VulkanQueueType::Count> m_CommandPools;
 
 		Bool m_IsReady = false;
 		Set<I32> m_UniqeQueueFamiliesIndices;
+
 
 		VulkanDeviceSettings m_Settings;
 	};

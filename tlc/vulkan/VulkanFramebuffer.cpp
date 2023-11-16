@@ -13,6 +13,9 @@ namespace tlc
 		m_Device = device;
 		m_Settings = settings;
 
+		m_IsRenderPassOwned = settings.renderPass == static_cast<vk::RenderPass>(VK_NULL_HANDLE);
+		m_RenderPass = settings.renderPass;
+
 		Recreate();
 	}
 
@@ -25,10 +28,13 @@ namespace tlc
 	{
 		Cleanup();
 
-		if (!RecreateRenderPass())
+		if (m_IsRenderPassOwned)
 		{
-			log::Error("VulkanFramebuffer::Recreate: failed to recreate render pass");
-			return false;
+			if (!RecreateRenderPass())
+			{
+				log::Error("VulkanFramebuffer::Recreate: failed to recreate render pass");
+				return false;
+			}
 		}
 
 		vk::ImageView attachments[] = {
@@ -58,13 +64,16 @@ namespace tlc
 		return true;
 	}
 
-	Ref<VulkanGraphicsPipeline> VulkanFramebuffer::CreateGraphicsPipeline(const VulkanGraphicsPipelineSettings& settings)
+	Ref<VulkanGraphicsPipeline> VulkanFramebuffer::CreateGraphicsPipeline(VulkanGraphicsPipelineSettings settings)
 	{
 		if (!m_IsReady)
 		{
 			log::Error("VulkanFramebuffer::CreateGraphicsPipeline: framebuffer is not ready");
 			return nullptr;
 		}
+
+		settings.renderPass = m_RenderPass;
+		settings.extent = m_Settings.swapchain->GetExtent();
 
 		return CreateRef<VulkanGraphicsPipeline>(m_Device, settings);
 	}
@@ -75,7 +84,12 @@ namespace tlc
 		{
 			return;
 		}
-		m_Device->GetDevice().destroyRenderPass(m_RenderPass);
+
+		if (m_IsRenderPassOwned)
+		{
+			m_Device->GetDevice().destroyRenderPass(m_RenderPass);
+		}
+
 		m_Device->GetDevice().destroyFramebuffer(m_Framebuffer);
 
 		m_IsReady = false;
