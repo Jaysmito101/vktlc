@@ -10,10 +10,7 @@ namespace tlc
 		m_Device = device;
 		m_Window = window;
 
-		if (!ChooseSufaceFormat())
-		{
-			log::Error("Failed to choose surface format");
-		}
+		RecreateSwapchain();
 	}
 
 	VulkanSwapchain::~VulkanSwapchain()
@@ -123,6 +120,7 @@ namespace tlc
 		vk::SwapchainCreateInfoKHR createInfo = vk::SwapchainCreateInfoKHR()
 			.setSurface(m_Context->GetSurface())
 			.setMinImageCount(imageCount)
+			.setImageFormat(m_SwapchainImageFormat.format)
 			.setImageColorSpace(m_SwapchainImageFormat.colorSpace)
 			.setImageExtent(m_SwapchainExtent)
 			.setImageArrayLayers(1)
@@ -161,6 +159,18 @@ namespace tlc
 		if (!QuerySwapchainImages())
 		{
 			log::Error("Failed to query swapchain images");
+			return false;
+		}
+
+		if (!CreateImageViews())
+		{
+			log::Error("Failed to create image views");
+			return false;
+		}
+
+		if (!CreateFramebuffers())
+		{
+			log::Error("Failed to create frambuffers");
 			return false;
 		}
 
@@ -207,14 +217,36 @@ namespace tlc
 		return true;
 	}
 
+	Bool VulkanSwapchain::CreateFramebuffers()
+	{
+		m_Framebuffers.clear();
+
+		auto settings = VulkanFramebufferSettings()
+			.SetSwapchain(this);
+
+		for (U32 i = 0; i < m_ImageViews.size(); i++)
+		{
+			settings.SetSwapchainImageIndex(i);
+			auto framebuffer = m_Device->CreateFramebuffer(settings);
+			if (!framebuffer->IsReady())
+			{
+				log::Error("VulkanSwapchain::CreateFramebuffers: Failed to create framebuffer");
+				return false;
+			}
+			m_Framebuffers.push_back(framebuffer);
+		}
+
+		return true;
+	}
+
 	void VulkanSwapchain::Cleanup()
 	{
-
 		for (auto& imageView : m_ImageViews)
 		{
 			m_Device->GetDevice().destroyImageView(imageView);
 		}
-
+		m_ImageViews.clear();
+		m_Framebuffers.clear();
 		m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		m_IsReady = false;
 	}

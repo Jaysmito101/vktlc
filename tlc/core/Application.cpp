@@ -34,6 +34,7 @@ namespace tlc
 	Application::~Application()
 	{
 		log::Debug("Shutting down application");
+		m_VulkanSwapchain.reset();
 		Window::Shutdown();
 		VulkanContext::Shutdown();
 		log::Info("Application shutdown");
@@ -61,13 +62,13 @@ namespace tlc
 		auto vertModule = m_VulkanDevice->CreateShaderModule(utils::ReadBinaryFie("vert.spv"));
 		auto fragModule = m_VulkanDevice->CreateShaderModule(utils::ReadBinaryFie("frag.spv"));
 
-		auto settings = VulkanGraphicsPipelineSettings();
-			 settings.SetExtent(m_VulkanSwapchain->GetExtent())
-			.SetVertexShaderModule(vertModule)
-			.SetFragmentShaderModule(fragModule);
+		//auto settings = VulkanGraphicsPipelineSettings();
+			 //settings.SetExtent(m_VulkanSwapchain->GetExtent())
+			//.SetVertexShaderModule(vertModule)
+			//.SetFragmentShaderModule(fragModule);
 
-		auto pipelinee = m_VulkanDevice->CreateGraphicsPipeline(settings);
-
+		//auto pipelinee = m_VulkanDevice->CreateGraphicsPipeline(settings);
+				
 
 
 

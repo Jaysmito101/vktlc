@@ -29,7 +29,7 @@ namespace tlc
 		Window* m_Window = nullptr;
 		VulkanContext* m_VulkanContext = nullptr;
 		VulkanDevice* m_VulkanDevice = nullptr;
-		VulkanSwapchain* m_VulkanSwapchain = nullptr;
+		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 
 		static Scope<Application> s_Instance;
 	};

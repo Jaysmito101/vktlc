@@ -24,24 +24,17 @@ namespace tlc
 
 	VulkanDevice::~VulkanDevice()
 	{
-		for (auto& swapchain : m_Swapchains)
-		{
-			swapchain.reset();
-		}
-		m_Swapchains.clear();
-
 		m_Device.destroy();
 	}
 
-	VulkanSwapchain* VulkanDevice::CreateSwapchain(Window* window)
+	Ref<VulkanSwapchain> VulkanDevice::CreateSwapchain(Window* window)
 	{
 		if (!m_IsReady) 
 		{
 			log::Error("Device is not ready");
 			return nullptr;
 		}
-		m_Swapchains.push_back(CreateScope<VulkanSwapchain>(this, window));
-		return m_Swapchains.back().get();
+		return CreateRef<VulkanSwapchain>(this, window);
 	}
 
 	Ref<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U8>& shaderCode)
@@ -54,14 +47,14 @@ namespace tlc
 		return CreateRef<VulkanShaderModule>(this, shaderCode);
 	}
 
-	Ref<VulkanGraphicsPipeline> VulkanDevice::CreateGraphicsPipeline(const VulkanGraphicsPipelineSettings& settings)
+	Ref<VulkanFramebuffer> VulkanDevice::CreateFramebuffer(const VulkanFramebufferSettings& settings)
 	{
 		if (!m_IsReady)
 		{
 			log::Error("Device is not ready");
 			return nullptr;
 		}
-		return CreateRef<VulkanGraphicsPipeline>(this, settings);
+		return CreateRef<VulkanFramebuffer>(this, settings);
 	}
 
 	Bool VulkanDevice::CreateDevice()

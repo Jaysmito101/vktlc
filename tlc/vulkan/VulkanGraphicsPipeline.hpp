@@ -15,6 +15,7 @@ namespace tlc
 		vk::Extent2D extent = vk::Extent2D(0, 0);
 		Ref<VulkanShaderModule> vertexShaderModule;
 		Ref<VulkanShaderModule> fragmentShaderModule;
+		vk::RenderPass m_RenderPass;
 
 		VulkanGraphicsPipelineSettings() = default;
 		VulkanGraphicsPipelineSettings(const VulkanGraphicsPipelineSettings&) = default;
@@ -22,6 +23,7 @@ namespace tlc
 		inline VulkanGraphicsPipelineSettings& SetExtent(const vk::Extent2D& ex) { this->extent = ex; return *this; }
 		inline VulkanGraphicsPipelineSettings& SetVertexShaderModule(Ref<VulkanShaderModule> shModule) { this->vertexShaderModule = std::move(shModule); return *this; }
 		inline VulkanGraphicsPipelineSettings& SetFragmentShaderModule(Ref<VulkanShaderModule> shModule) { this->fragmentShaderModule = std::move(shModule); return *this; }
+		inline VulkanGraphicsPipelineSettings& SetRenderPass(vk::RenderPass renderPass) { this->m_RenderPass = renderPass; return *this; }
 
 	};
 
@@ -64,7 +66,6 @@ namespace tlc
 		vk::PipelineColorBlendStateCreateInfo GetColorBlendStateCreateInfo() const;
 		vk::PipelineDepthStencilStateCreateInfo GetDepthStencilStateCreateInfo() const;
 		vk::PipelineLayout CreatePipelineLayout() const;
-		vk::RenderPass CreateRenderPass() const;
 
 		void Cleanup();
 
@@ -76,7 +77,6 @@ namespace tlc
 		VulkanGraphicsPipelineSettings m_Settings;
 		VulkanGraphicsPipelineProperties m_Properties;
 
-		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
 		vk::Pipeline m_Pipeline = VK_NULL_HANDLE;
 		vk::PipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 

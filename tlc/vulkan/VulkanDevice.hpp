@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vulkan/VulkanBase.hpp"
-#include "vulkan/VulkanGraphicsPipeline.hpp"
+#include "vulkan/VulkanFramebuffer.hpp"
 
 namespace tlc
 {
@@ -45,10 +45,9 @@ namespace tlc
 		VulkanDevice(VulkanContext* parentContext, vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings);
 		~VulkanDevice();
 
-		VulkanSwapchain* CreateSwapchain(Window* window);
-
+		Ref<VulkanSwapchain> CreateSwapchain(Window* window);
 		Ref<VulkanShaderModule> CreateShaderModule(const List<U8>& shaderCode);
-		Ref<VulkanGraphicsPipeline> CreateGraphicsPipeline(const VulkanGraphicsPipelineSettings& settings = VulkanGraphicsPipelineSettings());
+		Ref<VulkanFramebuffer> CreateFramebuffer(const VulkanFramebufferSettings& settings = VulkanFramebufferSettings());
 
 		inline I32 GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamilyIndex; }
 		inline I32 GetComputeQueueFamilyIndex() const { return m_ComputeQueueFamilyIndex; }
@@ -89,8 +88,6 @@ namespace tlc
 
 		Bool m_IsReady = false;
 		Set<I32> m_UniqeQueueFamiliesIndices;
-
-		List<Scope<VulkanSwapchain>> m_Swapchains;
 
 		VulkanDeviceSettings m_Settings;
 	};

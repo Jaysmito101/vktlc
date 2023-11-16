@@ -13,6 +13,8 @@ namespace tlc
 		m_Context = device->GetParentContext();
 		m_Device = device;
 		m_Settings = settings;
+
+		Recreate();
 	}
 
 	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
@@ -36,7 +38,6 @@ namespace tlc
 		m_Properties.depthStencilStateCreateInfo = GetDepthStencilStateCreateInfo();
 		
 		m_PipelineLayout = CreatePipelineLayout();
-		m_RenderPass = CreateRenderPass();
 
 		m_Properties.viewportStateCreateInfo = vk::PipelineViewportStateCreateInfo()
 			.setViewportCount(1)
@@ -61,7 +62,7 @@ namespace tlc
 			.setPColorBlendState(&m_Properties.colorBlendStateCreateInfo)
 			.setPDynamicState(&m_Properties.dynamicStateCreateInfo)
 			.setLayout(m_PipelineLayout)
-			.setRenderPass(m_RenderPass)
+			.setRenderPass(m_Settings.m_RenderPass)
 			.setSubpass(0)
 			.setBasePipelineHandle(VK_NULL_HANDLE)
 			.setBasePipelineIndex(-1);
@@ -221,49 +222,12 @@ namespace tlc
 		return m_Device->GetDevice().createPipelineLayout(pipelineLayoutCreateInfo);
 	}
 
-	vk::RenderPass VulkanGraphicsPipeline::CreateRenderPass() const
-	{
-		auto attachment = vk::AttachmentDescription()
-			.setFormat(m_Swapchain->GetSurfaceFormat().format)
-			.setSamples(vk::SampleCountFlagBits::e1)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
-			.setStoreOp(vk::AttachmentStoreOp::eStore)
-			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setInitialLayout(vk::ImageLayout::eUndefined)
-			.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
-		auto subpassAttachment = vk::AttachmentReference()
-			.setAttachment(0)
-			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-		auto subpass = vk::SubpassDescription()
-			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
-			.setColorAttachmentCount(1)
-			.setPColorAttachments(&subpassAttachment)
-			.setPDepthStencilAttachment(nullptr)
-			.setPInputAttachments(nullptr)
-			.setPreserveAttachmentCount(0)
-			.setPResolveAttachments(nullptr);
-
-		auto renderPassCreateInfo = vk::RenderPassCreateInfo()
-			.setAttachmentCount(1)
-			.setPAttachments(&attachment)
-			.setSubpassCount(1)
-			.setPSubpasses(&subpass)
-			.setDependencyCount(0)
-			.setPDependencies(nullptr);
-
-		return m_Device->GetDevice().createRenderPass(renderPassCreateInfo);
-	}
-
 	void VulkanGraphicsPipeline::Cleanup()
 	{
 		if (m_IsReady)
 		{
 			m_Device->GetDevice().destroyPipeline(m_Pipeline);
 			m_Device->GetDevice().destroyPipelineLayout(m_PipelineLayout);
-			m_Device->GetDevice().destroyRenderPass(m_RenderPass);
 		}
 
 		m_IsReady = false;

@@ -7,6 +7,7 @@ namespace tlc
 
 	class VulkanDevice;
 	class VulkanContext;
+	class VulkanFramebuffer;
 	class Window;
 
 	class VulkanSwapchain
@@ -15,9 +16,11 @@ namespace tlc
 		VulkanSwapchain(VulkanDevice* device, Window* window);
 		~VulkanSwapchain();
 
-		inline Bool GetIsReady() const { return m_IsReady; }
+		inline Bool IsReady() const { return m_IsReady; }
 		inline const vk::SurfaceFormatKHR& GetSurfaceFormat() const { return m_SwapchainImageFormat; }
 		inline const vk::Extent2D& GetExtent() const { return m_SwapchainExtent; }
+		inline const List<vk::Image>& GetImages() const { return m_Images; }
+		inline const List<vk::ImageView>& GetImageViews() const { return m_ImageViews; }
 
 	private:
 		Bool ChooseSufaceFormat();
@@ -26,6 +29,7 @@ namespace tlc
 		Bool RecreateSwapchain();
 		Bool QuerySwapchainImages();
 		Bool CreateImageViews();
+		Bool CreateFramebuffers();
 
 		void Cleanup();
 
@@ -40,6 +44,7 @@ namespace tlc
 		vk::Extent2D m_SwapchainExtent = { 0, 0 };
 		List<vk::Image> m_Images;
 		List<vk::ImageView> m_ImageViews;
+		List<Ref<VulkanFramebuffer>> m_Framebuffers;
 
 		Bool m_IsReady = false;
 
