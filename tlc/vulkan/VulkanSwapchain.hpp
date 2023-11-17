@@ -26,18 +26,19 @@ namespace tlc
 		inline const List<vk::Image>& GetImages() const { return m_Images; }
 		inline const List<vk::ImageView>& GetImageViews() const { return m_ImageViews; }
 		inline const List<Ref<VulkanFramebuffer>>& GetFramebuffers() const { return m_Framebuffers; }
+		
+		Bool Recreate();
 
 	private:
 		Bool ChooseSufaceFormat();
 		Bool ChoosePresentMode();
 		Bool ChooseExtent();
-		Bool RecreateSwapchain();
 		Bool QuerySwapchainImages();
 		Bool CreateImageViews();
 		Bool CreateRenderPass();
 		Bool CreateFramebuffers();
 
-		void Cleanup();
+		void Cleanup(Bool forRecreate);
 
 	private:
 		VulkanContext* m_Context;

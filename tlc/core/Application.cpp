@@ -89,10 +89,21 @@ namespace tlc
 
 	void Application::Run()
 	{
+		auto prevWindowSize = m_Window->GetSize();
 		while (m_Running)
 		{
 			if (!m_Minimized)
 			{
+				const auto currentWindowSize = m_Window->GetSize();
+				if ( currentWindowSize.x != prevWindowSize.x || currentWindowSize.y != prevWindowSize.y )
+				{
+					m_VulkanDevice->WaitIdle();
+					m_VulkanSwapchain->Recreate();
+
+
+
+					prevWindowSize = currentWindowSize;
+				}
 
 				VkCall( m_VulkanDevice->GetDevice().waitForFences({ m_InFlightFence }, true, UINT64_MAX) );
 				m_VulkanDevice->GetDevice().resetFences({m_InFlightFence});
@@ -133,9 +144,9 @@ namespace tlc
 				// m_CommandBuffer->Reset();
 				
 				m_VulkanSwapchain->PresentImage(imageIndex, m_RenderFinishedSemaphore);
-				
-
 			}
+
+
 
 			m_Window->Update();
 			m_Window->SetFullscreen(glfwGetKey(m_Window->GetHandle(), GLFW_KEY_F) == GLFW_PRESS);

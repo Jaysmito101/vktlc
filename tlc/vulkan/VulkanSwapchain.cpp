@@ -10,7 +10,7 @@ namespace tlc
 		m_Device = device;
 		m_Window = window;
 
-		RecreateSwapchain();
+		Recreate();
 	}
 
 	VulkanSwapchain::~VulkanSwapchain()
@@ -18,7 +18,7 @@ namespace tlc
 		log::Debug("Destroying swapchain");
 		if (m_IsReady)
 		{
-			Cleanup();
+			Cleanup(false);
 		}
 	}
 
@@ -107,8 +107,9 @@ namespace tlc
 		return true;
 	}
 
-	Bool VulkanSwapchain::RecreateSwapchain()
+	Bool VulkanSwapchain::Recreate()
 	{
+		Cleanup(true);
 
 		if (!ChooseSufaceFormat())
 		{
@@ -167,8 +168,14 @@ namespace tlc
 			.setClipped(true)
 			.setOldSwapchain(m_Swapchain);
 
+		auto oldSwapchain = m_Swapchain;
 
 		m_Swapchain = m_Device->GetDevice().createSwapchainKHR(createInfo);
+
+		if (oldSwapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
+		{
+			m_Device->GetDevice().destroySwapchainKHR(oldSwapchain);
+		}
 
 		if (m_Swapchain == static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
 		{
@@ -283,7 +290,7 @@ namespace tlc
 			.setPSubpasses(&subpass)
 			.setDependencyCount(1)
 			.setPDependencies(&subpassDependency);
-
+		
 		m_RenderPass = m_Device->GetDevice().createRenderPass(renderPassCreateInfo);
 
 		if (m_RenderPass == static_cast<vk::RenderPass>(VK_NULL_HANDLE))
@@ -318,7 +325,7 @@ namespace tlc
 		return true;
 	}
 
-	void VulkanSwapchain::Cleanup()
+	void VulkanSwapchain::Cleanup(Bool forRecreate)
 	{
 		if (!m_IsReady)
 		{
@@ -334,7 +341,7 @@ namespace tlc
 		m_Device->GetDevice().destroyRenderPass(m_RenderPass);
 		m_ImageViews.clear();
 		m_Framebuffers.clear();
-		m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
+		if(!forRecreate) m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		m_IsReady = false;
 	}
 
