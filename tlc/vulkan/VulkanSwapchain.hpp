@@ -52,7 +52,9 @@ namespace tlc
 		vk::Extent2D m_SwapchainExtent = { 0, 0 };
 		List<vk::Image> m_Images;
 		List<vk::ImageView> m_ImageViews;
+		
 		List<Ref<VulkanFramebuffer>> m_Framebuffers;
+
 
 		Bool m_IsReady = false;
 

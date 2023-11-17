@@ -51,6 +51,7 @@ ENDIF()
 include_directories(
     ./tlc
     ./dep/glfw/include
+    ./dep/glm
     PUBLIC "$ENV{VULKAN_SDK}/include"
 )
 
@@ -73,7 +74,11 @@ add_executable(tlc
     ./tlc/vulkan/VulkanDevice.cpp
     ./tlc/vulkan/VulkanSwapchain.cpp
     ./tlc/vulkan/VulkanShader.cpp
+    ./tlc/vulkan/VulkanFramebuffer.cpp
+    ./tlc/vulkan/VulkanCommandBuffer.cpp
     ./tlc/vulkan/VulkanGraphicsPipeline.cpp
+# vulkan
+    ./tlc/rendering/Renderer.cpp
 # main
     ./tlc/Main.cpp
 )

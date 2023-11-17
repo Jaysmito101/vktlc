@@ -29,21 +29,22 @@ namespace tlc
 		});
 
 		SetupVulkan();
+
+		m_Renderer = Renderer::Get(m_VulkanDevice, m_VulkanSwapchain.get());
 	}
 
 	Application::~Application()
 	{
 		log::Debug("Shutting down application");
 
-		m_CommandBuffer.reset();
+		m_VulkanDevice->WaitIdle();
+		
+		m_Pipeline.reset();
 
-		m_VulkanDevice->DestroyVkSemaphore (m_ImageAvailableSemaphore);
-		m_VulkanDevice->DestroyVkSemaphore (m_RenderFinishedSemaphore);
-		m_VulkanDevice->DestroyVkFence (m_InFlightFence);
-
-		 m_Pipeline.reset();
+		Renderer::Shutdown();
 
 		m_VulkanSwapchain.reset();
+
 		Window::Shutdown();
 		VulkanContext::Shutdown();
 		log::Info("Application shutdown");
@@ -77,21 +78,37 @@ namespace tlc
 			.SetFragmentShaderModule(fragModule);
 
 		m_Pipeline = m_VulkanSwapchain->GetFramebuffers()[0]->CreateGraphicsPipeline(settings);
-		log::Info("Pipeline is ready ? : {}", m_Pipeline->IsReady());
-
-		m_ImageAvailableSemaphore = m_VulkanDevice->CreateVkSemaphore();
-		m_RenderFinishedSemaphore = m_VulkanDevice->CreateVkSemaphore();
-		m_CommandBuffer = m_VulkanDevice->CreateCommandBuffer(Graphics);
-		m_InFlightFence = m_VulkanDevice->CreateVkFence( vk::FenceCreateFlagBits::eSignaled );
-
+		log::Info("Pipeline is ready : {}", m_Pipeline->IsReady());
 
 	}
 
 	void Application::Run()
 	{
 		auto prevWindowSize = m_Window->GetSize();
+		auto prevTime = glfwGetTime();
+
+		I32 fps = 0;
+		F32 fpsTimer = 0.0f;
+
+		m_Renderer->SetClearColor(0.2f, 0.21f, 0.22f, 1.0f);
+
 		while (m_Running)
 		{
+			auto currentTime = glfwGetTime();
+			m_DeltaTime = static_cast<F32>(currentTime - prevTime);
+			prevTime = currentTime;
+
+			fpsTimer += m_DeltaTime;
+			fps++;
+			if (fpsTimer >= 1.0f)
+			{
+				m_Window->SetTitle(std::format("TLC [Delta time: {}, FPS: {}]", m_DeltaTime, fps));
+				fps = 0;
+				fpsTimer = 0.0f;
+			}
+
+			//m_Window->SetTitle(std::format("TLC [Delta time: {}, FPS: {}]", m_DeltaTime, 1.0f / m_DeltaTime));
+
 			if (!m_Minimized)
 			{
 				const auto currentWindowSize = m_Window->GetSize();
@@ -99,51 +116,29 @@ namespace tlc
 				{
 					m_VulkanDevice->WaitIdle();
 					m_VulkanSwapchain->Recreate();
-
-
-
 					prevWindowSize = currentWindowSize;
 				}
 
-				VkCall( m_VulkanDevice->GetDevice().waitForFences({ m_InFlightFence }, true, UINT64_MAX) );
-				m_VulkanDevice->GetDevice().resetFences({m_InFlightFence});
+				m_Renderer->AcquireNextImage();
 
-				auto imageIndex = m_VulkanSwapchain->AcquireNextImage(m_ImageAvailableSemaphore);
+				m_Renderer->BeginFrame();
 
-				m_CommandBuffer->Reset();
-				m_CommandBuffer->Begin();
+				m_Renderer->BeginDefaultRenderPass();
 
-				auto clearColor = vk::ClearColorValue(std::array<float, 4>{0.2f, 0.2f, 0.2f, 1.0f});
-				m_CommandBuffer->BeginRenderPass(m_VulkanSwapchain->GetRenderPass(), m_VulkanSwapchain->GetFramebuffers()[imageIndex]->GetFramebuffer(), m_VulkanSwapchain->GetExtent(), { clearColor });
-
-				m_CommandBuffer->BindPipeline(m_Pipeline->GetPipeline());
-
-				auto viewport = vk::Viewport()
-					.setX(0.0f)
-					.setY(0.0f)
-					.setHeight(static_cast<F32>(m_VulkanSwapchain->GetExtent().height))
-					.setWidth(static_cast<F32>(m_VulkanSwapchain->GetExtent().width))
-					.setMinDepth(0.0f)
-					.setMaxDepth(0.0f);
-				m_CommandBuffer->SetViewport(viewport);
-
-				auto scissor = vk::Rect2D()
-					.setOffset({0, 0})
-					.setExtent(m_VulkanSwapchain->GetExtent());
-				m_CommandBuffer->SetScissor(scissor);
-
-				m_CommandBuffer->Draw(3, 1);
+				// m_CommandBuffer->BindPipeline(m_Pipeline->GetPipeline());
+				m_Renderer->SetPipeline(m_Pipeline.get());
 				
-				m_CommandBuffer->EndRenderPass();
-				m_CommandBuffer->End();
+				m_Renderer->SetViewport(0.0f, 0.0f, static_cast<F32>(m_VulkanSwapchain->GetExtent().width), static_cast<F32>(m_VulkanSwapchain->GetExtent().height));
 
-				m_CommandBuffer->Submit({ m_ImageAvailableSemaphore }, { m_RenderFinishedSemaphore }, m_InFlightFence);
+				m_Renderer->SetScissor(0, 0, m_VulkanSwapchain->GetExtent().width, m_VulkanSwapchain->GetExtent().height);
 
-				//log::Info ("Acquired image index: {}", imageIndex);
-
-				// m_CommandBuffer->Reset();
+				m_Renderer->DrawRaw(3, 1);
 				
-				m_VulkanSwapchain->PresentImage(imageIndex, m_RenderFinishedSemaphore);
+				m_Renderer->EndRenderPass();
+				m_Renderer->EndFrame();
+
+				
+				m_Renderer->PresentFrame();
 			}
 
 

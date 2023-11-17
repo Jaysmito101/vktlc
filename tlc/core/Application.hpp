@@ -3,6 +3,7 @@
 #include "core/Window.hpp"
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
+#include "rendering/Renderer.hpp"
 
 namespace tlc 
 {
@@ -29,14 +30,13 @@ namespace tlc
 		Window* m_Window = nullptr;
 		VulkanContext* m_VulkanContext = nullptr;
 		VulkanDevice* m_VulkanDevice = nullptr;
-		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 
+		Renderer* m_Renderer = nullptr;
+
+		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 		Ref<VulkanGraphicsPipeline> m_Pipeline;
 
-		vk::Semaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
-		vk::Semaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
-		vk::Fence m_InFlightFence = VK_NULL_HANDLE;
-		Ref<VulkanCommandBuffer> m_CommandBuffer = nullptr;
+		F32 m_DeltaTime = 0.0f;
 
 		static Scope<Application> s_Instance;
 	};
