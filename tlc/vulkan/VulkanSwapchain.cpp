@@ -268,13 +268,21 @@ namespace tlc
 			.setPreserveAttachmentCount(0)
 			.setPResolveAttachments(nullptr);
 
+		auto subpassDependency = vk::SubpassDependency()
+			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+			.setDstSubpass(0)
+			.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+			.setSrcAccessMask(vk::AccessFlagBits::eNoneKHR)
+			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+
 		auto renderPassCreateInfo = vk::RenderPassCreateInfo()
 			.setAttachmentCount(1)
 			.setPAttachments(&attachment)
 			.setSubpassCount(1)
 			.setPSubpasses(&subpass)
-			.setDependencyCount(0)
-			.setPDependencies(nullptr);
+			.setDependencyCount(1)
+			.setPDependencies(&subpassDependency);
 
 		m_RenderPass = m_Device->GetDevice().createRenderPass(renderPassCreateInfo);
 
