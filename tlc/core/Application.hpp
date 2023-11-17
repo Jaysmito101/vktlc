@@ -33,6 +33,11 @@ namespace tlc
 
 		Ref<VulkanGraphicsPipeline> m_Pipeline;
 
+		vk::Semaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
+		vk::Semaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
+		vk::Fence m_InFlightFence = VK_NULL_HANDLE;
+		Ref<VulkanCommandBuffer> m_CommandBuffer = nullptr;
+
 		static Scope<Application> s_Instance;
 	};
 }

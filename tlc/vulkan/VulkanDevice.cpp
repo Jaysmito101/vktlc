@@ -29,12 +29,8 @@ namespace tlc
 
 		for (auto& commandPool : m_CommandPools)
 		{
+			if (commandPool == static_cast<vk::CommandPool>(VK_NULL_HANDLE)) continue;
 			m_Device.destroyCommandPool(commandPool);
-		}
-
-		for (auto& [key, value] : m_CommandBuffers)
-		{
-			key->Cleanup();
 		}
 
 		m_Device.destroy();
@@ -77,9 +73,35 @@ namespace tlc
 			log::Error("Device is not ready");
 			return nullptr;
 		}
-		auto buffer = CreateRef<VulkanCommandBuffer>(this, type);
-		m_CommandBuffers[buffer.get()] = true;
-		return buffer;
+		return CreateRef<VulkanCommandBuffer>(this, type);
+	}
+
+	vk::Semaphore VulkanDevice::CreateVkSemaphore(vk::SemaphoreCreateFlags flags) const
+	{
+		auto semaphoreCreateInfo = vk::SemaphoreCreateInfo()
+			.setFlags(flags);
+
+		return m_Device.createSemaphore(semaphoreCreateInfo);
+	}
+
+	void VulkanDevice::DestroyVkSemaphore(vk::Semaphore semaphore) const
+	{
+		WaitIdle();
+		m_Device.destroySemaphore(semaphore);
+	}
+
+	vk::Fence VulkanDevice::CreateVkFence(vk::FenceCreateFlags flags) const
+	{
+		auto fenceCreateInfo = vk::FenceCreateInfo()
+			.setFlags(flags);
+
+		return m_Device.createFence(fenceCreateInfo);
+	}
+
+	void VulkanDevice::DestroyVkFence(vk::Fence fence) const
+	{
+		WaitIdle();
+		m_Device.destroyFence(fence);
 	}
 
 	Bool VulkanDevice::CreateDevice()
@@ -142,6 +164,12 @@ namespace tlc
 			}
 		}
 
+		if (!CreateCommandPools())
+		{
+			log::Error("Failed to create command pools");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -153,7 +181,11 @@ namespace tlc
 
 		for (U32 i = 0; i < VulkanQueueType::Count; i++)
 		{
-			if (m_QueueFamilyIndices[i] == -1) continue;
+			if (m_QueueFamilyIndices[i] == -1 || m_QueueFamilyIndices[i] == 1000)
+			{
+				m_CommandPools[i] = VK_NULL_HANDLE;
+				continue;
+			}
 			poolCreateInfo.setQueueFamilyIndex(m_QueueFamilyIndices[i]);
 			m_CommandPools[i] = m_Device.createCommandPool(poolCreateInfo);
 			if (m_CommandPools[i] == static_cast<vk::CommandPool>(VK_NULL_HANDLE))
@@ -164,11 +196,6 @@ namespace tlc
 		}
 
 		return true;
-	}
-
-	void VulkanDevice::CommandBufferDeleted(VulkanCommandBuffer* buffer)
-	{
-		m_CommandBuffers.erase(buffer);
 	}
 
 	I32 VulkanDevice::FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos)

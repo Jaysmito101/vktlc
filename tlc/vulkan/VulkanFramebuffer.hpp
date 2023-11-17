@@ -37,6 +37,7 @@ namespace tlc
 		inline const vk::Framebuffer GetFramebuffer() const { return m_Framebuffer; }
 		inline Bool IsReady() const { return m_IsReady; }
 
+		friend class VulkanGraphicsPipeline;
 	private:
 		void Cleanup();
 		Bool RecreateRenderPass();

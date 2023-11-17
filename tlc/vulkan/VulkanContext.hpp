@@ -3,6 +3,7 @@
 #include "vulkan/VulkanBase.hpp"
 #include "vulkan/VulkanDevice.hpp"
 #include "vulkan/VulkanShader.hpp"
+#include "vulkan/VulkanCommandBuffer.hpp"
 #include "vulkan/VulkanGraphicsPipeline.hpp"
 
 namespace tlc

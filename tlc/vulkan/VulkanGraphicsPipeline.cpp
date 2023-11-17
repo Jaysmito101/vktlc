@@ -1,6 +1,7 @@
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanGraphicsPipeline.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
+#include "vulkan/VulkanFramebuffer.hpp"
 #include "vulkan/VulkanShader.hpp"
 
 namespace tlc

@@ -35,8 +35,13 @@ namespace tlc
 	{
 		log::Debug("Shutting down application");
 
+		m_CommandBuffer.reset();
 
-		m_Pipeline.reset();
+		m_VulkanDevice->DestroyVkSemaphore (m_ImageAvailableSemaphore);
+		m_VulkanDevice->DestroyVkSemaphore (m_RenderFinishedSemaphore);
+		m_VulkanDevice->DestroyVkFence (m_InFlightFence);
+
+		 m_Pipeline.reset();
 
 		m_VulkanSwapchain.reset();
 		Window::Shutdown();
@@ -72,8 +77,12 @@ namespace tlc
 			.SetFragmentShaderModule(fragModule);
 
 		m_Pipeline = m_VulkanSwapchain->GetFramebuffers()[0]->CreateGraphicsPipeline(settings);
-
 		log::Info("Pipeline is ready ? : {}", m_Pipeline->IsReady());
+
+		m_ImageAvailableSemaphore = m_VulkanDevice->CreateVkSemaphore();
+		m_RenderFinishedSemaphore = m_VulkanDevice->CreateVkSemaphore();
+		m_CommandBuffer = m_VulkanDevice->CreateCommandBuffer(Graphics);
+		m_InFlightFence = m_VulkanDevice->CreateVkFence( vk::FenceCreateFlagBits::eSignaled );
 
 
 	}
@@ -85,7 +94,46 @@ namespace tlc
 			if (!m_Minimized)
 			{
 
+				VkCall( m_VulkanDevice->GetDevice().waitForFences({ m_InFlightFence }, true, UINT64_MAX) );
+				m_VulkanDevice->GetDevice().resetFences({m_InFlightFence});
 
+				auto imageIndex = m_VulkanSwapchain->AcquireNextImage(m_ImageAvailableSemaphore);
+
+				m_CommandBuffer->Reset();
+				m_CommandBuffer->Begin();
+
+				auto clearColor = vk::ClearColorValue(std::array<float, 4>{0.2f, 0.2f, 0.2f, 1.0f});
+				m_CommandBuffer->BeginRenderPass(m_VulkanSwapchain->GetRenderPass(), m_VulkanSwapchain->GetFramebuffers()[imageIndex]->GetFramebuffer(), m_VulkanSwapchain->GetExtent(), { clearColor });
+
+				m_CommandBuffer->BindPipeline(m_Pipeline->GetPipeline());
+
+				auto viewport = vk::Viewport()
+					.setX(0.0f)
+					.setY(0.0f)
+					.setHeight(static_cast<F32>(m_VulkanSwapchain->GetExtent().height))
+					.setWidth(static_cast<F32>(m_VulkanSwapchain->GetExtent().width))
+					.setMinDepth(0.0f)
+					.setMaxDepth(0.0f);
+				m_CommandBuffer->SetViewport(viewport);
+
+				auto scissor = vk::Rect2D()
+					.setOffset({0, 0})
+					.setExtent(m_VulkanSwapchain->GetExtent());
+				m_CommandBuffer->SetScissor(scissor);
+
+				m_CommandBuffer->Draw(3, 1);
+				
+				m_CommandBuffer->EndRenderPass();
+				m_CommandBuffer->End();
+
+				m_CommandBuffer->Submit({ m_ImageAvailableSemaphore }, { m_RenderFinishedSemaphore }, m_InFlightFence);
+
+				//log::Info ("Acquired image index: {}", imageIndex);
+
+				// m_CommandBuffer->Reset();
+				
+				m_VulkanSwapchain->PresentImage(imageIndex, m_RenderFinishedSemaphore);
+				
 
 			}
 

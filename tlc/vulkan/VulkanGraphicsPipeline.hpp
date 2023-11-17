@@ -8,6 +8,7 @@ namespace tlc
 	class VulkanContext;
 	class VulkanDevice;
 	class VulkanSwapchain;
+	class VulkanFramebuffer;
 	class VulkanShaderModule;
 
 	struct VulkanGraphicsPipelineSettings
@@ -16,6 +17,8 @@ namespace tlc
 		Ref<VulkanShaderModule> vertexShaderModule;
 		Ref<VulkanShaderModule> fragmentShaderModule;
 		vk::RenderPass renderPass;
+
+		VulkanFramebuffer* framebuffer = nullptr;
 
 		VulkanGraphicsPipelineSettings() = default;
 		VulkanGraphicsPipelineSettings(const VulkanGraphicsPipelineSettings&) = default;
@@ -55,6 +58,10 @@ namespace tlc
 		inline VulkanGraphicsPipelineSettings& GetSettings() { return m_Settings; }
 
 		inline Bool IsReady() { return m_IsReady; }
+		inline vk::Pipeline GetPipeline() { return m_Pipeline; }
+		inline vk::PipelineLayout GetPipelineLayout() { return m_PipelineLayout; }
+
+		friend class VulkanFramebuffer;
 
 	private:
 

@@ -60,6 +60,12 @@ namespace tlc
 		Ref<VulkanFramebuffer> CreateFramebuffer(const VulkanFramebufferSettings& settings = VulkanFramebufferSettings());
 		Ref<VulkanCommandBuffer> CreateCommandBuffer(VulkanQueueType type);
 
+		vk::Semaphore CreateVkSemaphore(vk::SemaphoreCreateFlags flags = vk::SemaphoreCreateFlags()) const;
+		void DestroyVkSemaphore(vk::Semaphore semaphore) const;
+
+		vk::Fence CreateVkFence(vk::FenceCreateFlags flags = vk::FenceCreateFlags()) const;
+		void DestroyVkFence(vk::Fence fence) const;
+
 		inline I32 GetGraphicsQueueFamilyIndex() const { return m_QueueFamilyIndices[Graphics]; }
 		inline I32 GetComputeQueueFamilyIndex() const { return m_QueueFamilyIndices[Compute]; }
 		inline I32 GetTransferQueueFamilyIndex() const { return m_QueueFamilyIndices[Transfer]; }
@@ -67,7 +73,7 @@ namespace tlc
 
 		inline Bool IsReady() const { return m_IsReady; }
 
-		inline void WaitIdle() { m_Device.waitIdle(); }
+		inline void WaitIdle() const { m_Device.waitIdle(); }
 		inline VulkanContext* GetParentContext() const { return m_ParentContext; }
 		inline const vk::Device GetDevice() const { return m_Device; }
 		inline const vk::PhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
@@ -82,8 +88,6 @@ namespace tlc
 	private:
 		Bool CreateDevice();
 		Bool CreateCommandPools();
-
-		void CommandBufferDeleted(VulkanCommandBuffer* buffer);
 
 		I32 FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos);
 		static I32 FindQueueFamily(const vk::PhysicalDevice& physicalDevice, const vk::QueueFlags& flags, const vk::SurfaceKHR& surface = VK_NULL_HANDLE);
@@ -103,7 +107,6 @@ namespace tlc
 		Bool m_IsReady = false;
 		Set<I32> m_UniqeQueueFamiliesIndices;
 
-		UnorderedMap<VulkanCommandBuffer*, Bool> m_CommandBuffers;
 
 		VulkanDeviceSettings m_Settings;
 	};

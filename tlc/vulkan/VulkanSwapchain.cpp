@@ -22,6 +22,26 @@ namespace tlc
 		}
 	}
 
+	U32 VulkanSwapchain::AcquireNextImage(vk::Semaphore semaphore, vk::Fence fence, U64 timeout)
+	{
+		U32 imageIndex = 0;
+		VkCritCall(m_Device->GetDevice().acquireNextImageKHR(m_Swapchain, timeout, semaphore, fence, &imageIndex));
+		return imageIndex;
+	}
+
+	void VulkanSwapchain::PresentImage(U32 index, vk::Semaphore waitSemaphore)
+	{
+		auto presentInfo = vk::PresentInfoKHR()
+			.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(&waitSemaphore)
+			.setSwapchainCount(1)
+			.setPSwapchains(&m_Swapchain)
+			.setPImageIndices(&index);
+
+		// VkCritCall(m_Device->GetDevice().queuePresentKHR(m_Context->GetPresentQueue(), &presentInfo));
+		VkCall(m_Device->GetQueue(Present).presentKHR(presentInfo));
+	}
+
 	Bool VulkanSwapchain::ChooseSufaceFormat()
 	{
 		const auto formats = m_Device->GetPhysicalDevice().getSurfaceFormatsKHR(m_Context->GetSurface());
@@ -292,6 +312,12 @@ namespace tlc
 
 	void VulkanSwapchain::Cleanup()
 	{
+		if (!m_IsReady)
+		{
+			return;
+		}
+
+		m_Device->WaitIdle();
 		for (auto& imageView : m_ImageViews)
 		{
 			m_Device->GetDevice().destroyImageView(imageView);

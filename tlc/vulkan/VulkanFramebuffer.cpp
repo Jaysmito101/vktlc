@@ -72,6 +72,7 @@ namespace tlc
 			return nullptr;
 		}
 
+		settings.framebuffer = this;
 		settings.renderPass = m_RenderPass;
 		settings.extent = m_Settings.swapchain->GetExtent();
 
@@ -84,6 +85,8 @@ namespace tlc
 		{
 			return;
 		}
+		
+		m_Device->WaitIdle();
 
 		if (m_IsRenderPassOwned)
 		{
