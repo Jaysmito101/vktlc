@@ -38,6 +38,8 @@ namespace tlc
 		Ref<VulkanGraphicsPipeline> m_Pipeline;
 		Ref<VulkanBuffer> m_VertexBuffer;
 
+		VulkanVertex vertices[3];
+
 
 		F32 m_DeltaTime = 0.0f;
 

@@ -17,6 +17,11 @@ namespace tlc
 		void Resize(Size size);
 
 
+		Bool SetData(const void* data, Size size, Size offset = 0);
+		Bool GetData(void* data, Size size, Size offset = 0);
+		Bool MapMemory(void** data, Size size, Size offset = 0);
+		void UnmapMemory();
+
 		inline vk::Buffer GetBuffer() const { return m_Buffer; }
 		inline vk::DeviceMemory GetMemory() const { return m_Memory; }
 		inline bool IsReady() const { return m_IsReady; }
@@ -29,9 +34,11 @@ namespace tlc
 		Bool RecreateBuffer();
 		void Cleanup();
 
+
 	private:
 		VulkanDevice* m_Device = nullptr;
 		vk::BufferUsageFlags m_UsageFlags = vk::BufferUsageFlagBits::eVertexBuffer;
+		vk::MemoryPropertyFlags m_MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 		vk::Buffer m_Buffer = VK_NULL_HANDLE;
 		vk::DeviceMemory m_Memory = VK_NULL_HANDLE;
 		Size m_Size = 0;

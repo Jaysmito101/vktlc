@@ -26,6 +26,73 @@ namespace tlc
 		RecreateBuffer();
 	}
 
+	Bool VulkanBuffer::SetData(const void* data, Size size, Size offset)
+	{
+		if (size + offset > m_Size)
+		{
+			log::Error("VulkanBuffer::SetData: size + offset > m_Size");
+			return false;
+		}
+
+		void* mappedData = nullptr;
+		if (!MapMemory(&mappedData, size, offset))
+		{
+			log::Error("VulkanBuffer::SetData: failed to map memory");
+			return false;
+		}
+
+		memcpy(mappedData, data, size);
+
+		UnmapMemory();
+
+		return true;
+	}
+
+	Bool VulkanBuffer::GetData(void* data, Size size, Size offset)
+	{
+		if (size + offset > m_Size)
+		{
+			log::Error("VulkanBuffer::GetData: size + offset > m_Size");
+			return false;
+		}
+
+		void* mappedData = nullptr;
+		if (!MapMemory(&mappedData, size, offset))
+		{
+			log::Error("VulkanBuffer::GetData: failed to map memory");
+			return false;
+		}
+
+		memcpy(data, mappedData, size);
+
+		UnmapMemory();
+
+		return true;
+	}
+
+	Bool VulkanBuffer::MapMemory(void** data, Size size, Size offset)
+	{
+		if (size + offset > m_Size)
+		{
+			log::Error("VulkanBuffer::MapMemory: size + offset > m_Size");
+			return false;
+		}
+
+		auto result = m_Device->GetDevice().mapMemory(m_Memory, offset, size, vk::MemoryMapFlags(), data);
+
+		if (result != vk::Result::eSuccess)
+		{
+			log::Error("VulkanBuffer::MapMemory: failed to map memory");
+			return false;
+		}
+
+		return true;
+	}
+
+	void VulkanBuffer::UnmapMemory()
+	{
+		m_Device->GetDevice().unmapMemory(m_Memory);
+	}
 
 
 	Bool VulkanBuffer::RecreateBuffer()
@@ -52,7 +119,7 @@ namespace tlc
 
 		auto allocInfo = vk::MemoryAllocateInfo()
 			.setAllocationSize(memRequirements.size)
-			.setMemoryTypeIndex(m_Device->FindMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+			.setMemoryTypeIndex(m_Device->FindMemoryType(memRequirements.memoryTypeBits, m_MemoryPropertyFlags));
 
 		result = m_Device->GetDevice().allocateMemory(&allocInfo, nullptr, &m_Memory);
 
@@ -78,5 +145,4 @@ namespace tlc
 		m_Device->GetDevice().freeMemory(m_Memory);
 		m_IsReady = false;
 	}
-
 }

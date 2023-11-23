@@ -86,6 +86,15 @@ namespace tlc
 
 		m_VertexBuffer->Resize(sizeof(VulkanVertex) * 3);
 
+		
+
+		vertices[0].position = glm::vec4(0.0f, -0.5f, 0.0f, 1.0f);
+		vertices[0].color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		vertices[1].position = glm::vec4(0.5f, 0.5f, 0.0f, 1.0f);
+		vertices[1].color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+		vertices[2].position = glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f);
+		vertices[2].color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		m_VertexBuffer->SetData(vertices, sizeof(vertices));
 	}
 
 	void Application::Run()
@@ -147,6 +156,12 @@ namespace tlc
 
 				
 				m_Renderer->PresentFrame();
+
+				vertices[0].position = glm::vec4(sinf(static_cast<F32>(currentTime)) * 0.5f, -0.5f, 0.0f, 1.0f);
+				vertices[1].position = glm::vec4(0.5f, sinf(static_cast<F32>(currentTime + 115.0f)) * 0.5f, 0.0f, 1.0f);
+				vertices[2].position = glm::vec4(-0.5f, sinf(static_cast<F32>(currentTime + 230.0f)) * 0.5f, 0.0f, 1.0f);
+				m_VertexBuffer->SetData(vertices, sizeof(vertices));
+
 			}
 
 
