@@ -11,6 +11,54 @@ namespace tlc
 	class VulkanFramebuffer;
 	class VulkanShaderModule;
 
+	struct VulkanVertex
+	{
+		glm::vec4 position = glm::vec4(0.0f);
+		glm::vec4 normal = glm::vec4(0.0f);
+		glm::vec4 texCoord = glm::vec4(0.0f);
+		glm::vec4 color = glm::vec4(0.0f);
+		glm::vec4 boneWeights = glm::vec4(0.0f);
+		glm::ivec4 boneIDs = glm::ivec4(-1);
+
+		inline static List<vk::VertexInputAttributeDescription> GetAttributeDescriptions()
+		{
+			List<vk::VertexInputAttributeDescription> attributeDescriptions;
+			attributeDescriptions.resize(6);
+
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = vk::Format::eR32G32B32A32Sfloat;
+			attributeDescriptions[0].offset = offsetof(VulkanVertex, position);
+
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = vk::Format::eR32G32B32A32Sfloat;
+			attributeDescriptions[1].offset = offsetof(VulkanVertex, normal);
+
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = vk::Format::eR32G32B32A32Sfloat;
+			attributeDescriptions[2].offset = offsetof(VulkanVertex, texCoord);
+
+			attributeDescriptions[3].binding = 0;
+			attributeDescriptions[3].location = 3;
+			attributeDescriptions[3].format = vk::Format::eR32G32B32A32Sfloat;
+			attributeDescriptions[3].offset = offsetof(VulkanVertex, color);
+
+			attributeDescriptions[4].binding = 0;
+			attributeDescriptions[4].location = 4;
+			attributeDescriptions[4].format = vk::Format::eR32G32B32A32Sfloat;
+			attributeDescriptions[4].offset = offsetof(VulkanVertex, boneWeights);
+
+			attributeDescriptions[5].binding = 0;
+			attributeDescriptions[5].location = 5;
+			attributeDescriptions[5].format = vk::Format::eR32G32B32A32Sint;
+			attributeDescriptions[5].offset = offsetof(VulkanVertex, boneIDs);
+
+			return attributeDescriptions;
+		}
+	};
+
 	struct VulkanGraphicsPipelineSettings
 	{
 		vk::Extent2D extent = vk::Extent2D(0, 0);
@@ -43,7 +91,9 @@ namespace tlc
 		vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
 		vk::PipelineViewportStateCreateInfo viewportStateCreateInfo;
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
-		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+		List<vk::PipelineShaderStageCreateInfo> shaderStages;
+		vk::VertexInputBindingDescription vertexInputBindingDescription;
+		List<vk::VertexInputAttributeDescription> vertexInputAttributeDescriptions;
 	};
 
 	class VulkanGraphicsPipeline
@@ -65,8 +115,8 @@ namespace tlc
 
 	private:
 
+		vk::PipelineVertexInputStateCreateInfo GetVertexInputStateCreateInfo();
 		vk::PipelineDynamicStateCreateInfo GetDynamicStateCreateInfo() const;
-		vk::PipelineVertexInputStateCreateInfo GetVertexInputStateCreateInfo() const;
 		vk::PipelineInputAssemblyStateCreateInfo GetInputAssemblyStateCreateInfo() const;
 		Pair<vk::Viewport, vk::Rect2D> GetViewportAndScissor() const;
 		vk::PipelineRasterizationStateCreateInfo GetRasterizationStateCreateInfo() const;

@@ -34,7 +34,10 @@ namespace tlc
 		Renderer* m_Renderer = nullptr;
 
 		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;
+		
 		Ref<VulkanGraphicsPipeline> m_Pipeline;
+		Ref<VulkanBuffer> m_VertexBuffer;
+
 
 		F32 m_DeltaTime = 0.0f;
 

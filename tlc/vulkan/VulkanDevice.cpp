@@ -2,6 +2,7 @@
 #include "vulkan/VulkanContext.hpp"
 #include "vulkan/VulkanShader.hpp"
 #include "vulkan/VulkanSwapchain.hpp"
+#include "vulkan/VulkanBuffer.hpp"
 #include "vulkan/VulkanCommandBuffer.hpp"
 
 namespace tlc
@@ -102,6 +103,32 @@ namespace tlc
 	{
 		WaitIdle();
 		m_Device.destroyFence(fence);
+	}
+
+	Ref<VulkanBuffer> VulkanDevice::CreateBuffer()
+	{
+		if (!m_IsReady)
+		{
+			log::Error("Device is not ready");
+			return nullptr;
+		}
+		return CreateRef<VulkanBuffer>(this);
+	}
+
+	U32 VulkanDevice::FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const
+	{
+		auto memoryProperties = m_PhysicalDevice.getMemoryProperties();
+
+		for (U32 i = 0; i < memoryProperties.memoryTypeCount; i++)
+		{
+			if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		log::Error("Failed to find suitable memory type");
+		return std::numeric_limits<U32>::max();
 	}
 
 	Bool VulkanDevice::CreateDevice()

@@ -31,6 +31,7 @@ namespace tlc
 		inline Bool IsReady() const { return m_IsReady; }
 		inline void SetClearColor(vk::ClearColorValue color) { m_ClearColor = color; }
 		inline void SetClearColor(F32 r, F32 g, F32 b, F32 a) { m_ClearColor = { r, g, b, a }; }
+		inline VulkanCommandBuffer* GetCommandBuffer() const { return m_CommandBuffer.get(); }
 
 		inline static Renderer* Get(VulkanDevice* device = nullptr, VulkanSwapchain* swapchain = nullptr) { if (s_Instance == nullptr) { s_Instance = CreateScope<Renderer>(device, swapchain); } return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }

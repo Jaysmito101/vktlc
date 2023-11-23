@@ -25,6 +25,7 @@ namespace tlc
 		void BeginRenderPass(vk::RenderPass renderPass, vk::Framebuffer framebuffer, vk::Extent2D extent, List<vk::ClearValue> clearValues);
 		void EndRenderPass();
 
+		void BindVertexBuffer(vk::Buffer buffer, U64 offset = 0);
 		void BindPipeline(vk::Pipeline pipeline, Bool isGraphics = true);
 		void SetViewport(vk::Viewport viewport);
 		void SetScissor(vk::Rect2D scissor);

@@ -33,6 +33,8 @@ namespace tlc
 	using I32 = int32_t;
 	using I64 = int64_t;
 
+	using Size = size_t;
+
 	using Bool = bool;
 
 	using F32 = float;

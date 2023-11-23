@@ -5,6 +5,7 @@
 
 namespace tlc
 {
+	class VulkanBuffer;
 	class VulkanSwapchain;
 	class VulkanContext;
 	class VulkanShaderModule;
@@ -59,12 +60,16 @@ namespace tlc
 		Ref<VulkanShaderModule> CreateShaderModule(const List<U8>& shaderCode);
 		Ref<VulkanFramebuffer> CreateFramebuffer(const VulkanFramebufferSettings& settings = VulkanFramebufferSettings());
 		Ref<VulkanCommandBuffer> CreateCommandBuffer(VulkanQueueType type);
+		Ref<VulkanBuffer> CreateBuffer();
 
 		vk::Semaphore CreateVkSemaphore(vk::SemaphoreCreateFlags flags = vk::SemaphoreCreateFlags()) const;
 		void DestroyVkSemaphore(vk::Semaphore semaphore) const;
 
 		vk::Fence CreateVkFence(vk::FenceCreateFlags flags = vk::FenceCreateFlags()) const;
 		void DestroyVkFence(vk::Fence fence) const;
+
+
+		U32 FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
 		inline I32 GetGraphicsQueueFamilyIndex() const { return m_QueueFamilyIndices[Graphics]; }
 		inline I32 GetComputeQueueFamilyIndex() const { return m_QueueFamilyIndices[Compute]; }

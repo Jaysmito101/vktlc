@@ -90,6 +90,12 @@ namespace tlc
 		m_CommandBuffer.endRenderPass();
 	}
 
+	void VulkanCommandBuffer::BindVertexBuffer(vk::Buffer buffer, U64 offset)
+	{
+		vk::DeviceSize offsets[] = {offset};
+		m_CommandBuffer.bindVertexBuffers(0, 1, &buffer, offsets);
+	}
+
 	void VulkanCommandBuffer::BindPipeline(vk::Pipeline pipeline, Bool isGraphics)
 	{		
 		m_CommandBuffer.bindPipeline(isGraphics ? vk::PipelineBindPoint::eGraphics : vk::PipelineBindPoint::eCompute, pipeline);

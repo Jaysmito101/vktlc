@@ -39,6 +39,7 @@ namespace tlc
 
 		m_VulkanDevice->WaitIdle();
 		
+		m_VertexBuffer.reset();
 		m_Pipeline.reset();
 
 		Renderer::Shutdown();
@@ -79,6 +80,11 @@ namespace tlc
 
 		m_Pipeline = m_VulkanSwapchain->GetFramebuffers()[0]->CreateGraphicsPipeline(settings);
 		log::Info("Pipeline is ready : {}", m_Pipeline->IsReady());
+
+		m_VertexBuffer = m_VulkanDevice->CreateBuffer();
+		m_VertexBuffer->SetUsageFlags(vk::BufferUsageFlagBits::eVertexBuffer);
+
+		m_VertexBuffer->Resize(sizeof(VulkanVertex) * 3);
 
 	}
 
@@ -131,6 +137,8 @@ namespace tlc
 				m_Renderer->SetViewport(0.0f, 0.0f, static_cast<F32>(m_VulkanSwapchain->GetExtent().width), static_cast<F32>(m_VulkanSwapchain->GetExtent().height));
 
 				m_Renderer->SetScissor(0, 0, m_VulkanSwapchain->GetExtent().width, m_VulkanSwapchain->GetExtent().height);
+
+				m_Renderer->GetCommandBuffer()->BindVertexBuffer(m_VertexBuffer->GetBuffer(), 0);
 
 				m_Renderer->DrawRaw(3, 1);
 				
