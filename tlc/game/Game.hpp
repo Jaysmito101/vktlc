@@ -23,10 +23,6 @@ namespace tlc
 		inline static Application* Create() { s_Instance = CreateScope<GameApplication>(); return s_Instance.get(); }
 
 	private:
-		Ref<VulkanGraphicsPipeline> m_Pipeline;
-		Ref<VulkanBuffer> m_VertexBuffer;
-		VulkanVertex vertices[3];
-
 
 		I32 fps = 0;
 		F32 fpsTimer = 0.0f;

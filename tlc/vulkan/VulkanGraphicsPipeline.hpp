@@ -107,9 +107,9 @@ namespace tlc
 		inline const VulkanGraphicsPipelineSettings& GetSettings() const { return m_Settings; }
 		inline VulkanGraphicsPipelineSettings& GetSettings() { return m_Settings; }
 
-		inline Bool IsReady() { return m_IsReady; }
-		inline vk::Pipeline GetPipeline() { return m_Pipeline; }
-		inline vk::PipelineLayout GetPipelineLayout() { return m_PipelineLayout; }
+		inline Bool IsReady() const { return m_IsReady; }
+		inline vk::Pipeline GetPipeline() const { return m_Pipeline; }
+		inline vk::PipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 
 		friend class VulkanFramebuffer;
 

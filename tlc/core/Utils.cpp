@@ -46,5 +46,12 @@ namespace tlc
 
 		}
 
+		// TODO: Implement a better UUID generator (Probably use the OS to generate a UUID)
+		UUID GenerateUUID()
+		{
+			static UUID uuid = 0;
+			return ++uuid;
+		}
+
 	}
 }

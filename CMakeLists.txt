@@ -81,8 +81,11 @@ add_executable(tlc
 # rendering
     ./tlc/rendering/Renderer.cpp
 # engine
+    ./tlc/engine/Scene.cpp
 # game
     ./tlc/game/Game.cpp
+    ./tlc/game/scenes/MainScene.cpp
+    ./tlc/game/scenes/TestScene.cpp
 # main
     ./tlc/Main.cpp
 )

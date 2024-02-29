@@ -26,6 +26,7 @@ namespace tlc
 	{
 		if (m_IsReady)
 		{
+			m_Device->WaitIdle();
 			m_Device->GetDevice().destroyShaderModule(m_ShaderModule);
 		}
 	}

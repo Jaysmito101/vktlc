@@ -5,6 +5,8 @@
 #include "vulkan/VulkanSwapchain.hpp"
 #include "rendering/Renderer.hpp"
 
+#include "engine/Scene.hpp"
+
 namespace tlc 
 {
 	class Application
@@ -26,18 +28,34 @@ namespace tlc
 		inline static Application* Get() { TLC_ASSERT(s_Instance != nullptr , "Instance cannot be null!"); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }
 
+		// TODO: Maybe remove these
+		inline VulkanDevice* GetVulkanDevice() { return m_VulkanDevice; }
+		inline VulkanSwapchain* GetVulkanSwapchain() { return m_VulkanSwapchain.get(); }
+		inline Renderer* GetRenderer() { return m_Renderer; }
+		inline Scene* GetCurrentScene() { return m_CurrentScene; }
+
 		virtual void OnLoad() = 0;
 		virtual void OnUnload() = 0;
 		virtual void OnStart() = 0;
 		virtual void OnUpdate() = 0;
 		virtual void OnEnd() = 0;
-
 		virtual void OnResize(U32 width, U32 height) = 0;
 
-		virtual void OnPause() {}; // Unused
-		virtual void OnResume() {}; // Unused
 
+		template <typename T>
+		void RegisterScene(const String& name)
+		{
+			TLC_ASSERT(!m_HasLoaded, "Cannot Register scenes after loading!");
+			TLC_ASSERT(m_Scenes.find(name) == m_Scenes.end(), "Scene already exists!");
+			m_Scenes[name] = CreateScope<T>();
+			m_Scenes[name]->SetName(name);
+		}
 
+		void ChangeScene(const String& name);
+		void ChangeSceneAsync(const String& name);
+
+	private:
+		void PollForSceneChange();
 
 	protected:
 		
@@ -51,11 +69,16 @@ namespace tlc
 		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;		
 
 	private:
-		bool m_Running = true;
-		bool m_Paused = false;
-		bool m_Minimized = false;
+		Bool m_Running = true;
+		Bool m_Paused = false;
+		Bool m_Minimized = false;
+		Bool m_HasLoaded = false;
 		F32 m_DeltaTime = 0.0f;
 		F32 m_LastFrameTime = 0.0f;
 		F32 m_CurentFrameTime = 0.0f;
+
+		Map<String, Scope<Scene>> m_Scenes;
+		Scene* m_CurrentScene = nullptr;
+		Scene* m_NextSceneOnLoading = nullptr;
 	};
 }

@@ -1,5 +1,7 @@
 #include "core/Application.hpp"
 
+
+// TODO: Make input system!
 #include <GLFW/glfw3.h>
 
 namespace tlc
@@ -25,7 +27,15 @@ namespace tlc
 
 		EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void {
 			m_Minimized = (width == 0 || height == 0);
-			this->OnResize(width, height);
+			static Pair<I32, I32> prevWindowSize = MakePair(0, 0);
+			if ((width != prevWindowSize.x || height != prevWindowSize.y) && (width > 0 && height > 0))
+			{
+				m_VulkanDevice->WaitIdle();
+				m_VulkanSwapchain->Recreate();
+				// TODO: Recreate the pipeline here
+				prevWindowSize = MakePair(width, height);
+			}
+			OnResize(width, height);
 			});
 
 
@@ -37,6 +47,8 @@ namespace tlc
 
 	Application::~Application()
 	{
+
+		m_Scenes.clear();
 
 		log::Debug("Shutting down application");
 
@@ -75,13 +87,19 @@ namespace tlc
 	void Application::Run()
 	{
 		m_VulkanDevice->WaitIdle();
-		this->OnLoad();
-	
-		auto prevWindowSize = m_Window->GetSize();
-		m_LastFrameTime = static_cast<F32>(glfwGetTime());
+		OnLoad();
 
+		m_HasLoaded = true;
+
+	
+		m_LastFrameTime = static_cast<F32>(glfwGetTime());
 		m_Renderer->SetClearColor(0.2f, 0.21f, 0.22f, 1.0f);
-		this->OnStart();
+
+		OnStart();
+
+
+		TLC_ASSERT(m_CurrentScene != nullptr, "No scene to start");
+		m_CurrentScene->Start();
 
 		try 
 		{
@@ -90,12 +108,14 @@ namespace tlc
 				m_CurentFrameTime = static_cast<F32>(glfwGetTime());
 				m_DeltaTime = static_cast<F32>(m_CurentFrameTime - m_LastFrameTime);
 				m_LastFrameTime = m_CurentFrameTime;
-
-				this->OnUpdate();
-
-
+				
+				if(m_NextSceneOnLoading) PollForSceneChange();
 				m_Window->Update();
 
+				if (m_Minimized) continue;
+
+				if(!m_CurrentScene->IsPaused()) m_CurrentScene->Update();
+				OnUpdate();
 			}
 		}
 		catch (const std::exception& e)
@@ -103,12 +123,73 @@ namespace tlc
 			log::Error("Exception: {}", e.what());
 		}
 
-		this->OnEnd();
+		m_CurrentScene->End();
+		OnEnd();
 
+		m_CurrentScene->Unload();
 
 		m_VulkanDevice->WaitIdle();
-		this->OnUnload();
+		OnUnload();
 
 	}
+
+	void Application::ChangeScene(const String& name)
+	{
+		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
+
+		if (m_CurrentScene != nullptr)
+		{
+			m_CurrentScene->End();
+			m_CurrentScene->Unload();
+		}
+		
+		m_CurrentScene = m_Scenes[name].get();
+		m_CurrentScene->Load(false);
+		m_CurrentScene->Start();
+	}
+
+	void Application::ChangeSceneAsync(const String& name)
+	{
+		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
+
+		if (m_NextSceneOnLoading != nullptr)
+		{
+			log::Error("Cannot load another scene while one is already loading");
+			return;
+		}
+
+		if (m_CurrentScene && m_CurrentScene->GetName() == name)
+		{
+			log::Error("Cannot load the same scene again async, use ChangeScene instead");
+			return;
+		}
+
+
+		// First load the new scene async
+		m_NextSceneOnLoading = m_Scenes[name].get();
+
+		std::thread([this]() -> void {
+			m_NextSceneOnLoading->Load(true);
+			}).detach();
+	}
+
+	void Application::PollForSceneChange()
+	{
+		if (m_NextSceneOnLoading != nullptr && m_NextSceneOnLoading->HasLoaded())
+		{
+			if (m_CurrentScene != nullptr)
+			{
+				m_CurrentScene->End();
+				m_CurrentScene->Unload();
+			}
+
+			m_CurrentScene = m_NextSceneOnLoading;
+			m_NextSceneOnLoading = nullptr;
+
+			m_CurrentScene->Start();
+		}
+	}
+
+
 
 }

@@ -228,6 +228,8 @@ namespace tlc
 
 	void VulkanGraphicsPipeline::Cleanup()
 	{
+		m_Device->WaitIdle();
+
 		if (m_IsReady)
 		{
 			m_Device->GetDevice().destroyPipeline(m_Pipeline);

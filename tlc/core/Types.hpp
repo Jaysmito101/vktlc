@@ -40,6 +40,8 @@ namespace tlc
 	using F32 = float;
 	using F64 = double;
 
+	using UUID = uint64_t;
+
 	using String = std::string;
 	using WString = std::wstring;
 	using StringView = std::string_view;
@@ -62,6 +64,7 @@ namespace tlc
 
 	template <typename T, int N>
 	using Array = std::array<T, N>;
+
 
 	template<typename A, typename B>
 	struct Pair 

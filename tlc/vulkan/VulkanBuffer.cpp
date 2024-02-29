@@ -141,6 +141,7 @@ namespace tlc
 		if (!m_IsReady)
 			return;
 
+		m_Device->WaitIdle();
 		m_Device->GetDevice().destroyBuffer(m_Buffer);
 		m_Device->GetDevice().freeMemory(m_Memory);
 		m_IsReady = false;
