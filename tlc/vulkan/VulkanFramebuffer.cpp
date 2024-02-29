@@ -41,6 +41,8 @@ namespace tlc
 			m_Settings.swapchain->GetImageViews()[m_Settings.swapchainImageIndex]
 		};
 
+
+		// TODO: This willl crash for non-swapchain framebuffers for now, FIX IT!
 		auto framebufferCreateInfo = vk::FramebufferCreateInfo()
 			.setRenderPass(m_RenderPass)
 			.setAttachmentCount(1)

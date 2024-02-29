@@ -73,12 +73,16 @@ add_executable(tlc
     ./tlc/vulkan/VulkanContext.cpp
     ./tlc/vulkan/VulkanDevice.cpp
     ./tlc/vulkan/VulkanSwapchain.cpp
+    ./tlc/vulkan/VulkanBuffer.cpp
     ./tlc/vulkan/VulkanShader.cpp
     ./tlc/vulkan/VulkanFramebuffer.cpp
     ./tlc/vulkan/VulkanCommandBuffer.cpp
     ./tlc/vulkan/VulkanGraphicsPipeline.cpp
-# vulkan
+# rendering
     ./tlc/rendering/Renderer.cpp
+# engine
+# game
+    ./tlc/game/Game.cpp
 # main
     ./tlc/Main.cpp
 )

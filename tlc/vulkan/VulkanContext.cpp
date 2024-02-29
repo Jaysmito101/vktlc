@@ -291,6 +291,10 @@ namespace tlc
 
 	const vk::SurfaceKHR& VulkanContext::CreateSurface(Window* window)
 	{
+		TLC_ASSERT(window, "Window is null");
+		TLC_ASSERT(m_Instance, "Vulkan instance is null");	
+		TLC_ASSERT(m_Surface == (vk::SurfaceKHR)VK_NULL_HANDLE, "Surface already created");
+
 		log::Debug("Creating Window Surface");
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 		if (glfwCreateWindowSurface(m_Instance, window->GetHandle(), nullptr, &surface) != VK_SUCCESS)

@@ -1,9 +1,11 @@
-#include "core/Core.hpp"
-#include "core/Application.hpp"
+#include "game/Game.hpp"
 
 int main()
 {
     tlc::Logger::Init();
+    tlc::log::AttachFile(tlc::utils::GetExecutableDirectory() + "/log.txt");
+
+    (void)tlc::GameApplication::Create();
 
     auto app = tlc::Application::Get();
     app->Run();

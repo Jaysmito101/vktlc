@@ -32,6 +32,13 @@
 #include <sys/ioctl.h>
 #endif
 
+// define TLC_DEBUG
+#ifdef NDEBUG
+#define TLC_RELEASE
+#else
+#define TLC_DEBUG
+#endif
+
 
 
 // std includes
@@ -79,5 +86,17 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+// assert
+
+#ifdef TLC_DEBUG
+#define TLC_ASSERT(condition, message) { \
+	if (!(condition)) { \
+		log::Error("Assertion failed: {0} in {1} at {2}:{3}", message, __FUNCTION__, __FILE__, __LINE__); \
+		__debugbreak(); \
+	} \
+}
+#else
+#define TLC_ASSERT(condition, message)
+#endif
 
 
