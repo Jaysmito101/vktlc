@@ -19,7 +19,7 @@ namespace tlc
 		inline Bool IsReady() const { return m_IsReady; }
 
 	private:
-		VulkanDevice* m_Device;
+		Raw<VulkanDevice> m_Device;
 		vk::ShaderModule m_ShaderModule = VK_NULL_HANDLE;
 		Bool m_IsReady = false;
 	};

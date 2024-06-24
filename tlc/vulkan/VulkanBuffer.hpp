@@ -36,7 +36,7 @@ namespace tlc
 
 
 	private:
-		VulkanDevice* m_Device = nullptr;
+		Raw<VulkanDevice> m_Device = nullptr;
 		vk::BufferUsageFlags m_UsageFlags = vk::BufferUsageFlagBits::eVertexBuffer;
 		vk::MemoryPropertyFlags m_MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 		vk::Buffer m_Buffer = VK_NULL_HANDLE;

@@ -13,7 +13,7 @@ namespace tlc
 	class VulkanSwapchain
 	{
 	public:
-		VulkanSwapchain(VulkanDevice* device, Window* window);
+		VulkanSwapchain(Raw<VulkanDevice> device, Raw<Window> window);
 		~VulkanSwapchain();
 
 		U32 AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
@@ -41,9 +41,9 @@ namespace tlc
 		void Cleanup(Bool forRecreate);
 
 	private:
-		VulkanContext* m_Context;
-		VulkanDevice* m_Device;
-		Window* m_Window;
+		Raw<VulkanContext> m_Context;
+		Raw<VulkanDevice> m_Device;
+		Raw<Window> m_Window;
 
 		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
 		vk::SwapchainKHR m_Swapchain = VK_NULL_HANDLE;

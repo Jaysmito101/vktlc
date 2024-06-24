@@ -128,9 +128,9 @@ namespace tlc
 		void Cleanup();
 
 	private:
-		VulkanContext* m_Context;
-		VulkanDevice* m_Device;
-		VulkanSwapchain* m_Swapchain;
+		Raw<VulkanContext> m_Context;
+		Raw<VulkanDevice> m_Device;
+		Raw<VulkanSwapchain> m_Swapchain;
 
 		VulkanGraphicsPipelineSettings m_Settings;
 		VulkanGraphicsPipelineProperties m_Properties;

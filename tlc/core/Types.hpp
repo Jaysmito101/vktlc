@@ -93,6 +93,9 @@ namespace tlc
 	template<typename T>
 	using Scope = std::unique_ptr<T>;
 
+	template<typename T>
+	using Raw = T*;
+
 	template<typename T, typename... Args>
 	inline Ref<T> CreateRef(Args&&... args)
 	{
@@ -105,10 +108,24 @@ namespace tlc
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
 
+	template<typename T, typename... Args>
+	inline Raw<T> CreateRaw(Args&&... args)
+	{
+		return new T(std::forward<Args>(args)...);
+	}
+
 	template<typename Target, typename Source>
 	inline Ref<Target> CastRef(const Ref<Source>& source)
 	{
 		return std::static_pointer_cast<Target>(source);
 	}
 
+	/*
+	template<typename T>
+	inline void DeleteRaw(Raw<T> ptr)
+	{
+		delete ptr;
+	}
+	*/
+#define DeleteRaw(x) if (x != nullptr) { delete x; x = nullptr; }
 }

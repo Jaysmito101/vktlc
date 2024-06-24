@@ -6,6 +6,7 @@ namespace tlc
 	Scene::Scene()
 	{
 		m_UUID = utils::GenerateUUID();
+		m_ECS = CreateScope<ECS>();
 	}
 
 	Scene::~Scene()
@@ -26,28 +27,64 @@ namespace tlc
 
 	void Scene::Start()
 	{
+		auto components = m_ECS->GetAllComponents();
+		for (auto& component : components)
+		{
+			component->Start();
+		}
+
 		OnStart();
 	}
 
 	void Scene::Update()
 	{
 		OnUpdate();
+
+		auto components = m_ECS->GetAllComponents();
+		for (auto& component : components)
+		{
+			component->Update();
+		}
+
+
+		m_ECS->HandleDeletions();
 	}
 
 	void Scene::End()
 	{
 		OnEnd();
+
+		auto components = m_ECS->GetAllComponents();
+		for (auto& component : components)
+		{
+			component->End();
+		}
 	}
 
 	void Scene::Pause()
 	{
 		OnPause();
+
+		auto components = m_ECS->GetAllComponents();
+		for (auto& component : components)
+		{
+			component->Pause();
+		}
+
 		m_IsPaused = true;
 	}
 
 	void Scene::Resume()
 	{
 		OnResume();
+
+		auto components = m_ECS->GetAllComponents();
+		for (auto& component : components)
+		{
+			component->Resume();
+		}
+
+
 		m_IsPaused = false;
 	}
 

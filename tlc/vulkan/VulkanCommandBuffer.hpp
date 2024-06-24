@@ -36,7 +36,7 @@ namespace tlc
 		void Cleanup();
 
 	private:
-		VulkanDevice* m_Device = nullptr;
+		Raw<VulkanDevice> m_Device = nullptr;
 		U8 m_QueueType = 0;
 
 		vk::CommandBuffer m_CommandBuffer = VK_NULL_HANDLE;

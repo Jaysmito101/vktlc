@@ -99,7 +99,7 @@ namespace tlc
 		static vk::DeviceQueueCreateInfo CreateQueueCreateInfo(I32 queueFamilyIndex, F32* queuePriority);
 
 	private:
-		VulkanContext* m_ParentContext;
+		Raw<VulkanContext> m_ParentContext;
 		vk::PhysicalDevice m_PhysicalDevice;
 		vk::Device m_Device;
 		

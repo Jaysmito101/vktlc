@@ -43,7 +43,7 @@ namespace tlc
 		Bool RecreateRenderPass();
 
 	private:
-		VulkanDevice* m_Device;
+		Raw<VulkanDevice> m_Device;
 
 		VulkanFramebufferSettings m_Settings;
 

@@ -98,8 +98,7 @@ namespace tlc
 		OnStart();
 
 
-		TLC_ASSERT(m_CurrentScene != nullptr, "No scene to start");
-		m_CurrentScene->Start();
+		if (m_CurrentScene != nullptr) m_CurrentScene->Start();
 
 		try 
 		{
@@ -114,8 +113,16 @@ namespace tlc
 
 				if (m_Minimized) continue;
 
-				if(!m_CurrentScene->IsPaused()) m_CurrentScene->Update();
+				if(m_CurrentScene != nullptr && !m_CurrentScene->IsPaused()) m_CurrentScene->Update();
 				OnUpdate();
+
+				if (m_SceneChangeRequest.has_value()) {
+					if (m_SceneChangeRequest.value().second)
+						ChangeSceneAsyncI(m_SceneChangeRequest.value().first);
+					else
+						ChangeSceneI(m_SceneChangeRequest.value().first);
+					m_SceneChangeRequest.reset();
+				}
 			}
 		}
 		catch (const std::exception& e)
@@ -123,17 +130,17 @@ namespace tlc
 			log::Error("Exception: {}", e.what());
 		}
 
-		m_CurrentScene->End();
+		if (m_CurrentScene != nullptr) m_CurrentScene->End();
 		OnEnd();
 
-		m_CurrentScene->Unload();
+		if (m_CurrentScene != nullptr) m_CurrentScene->Unload();
 
 		m_VulkanDevice->WaitIdle();
 		OnUnload();
 
 	}
 
-	void Application::ChangeScene(const String& name)
+	void Application::ChangeSceneI(const String& name)
 	{
 		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
 
@@ -148,7 +155,7 @@ namespace tlc
 		m_CurrentScene->Start();
 	}
 
-	void Application::ChangeSceneAsync(const String& name)
+	void Application::ChangeSceneAsyncI(const String& name)
 	{
 		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
 

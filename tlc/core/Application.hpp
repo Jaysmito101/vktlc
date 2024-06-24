@@ -51,21 +51,25 @@ namespace tlc
 			m_Scenes[name]->SetName(name);
 		}
 
-		void ChangeScene(const String& name);
-		void ChangeSceneAsync(const String& name);
+		inline void ChangeScene(const String& name) { m_SceneChangeRequest = std::make_pair(name, false); }
+		void ChangeSceneAsync(const String& name) { m_SceneChangeRequest = std::make_pair(name, true); }
 
 	private:
 		void PollForSceneChange();
+
+
+		void ChangeSceneI(const String& name);
+		void ChangeSceneAsyncI(const String& name);
 
 	protected:
 		
 		static Scope<Application> s_Instance;
 
 	
-		Window* m_Window = nullptr;
-		VulkanContext* m_VulkanContext = nullptr;
-		VulkanDevice* m_VulkanDevice = nullptr;
-		Renderer* m_Renderer = nullptr;
+		Raw<Window> m_Window = nullptr;
+		Raw<VulkanContext> m_VulkanContext = nullptr;
+		Raw<VulkanDevice> m_VulkanDevice = nullptr;
+		Raw<Renderer> m_Renderer = nullptr;
 		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;		
 
 	private:
@@ -78,7 +82,10 @@ namespace tlc
 		F32 m_CurentFrameTime = 0.0f;
 
 		Map<String, Scope<Scene>> m_Scenes;
-		Scene* m_CurrentScene = nullptr;
-		Scene* m_NextSceneOnLoading = nullptr;
+		Raw<Scene> m_CurrentScene = nullptr;
+		Raw<Scene> m_NextSceneOnLoading = nullptr;
+
+
+		std::optional<std::pair<String, Bool>> m_SceneChangeRequest = std::nullopt;
 	};
 }

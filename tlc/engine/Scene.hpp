@@ -1,5 +1,6 @@
 #pragma once
 #include "core/Core.hpp"
+#include "engine/ecs/ECS.hpp"
 #include "rendering/Renderer.hpp"
 
 namespace tlc 
@@ -36,6 +37,9 @@ namespace tlc
 		inline Bool IsPaused() const { return m_IsPaused; }
 		inline const String& GetName() const { return m_Name; }
 
+		inline Raw<ECS> GetECS() { return m_ECS.get(); }
+		inline const Raw<ECS> GetECS() const { return m_ECS.get(); }
+
 	private:
 		inline void SetName(const String& name) { m_Name = name; }
 
@@ -45,6 +49,8 @@ namespace tlc
 		Bool m_IsPaused = false;
 
 		String m_Name = "Unnamed Scene";
+		
+		Scope<ECS> m_ECS;
 
 		friend class Application;
 	};
