@@ -37,6 +37,7 @@ namespace tlc
 			}
 		}
 
+		// TODO: This willl crash for non-swapchain framebuffers for now, FIX IT!
 		vk::ImageView attachments[] = {
 			m_Settings.swapchain->GetImageViews()[m_Settings.swapchainImageIndex]
 		};
