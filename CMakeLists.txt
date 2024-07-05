@@ -52,6 +52,7 @@ include_directories(
     ./tlc
     ./dep/glfw/include
     ./dep/glm
+    ./dep/shaderc/libshaderc/include
     PUBLIC "$ENV{VULKAN_SDK}/include"
 )
 
@@ -61,7 +62,10 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
+set(SHADERC_SKIP_TESTS ON)
+
 add_subdirectory(./dep/glfw)
+add_subdirectory(./dep/shaderc)
 
 add_executable(tlc
 # core
@@ -98,6 +102,7 @@ add_executable(tlc
 
 target_link_libraries(tlc
     glfw
+    shaderc
     ${Vulkan_LIBRARY}
 )
 
