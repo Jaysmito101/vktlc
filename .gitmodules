@@ -5,5 +5,5 @@
 	path = dep/glm
 	url = https://github.com/g-truc/glm
 [submodule "dep/glslang"]
-	path = dep/shaderc
+	path = dep/glslang
 	url = https://github.com/KhronosGroup/glslang.git
