@@ -2,6 +2,7 @@
 #include "core/Application.hpp"
 
 
+#include "services/ShaderCompiler.hpp"
 
 
 
@@ -22,8 +23,10 @@ namespace tlc
 		const auto swapchain = Application::Get()->GetVulkanSwapchain();
 		const auto device = Application::Get()->GetVulkanDevice();
 
-		auto vertShaderModule = device->CreateShaderModule(utils::ReadBinaryFie("vert.spv"));
-		auto fragShaderModule = device->CreateShaderModule(utils::ReadBinaryFie("frag.spv"));
+		auto shaderCompiler = Services::GetService<ShaderCompiler>();
+		auto vertShaderModule = device->CreateShaderModule(shaderCompiler->ToSpv(utils::ReadTextFile("shaders/vert.glsl"), ShaderCompiler::ShaderType::Vertex, "VertexMain"));
+		auto fragShaderModule = device->CreateShaderModule(shaderCompiler->ToSpv(utils::ReadTextFile("shaders/frag.glsl"), ShaderCompiler::ShaderType::Fragment, "FragmentMain"));
+
 
 		m_PipelineSettings = VulkanGraphicsPipelineSettings()
 			.SetExtent(swapchain->GetExtent())

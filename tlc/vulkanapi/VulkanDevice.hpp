@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vulkan/VulkanBase.hpp"
-#include "vulkan/VulkanFramebuffer.hpp"
+#include "vulkanapi/VulkanBase.hpp"
+#include "vulkanapi/VulkanFramebuffer.hpp"
 
 namespace tlc
 {
@@ -57,7 +57,7 @@ namespace tlc
 		~VulkanDevice();
 
 		Ref<VulkanSwapchain> CreateSwapchain(Window* window);
-		Ref<VulkanShaderModule> CreateShaderModule(const List<U8>& shaderCode);
+		Ref<VulkanShaderModule> CreateShaderModule(const List<U32>& shaderCode);
 		Ref<VulkanFramebuffer> CreateFramebuffer(const VulkanFramebufferSettings& settings = VulkanFramebufferSettings());
 		Ref<VulkanCommandBuffer> CreateCommandBuffer(VulkanQueueType type);
 		Ref<VulkanBuffer> CreateBuffer();

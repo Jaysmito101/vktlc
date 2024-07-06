@@ -46,6 +46,28 @@ namespace tlc
 
 		}
 
+		String ReadTextFile(const String& filepath)
+		{
+			String result;
+			std::ifstream file;
+			file.open(filepath, std::ios::in);
+			
+			if (file.is_open())
+			{
+				file.seekg(0, std::ios::end);
+				result.reserve(file.tellg());
+				file.seekg(0, std::ios::beg);
+				result.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+				file.close();
+			}
+			else
+			{
+				log::Error("Failed to open file '{}'", filepath);
+			}
+
+			return result;
+		}
+
 		// TODO: Implement a better UUID generator (Probably use the OS to generate a UUID)
 		UUID GenerateUUID()
 		{

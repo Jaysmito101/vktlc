@@ -1,9 +1,9 @@
-#include "vulkan/VulkanDevice.hpp"
-#include "vulkan/VulkanContext.hpp"
-#include "vulkan/VulkanShader.hpp"
-#include "vulkan/VulkanSwapchain.hpp"
-#include "vulkan/VulkanBuffer.hpp"
-#include "vulkan/VulkanCommandBuffer.hpp"
+#include "vulkanapi/VulkanDevice.hpp"
+#include "vulkanapi/VulkanContext.hpp"
+#include "vulkanapi/VulkanShader.hpp"
+#include "vulkanapi/VulkanSwapchain.hpp"
+#include "vulkanapi/VulkanBuffer.hpp"
+#include "vulkanapi/VulkanCommandBuffer.hpp"
 
 namespace tlc
 {
@@ -47,7 +47,7 @@ namespace tlc
 		return CreateRef<VulkanSwapchain>(this, window);
 	}
 
-	Ref<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U8>& shaderCode)
+	Ref<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U32>& shaderCode)
 	{
 		if (!m_IsReady)
 		{

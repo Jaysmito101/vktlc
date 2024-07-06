@@ -1,5 +1,5 @@
-#include "vulkan/VulkanCommandBuffer.hpp"
-#include "vulkan/VulkanDevice.hpp"
+#include "vulkanapi/VulkanCommandBuffer.hpp"
+#include "vulkanapi/VulkanDevice.hpp"
 
 namespace tlc
 {

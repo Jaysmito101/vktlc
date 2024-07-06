@@ -1,5 +1,5 @@
 #include "core/Application.hpp"
-
+#include "services/Services.hpp"
 
 // TODO: Make input system!
 #include <GLFW/glfw3.h>
@@ -21,10 +21,13 @@ namespace tlc
 		m_Window = Window::Get();
 		log::Info("Application started");
 
+		Services::Setup();
+
 		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void {
 			m_Running = false;
 			});
 
+		// TODO: Clean this up!
 		EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void {
 			m_Minimized = (width == 0 || height == 0);
 			static Pair<I32, I32> prevWindowSize = MakePair(0, 0);
@@ -47,10 +50,11 @@ namespace tlc
 
 	Application::~Application()
 	{
-
 		m_Scenes.clear();
 
 		log::Debug("Shutting down application");
+
+		Services::Shutdown();
 
 		m_VulkanDevice->WaitIdle();
 
@@ -153,6 +157,7 @@ namespace tlc
 		m_CurrentScene = m_Scenes[name].get();
 		m_CurrentScene->Load(false);
 		m_CurrentScene->Start();
+		Services::PushSceneChangeEvent();
 	}
 
 	void Application::ChangeSceneAsyncI(const String& name)
@@ -194,6 +199,7 @@ namespace tlc
 			m_NextSceneOnLoading = nullptr;
 
 			m_CurrentScene->Start();
+			Services::PushSceneChangeEvent();
 		}
 	}
 

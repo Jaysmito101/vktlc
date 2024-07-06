@@ -1,15 +1,15 @@
-#include "vulkan/VulkanDevice.hpp"
-#include "vulkan/VulkanShader.hpp"
+#include "vulkanapi/VulkanDevice.hpp"
+#include "vulkanapi/VulkanShader.hpp"
 
 namespace tlc
 {
 
-	VulkanShaderModule::VulkanShaderModule(VulkanDevice* device, const List<U8>& shaderCode)
+	VulkanShaderModule::VulkanShaderModule(Raw<VulkanDevice> device, const List<U32>& shaderCode)
 	{
 		m_Device = device;
 
 		vk::ShaderModuleCreateInfo createInfo = vk::ShaderModuleCreateInfo()
-			.setCodeSize(static_cast<U32>(shaderCode.size()))
+			.setCodeSize(static_cast<U32>(shaderCode.size()) * 4)
 			.setPCode(reinterpret_cast<const U32*>(shaderCode.data()));
 
 		if (m_Device->GetDevice().createShaderModule(&createInfo, nullptr, &m_ShaderModule) != vk::Result::eSuccess)

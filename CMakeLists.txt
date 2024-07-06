@@ -4,11 +4,18 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(tlc C CXX)
 
+add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(SHADERC_SKIP_TESTS ON)
+
+add_subdirectory(./dep/glfw)
+# add_subdirectory(./dep/shaderc)
 
 # Use FindVulkan module added with CMAKE 3.7
 if(NOT CMAKE_VERSION VERSION_LESS 3.7.0)
@@ -48,24 +55,17 @@ ELSE()
     message(STATUS ${Vulkan_LIBRARY})
 ENDIF()
 
+
 include_directories(
     ./tlc
     ./dep/glfw/include
     ./dep/glm
-    ./dep/shaderc/libshaderc/include
-    PUBLIC "$ENV{VULKAN_SDK}/include"
+    # ./dep/shaderc/libshaderc/include
+    # PUBLIC "$ENV{VULKAN_SDK}/include"
+    ${Vulkan_INCLUDE_DIRS}
 )
 
-if (MSVC)
-    add_compile_options(/W4 /WX)
-else()
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
-endif()
 
-set(SHADERC_SKIP_TESTS ON)
-
-add_subdirectory(./dep/glfw)
-add_subdirectory(./dep/shaderc)
 
 add_executable(tlc
 # core
@@ -74,14 +74,17 @@ add_executable(tlc
     ./tlc/core/Window.cpp
     ./tlc/core/Application.cpp
 # vulkan
-    ./tlc/vulkan/VulkanContext.cpp
-    ./tlc/vulkan/VulkanDevice.cpp
-    ./tlc/vulkan/VulkanSwapchain.cpp
-    ./tlc/vulkan/VulkanBuffer.cpp
-    ./tlc/vulkan/VulkanShader.cpp
-    ./tlc/vulkan/VulkanFramebuffer.cpp
-    ./tlc/vulkan/VulkanCommandBuffer.cpp
-    ./tlc/vulkan/VulkanGraphicsPipeline.cpp
+    ./tlc/vulkanapi/VulkanContext.cpp
+    ./tlc/vulkanapi/VulkanDevice.cpp
+    ./tlc/vulkanapi/VulkanSwapchain.cpp
+    ./tlc/vulkanapi/VulkanBuffer.cpp
+    ./tlc/vulkanapi/VulkanShader.cpp
+    ./tlc/vulkanapi/VulkanFramebuffer.cpp
+    ./tlc/vulkanapi/VulkanCommandBuffer.cpp
+    ./tlc/vulkanapi/VulkanGraphicsPipeline.cpp
+# services
+    ./tlc/services/Services.cpp
+    ./tlc/services/ShaderCompilerService.cpp
 # rendering
     ./tlc/rendering/Renderer.cpp
 # engine
@@ -93,18 +96,20 @@ add_executable(tlc
     ./tlc/game/Game.cpp
     ./tlc/game/scenes/MainScene.cpp
     ./tlc/game/scenes/TestScene.cpp
-
     ./tlc/game/components/TriangleUpDown.cpp
     ./tlc/game/components/TriangleLeftRight.cpp
 # main
     ./tlc/Main.cpp
 )
-
 target_link_libraries(tlc
     glfw
-    shaderc
     ${Vulkan_LIBRARY}
+    debug $ENV{VULKAN_SDK}/Lib/shaderc_combinedd.lib
+    optimized $ENV{VULKAN_SDK}/Lib/shaderc_combined.lib
 )
+
+
+
 
 if (WIN32)
     target_compile_definitions(tlc

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vulkan/VulkanBase.hpp"
-#include "vulkan/VulkanGraphicsPipeline.hpp"
+#include "vulkanapi/VulkanBase.hpp"
+#include "vulkanapi/VulkanGraphicsPipeline.hpp"
 
 
 namespace tlc

@@ -7,3 +7,6 @@
 [submodule "dep/glslang"]
 	path = dep/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "dep/shaderc"]
+	path = dep/shaderc
+	url = https://github.com/google/shaderc

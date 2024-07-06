@@ -1,8 +1,8 @@
 #pragma once
 #include "core/Core.hpp"
 #include "core/Window.hpp"
-#include "vulkan/VulkanContext.hpp"
-#include "vulkan/VulkanSwapchain.hpp"
+#include "vulkanapi/VulkanContext.hpp"
+#include "vulkanapi/VulkanSwapchain.hpp"
 #include "rendering/Renderer.hpp"
 
 #include "engine/Scene.hpp"

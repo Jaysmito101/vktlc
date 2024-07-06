@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan/VulkanBase.hpp"
+#include "vulkanapi/VulkanBase.hpp"
 
 namespace tlc
 {
@@ -10,7 +10,7 @@ namespace tlc
 	class VulkanShaderModule
 	{
 	public:
-		VulkanShaderModule(VulkanDevice* device, const List<U8>& shaderCode);
+		VulkanShaderModule(Raw<VulkanDevice> device, const List<U32>& shaderCode);
 		~VulkanShaderModule();
 
 		vk::PipelineShaderStageCreateInfo GetShaderStageCreateInfo(vk::ShaderStageFlagBits stage) const;

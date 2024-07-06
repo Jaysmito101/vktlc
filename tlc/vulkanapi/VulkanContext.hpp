@@ -1,11 +1,11 @@
 #pragma once
 
-#include "vulkan/VulkanBase.hpp"
-#include "vulkan/VulkanDevice.hpp"
-#include "vulkan/VulkanShader.hpp"
-#include "vulkan/VulkanBuffer.hpp"
-#include "vulkan/VulkanCommandBuffer.hpp"
-#include "vulkan/VulkanGraphicsPipeline.hpp"
+#include "vulkanapi/VulkanBase.hpp"
+#include "vulkanapi/VulkanDevice.hpp"
+#include "vulkanapi/VulkanShader.hpp"
+#include "vulkanapi/VulkanBuffer.hpp"
+#include "vulkanapi/VulkanCommandBuffer.hpp"
+#include "vulkanapi/VulkanGraphicsPipeline.hpp"
 
 namespace tlc
 {

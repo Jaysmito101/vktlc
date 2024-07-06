@@ -1,6 +1,6 @@
-#include "vulkan/VulkanFramebuffer.hpp"
-#include "vulkan/VulkanDevice.hpp"
-#include "vulkan/VulkanSwapchain.hpp"
+#include "vulkanapi/VulkanFramebuffer.hpp"
+#include "vulkanapi/VulkanDevice.hpp"
+#include "vulkanapi/VulkanSwapchain.hpp"
 
 namespace tlc
 {

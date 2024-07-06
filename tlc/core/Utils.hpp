@@ -9,6 +9,7 @@ namespace tlc
 		String GetExecutableDirectory();
 
 		List<U8> ReadBinaryFie(const String& filepath);
+		String ReadTextFile(const String& filepath);	
 
 		UUID GenerateUUID();
 	}

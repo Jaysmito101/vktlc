@@ -4,6 +4,8 @@
 #include "game/scenes/TestScene.hpp"
 #include "game/scenes/MainScene.hpp"
 
+#include "services/ShaderCompiler.hpp"
+
 
 
 
@@ -11,6 +13,9 @@ namespace tlc
 {
     void GameApplication::OnLoad()
     {
+        // Register services
+        Services::RegisterService<ShaderCompiler>();
+
         // Register scenes
         RegisterScene<TestScene>("TestScene");
         RegisterScene<MainScene>("MainScene");
@@ -18,7 +23,7 @@ namespace tlc
     
     void GameApplication::OnUnload()
     {
-        
+           
     }
     
 
