@@ -31,8 +31,8 @@ namespace tlc
 		m_Properties.vertexInputStateCreateInfo = GetVertexInputStateCreateInfo();
 		m_Properties.inputAssemblyStateCreateInfo = GetInputAssemblyStateCreateInfo();
 		auto viewportAndScissor = GetViewportAndScissor();
-		m_Properties.viewport = viewportAndScissor.x;
-		m_Properties.scissor = viewportAndScissor.y;
+		m_Properties.viewport = viewportAndScissor.first;
+		m_Properties.scissor = viewportAndScissor.second;
 		m_Properties.rasterizationStateCreateInfo = GetRasterizationStateCreateInfo();
 		m_Properties.multisampleStateCreateInfo = GetMultisampleStateCreateInfo();
 		m_Properties.depthStencilStateCreateInfo = GetDepthStencilStateCreateInfo();

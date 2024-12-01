@@ -95,15 +95,15 @@ namespace tlc {
         }
 
         // unload the assets
-        if (bundle->second.x != nullptr) {
+        if (bundle->second.first != nullptr) {
             // delink the assets
-            for (auto& asset : bundle->second.y) {
+            for (auto& asset : bundle->second.second) {
                 asset.Data = nullptr;
             }
 
             // free the memory
-            delete[] bundle->second.x;
-            bundle->second.x = nullptr;
+            delete[] bundle->second.first;
+            bundle->second.first = nullptr;
         }
     }
 
@@ -120,7 +120,7 @@ namespace tlc {
 
         for (const auto& [bundleName, bundle] : m_Assets) {
             log::Info("Bundle: {}", bundleName);
-            for (const auto& asset : bundle.y) {
+            for (const auto& asset : bundle.second) {
                 log::Info("Asset: {} | Address: {} | Tags: {} | Offset: {}",
                     asset.Path, asset.Address, asset.Tags, asset.Offset
                 );
@@ -141,7 +141,7 @@ namespace tlc {
             return;
         }
 
-        if (bundle->second.x != nullptr) {
+        if (bundle->second.first != nullptr) {
             log::Warn("Bundle: {} already loaded!", bundleName);
             return;
         }
@@ -159,15 +159,15 @@ namespace tlc {
         auto size = bundleFile.tellg();
         bundleFile.seekg(0, std::ios::beg);
 
-        bundle->second.x = new U8[size];
-        bundleFile.read(reinterpret_cast<char*>(bundle->second.x), size);
+        bundle->second.first = new U8[size];
+        bundleFile.read(reinterpret_cast<char*>(bundle->second.first), size);
         bundleFile.close();
 
 
         // link the assets
-        auto& assets = bundle->second.y;
+        auto& assets = bundle->second.second;
         for (auto& asset : assets) {
-            asset.Data = bundle->second.x + asset.Offset;
+            asset.Data = bundle->second.first + asset.Offset;
         }
 
         log::Info("Bundle: {} loaded!", bundleName);
@@ -191,7 +191,7 @@ namespace tlc {
     List<String> AssetManager::GetAllAssets() const {
         List<String> result;
         for (const auto& [_, bundle] : m_Assets) {
-            for (const auto& asset : bundle.y) {
+            for (const auto& asset : bundle.second) {
                 result.emplace_back(asset.Address);
             }
         }
@@ -218,7 +218,7 @@ namespace tlc {
             return false;
         }
 
-        return bundle->second.x != nullptr;        
+        return bundle->second.first != nullptr;        
     }
 
     String AssetManager::GetAssetBundle(const String& address) const
@@ -237,7 +237,7 @@ namespace tlc {
             return result;
         }
 
-        for (const auto& asset : bundle->second.y) {
+        for (const auto& asset : bundle->second.second) {
             result.emplace_back(asset.Address);
         }
 
@@ -247,7 +247,7 @@ namespace tlc {
     List<String> AssetManager::GetAssetsWithTags(AssetTags tags) const {
         List<String> result;
         for (const auto& [_, bundle] : m_Assets) {
-            for (const auto& asset : bundle.y) {
+            for (const auto& asset : bundle.second) {
                 if ((asset.Tags & tags) == tags) {
                     result.emplace_back(asset.Address);
                 }
@@ -265,7 +265,7 @@ namespace tlc {
             return result;
         }
 
-        for (const auto& asset : bundle->second.y) {
+        for (const auto& asset : bundle->second.second) {
             if ((asset.Tags & tags) == tags) {
                 result.emplace_back(asset.Address);
             }
@@ -277,7 +277,7 @@ namespace tlc {
     const std::optional<Asset> AssetManager::GetAsset(const String& address, String& bundleName) const {
         bundleName = "";
         for (const auto& [assetBundleName, bundle] : m_Assets) {
-            for (const auto& asset : bundle.y) {
+            for (const auto& asset : bundle.second) {
                 if (asset.Address == address) {
                     bundleName = assetBundleName;
                     return std::optional<Asset>(asset);
@@ -307,5 +307,16 @@ namespace tlc {
         }
 
         return String(reinterpret_cast<const char*>(asset->Data), asset->Size);
+    }
+
+    U32 AssetManager::GetAssetDataHash(const String& address) const {
+        String bundleName = "";
+        auto asset = GetAsset(address, bundleName);
+        if (!asset.has_value()) {
+            log::Warn("Asset: {} not found!", address);
+            return 0;
+        }
+
+        return asset->Hash;
     }
 }

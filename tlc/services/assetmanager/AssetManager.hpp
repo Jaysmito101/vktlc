@@ -33,6 +33,7 @@ namespace tlc
             // Asset Data queries
             const Raw<U8> GetAssetDataRaw(const String& address, Size& size) const;
             String GetAssetDataString(const String& address) const;
+            U32 GetAssetDataHash(const String& address) const;
 
 
         private:

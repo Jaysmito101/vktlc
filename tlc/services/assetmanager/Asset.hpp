@@ -10,6 +10,9 @@ namespace tlc
         Image                = 0b00000000000000000000000000000010,
         Audio                = 0b00000000000000000000000000000100,
         Font                 = 0b00000000000000000000000000001000,
+        VertexShader         = 0b00000000000000000000000000010000,
+        FragmentShader       = 0b00000000000000000000000000100000,
+        ComputeShader        = 0b00000000000000000000000001000000,
     };
 
     inline AssetTags operator|(AssetTags a, AssetTags b) {

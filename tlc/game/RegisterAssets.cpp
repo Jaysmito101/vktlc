@@ -2,6 +2,7 @@
 
 #include "services/assetmanager/AssetManager.hpp"
 #include "services/assetmanager/AssetBundler.hpp"
+#include "services/CacheManager.hpp"
 
 
 namespace tlc
@@ -33,21 +34,18 @@ namespace tlc
 
 
 
-        // auto bundler = Services::GetService<AssetBundler>();
-        // bundler->RegisterAsset(assetsPath + "/images/test2.png", AssetTags::Image, "test_img", "test2.png");   
-        // bundler->RegisterAsset(assetsPath + "/images/test2.png", AssetTags::Image | AssetTags::Font, "test_img", "tes3t2.png");   
-        // bundler->RegisterAsset(assetsPath + "/images/test2.png", AssetTags::None, "test_img", "tes343t2.png");   
-        // bundler->RegisterAsset(assetsPath + "/images/test2.png", AssetTags::None, "test_img", "test432.png");   
-        // bundler->RegisterFromDirectory(assetsPath, "dir_assets");
-        // bundler->RegisterAsset(assetsPath + "/shaders/vert.glsl", AssetTags::Shader, "shaders", "ver_t.glsl");
-        // bundler->RegisterAsset(assetsPath + "/shaders/frag.glsl", AssetTags::Shader, "shaders", "fra_g.glsl");
-        // bundler->LogAssets();
-        // bundler->Pack();
+        auto bundler = Services::GetService<AssetBundler>();
+        bundler->RegisterFromDirectory(assetsPath, "standard");
+        bundler->LogAssets();
+        bundler->Pack();
 
         auto assetManager = Services::GetService<AssetManager>();
+        assetManager->ReloadAssetMetadata();
         assetManager->LogAssets();
         assetManager->LoadAllBundles();
 
-        log::Error("Shader :\n{}", assetManager->GetAssetDataString("ver_t.glsl"));
+        auto cacheManager = Services::GetService<CacheManager>();
+        cacheManager->CacheShaders();
+
     }
 }

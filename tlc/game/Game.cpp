@@ -5,6 +5,7 @@
 #include "game/scenes/MainScene.hpp"
 
 #include "services/ShaderCompiler.hpp"
+#include "services/CacheManager.hpp"
 #include "services/assetmanager/AssetManager.hpp"
 #include "services/assetmanager/AssetBundler.hpp"
 
@@ -17,6 +18,7 @@ namespace tlc
     {
         // Register services
         Services::RegisterService<ShaderCompiler>();
+        Services::RegisterService<CacheManager>(utils::GetExecutableDirectory() + "/cache");
         Services::RegisterService<AssetBundler>(utils::GetExecutableDirectory() + "/asset_bundles");
         Services::RegisterService<AssetManager>(utils::GetExecutableDirectory() + "/asset_bundles");
 

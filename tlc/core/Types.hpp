@@ -53,24 +53,14 @@ namespace tlc
 	template <typename T, int N>
 	using Array = std::array<T, N>;
 
+	template<typename A, typename B>
+	using Pair = std::pair<A, B>;
 
 	template<typename A, typename B>
-	struct Pair 
+	inline Pair<A, B> MakePair(A a, B b)
 	{
-	public:
-		A x;
-		B y;
-
-		Pair() : x(0), y(0) {}
-		Pair(A x, B y) : x(x), y(y) {}
-	};
-
-	template<typename A, typename B>
-	inline Pair<A, B> MakePair(A x, B y)
-	{
-		return Pair<A, B>(x, y);
+		return std::make_pair(a, b);
 	}
-	
 
 	template<typename T>
 	using Ref = std::shared_ptr<T>;

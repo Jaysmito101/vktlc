@@ -2,8 +2,7 @@
 #include "core/Application.hpp"
 
 
-#include "services/ShaderCompiler.hpp"
-
+#include "services/CacheManager.hpp"
 
 
 // TODO: Make input system!
@@ -23,9 +22,9 @@ namespace tlc
 		const auto swapchain = Application::Get()->GetVulkanSwapchain();
 		const auto device = Application::Get()->GetVulkanDevice();
 
-		auto shaderCompiler = Services::GetService<ShaderCompiler>();
-		auto vertShaderModule = device->CreateShaderModule(shaderCompiler->ToSpv(utils::ReadTextFile("shaders/vert.glsl"), ShaderCompiler::ShaderType::Vertex, "VertexMain"));
-		auto fragShaderModule = device->CreateShaderModule(shaderCompiler->ToSpv(utils::ReadTextFile("shaders/frag.glsl"), ShaderCompiler::ShaderType::Fragment, "FragmentMain"));
+		auto cacheService = Services::GetService<CacheManager>();
+		auto vertShaderModule = device->CreateShaderModule(cacheService->GetCacheDataTyped<U32>("shaders/vert.glsl"));
+		auto fragShaderModule = device->CreateShaderModule(cacheService->GetCacheDataTyped<U32>("shaders/frag.glsl"));
 
 
 		m_PipelineSettings = VulkanGraphicsPipelineSettings()

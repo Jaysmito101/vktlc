@@ -86,6 +86,7 @@ add_executable(tlc
 # services
     ./tlc/services/Services.cpp
     ./tlc/services/ShaderCompilerService.cpp
+    ./tlc/services/CacheManagerService.cpp
     ./tlc/services/assetmanager/AssetManagerService.cpp
     ./tlc/services/assetmanager/AssetBundlerService.cpp
 # rendering

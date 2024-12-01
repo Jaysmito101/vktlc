@@ -86,7 +86,7 @@ namespace tlc {
         }
 
         // recursively add all files in the directory
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
+        for (const auto& entry : std::filesystem::directory_iterator(path)) {
             if (entry.is_regular_file()) {
                 auto filePath = entry.path().string();
                 auto address = addressPrefix + entry.path().filename().string();
@@ -117,6 +117,15 @@ namespace tlc {
         }
         else if (path.ends_with(".glsl")) {
             tags = tags | AssetTags::Shader;
+            if (path.find("vert.glsl") != String::npos) {
+                tags = tags | AssetTags::VertexShader;
+            }
+            else if (path.find("frag.glsl") != String::npos) {
+                tags = tags | AssetTags::FragmentShader;
+            }
+            else if (path.find("comp.glsl") != String::npos) {
+                tags = tags | AssetTags::ComputeShader;
+            }
         }
         return tags;
     }

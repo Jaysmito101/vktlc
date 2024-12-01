@@ -31,7 +31,7 @@ namespace tlc
 		EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void {
 			m_Minimized = (width == 0 || height == 0);
 			static Pair<I32, I32> prevWindowSize = MakePair(0, 0);
-			if ((width != prevWindowSize.x || height != prevWindowSize.y) && (width > 0 && height > 0))
+			if ((width != prevWindowSize.first || height != prevWindowSize.second) && (width > 0 && height > 0))
 			{
 				m_VulkanDevice->WaitIdle();
 				m_VulkanSwapchain->Recreate();

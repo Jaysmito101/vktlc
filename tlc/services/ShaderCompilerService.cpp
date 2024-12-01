@@ -1,4 +1,5 @@
 #include "services/ShaderCompiler.hpp"
+#include "services/assetmanager/AssetManager.hpp"
 
 #include "shaderc/shaderc.hpp"
 
@@ -36,27 +37,27 @@ namespace tlc
                 static_cast<U32>(include_depth));
 
             Raw<shaderc_include_result> result = new shaderc_include_result();
-            auto source_name = new char[include.x.size() + 1];
+            auto source_name = new char[include.first.size() + 1];
             if (source_name == nullptr)
             {
                 log::Error("ShaderCompilerIncluder::GetInclude: failed to allocate memory for source_name");
                 return nullptr;
             }
-            std::memset(source_name, 0, include.x.size() + 1);
-            std::copy(include.x.begin(), include.x.end(), source_name);
+            std::memset(source_name, 0, include.first.size() + 1);
+            std::copy(include.first.begin(), include.first.end(), source_name);
             result->source_name = source_name;
-            result->source_name_length = include.x.size();            
+            result->source_name_length = include.first.size();            
 
-            auto content = new char[include.y.size() + 1];
+            auto content = new char[include.second.size() + 1];
             if (content == nullptr)
             {
                 log::Error("ShaderCompilerIncluder::GetInclude: failed to allocate memory for content");
                 return nullptr;
             }
-            std::memset(content, 0, include.y.size() + 1);
-            std::copy(include.y.begin(), include.y.end(), content);
+            std::memset(content, 0, include.second.size() + 1);
+            std::copy(include.second.begin(), include.second.end(), content);
             result->content = content;
-            result->content_length = include.y.size();
+            result->content_length = include.second.size();
 
             result->user_data = this;
             return result;
@@ -239,9 +240,9 @@ namespace tlc
 
     Pair<String, String> ShaderCompiler::GetInclude(const String& requestedSource, const String& requestingSource, U32 includeDepth)
     {
-        // TODO: Fix this after asset manager
-        log::Warn("ShaderCompiler::GetInclude({}, {}, {}]): include not implemented", requestedSource, requestingSource, includeDepth);        
-        return { "No_Name", "" };
+        auto assetManager = Services::GetService<AssetManager>();
+        auto include = assetManager->GetAssetDataString(requestedSource);
+        return { requestedSource, include };
     }
 
 }
