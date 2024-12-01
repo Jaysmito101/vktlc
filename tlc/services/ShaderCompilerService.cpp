@@ -96,6 +96,8 @@ namespace tlc
 
     String ShaderCompiler::Preprocess(const std::string& shaderSource, ShaderCompiler::ShaderType type, const String& inputFileName)
     {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;    
 
@@ -141,6 +143,8 @@ namespace tlc
 
     String ShaderCompiler::ToAssembly(const std::string& shaderSource, ShaderCompiler::ShaderType type, const String& inputFileName)
     {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;    
 
@@ -186,6 +190,8 @@ namespace tlc
 
     List<U32> ShaderCompiler::ToSpv(const std::string& shaderSource, ShaderCompiler::ShaderType type, const String& inputFileName)
     {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;    
 

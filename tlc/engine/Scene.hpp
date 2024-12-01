@@ -44,7 +44,7 @@ namespace tlc
 		inline void SetName(const String& name) { m_Name = name; }
 
 	private:
-		UUID m_UUID = 0;
+		UUID m_UUID = UUID::Zero();
 		Bool m_HasLoaded = false;
 		Bool m_IsPaused = false;
 

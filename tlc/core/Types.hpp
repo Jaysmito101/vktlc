@@ -9,16 +9,6 @@
 #include <functional>
 #include <cstdint>
 
-#if defined(_WIN32) || defined(_WIN64)
-	#ifdef TLC_BUILD_DLL
-		#define TLC_API __declspec(dllexport)
-	#else
-		#define TLC_API __declspec(dllimport)
-	#endif
-#else
-	#error TLC only supports Windows!
-#endif
-
 
 namespace tlc 
 {
@@ -39,8 +29,6 @@ namespace tlc
 
 	using F32 = float;
 	using F64 = double;
-
-	using UUID = uint64_t;
 
 	using String = std::string;
 	using WString = std::wstring;

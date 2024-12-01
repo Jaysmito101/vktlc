@@ -5,7 +5,7 @@ namespace tlc {
 	
 	void IComponent::Initiate(Raw<ECS> ecs, Raw<Entity> entity)
 	{
-		m_UUID = utils::GenerateUUID();
+		m_UUID = UUID::New();
 		m_ECS = ecs;
 		m_Entity = entity;
 	}

@@ -5,7 +5,7 @@ namespace tlc
 
 	Scene::Scene()
 	{
-		m_UUID = utils::GenerateUUID();
+		m_UUID = UUID::New();
 		m_ECS = CreateScope<ECS>();
 	}
 

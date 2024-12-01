@@ -40,5 +40,6 @@ namespace tlc
         U32 m_OptimizationLevel = 0;
         Bool m_EnableWarnings = true;
         Bool m_WarningsAsErrors = false;
+        std::mutex m_Mutex;
     };
 }

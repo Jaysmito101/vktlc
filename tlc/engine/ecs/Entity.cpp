@@ -5,7 +5,7 @@ namespace tlc {
 	Entity::Entity(Raw<ECS> ecs, String name)
 	{
 		m_ECS = ecs;
-		m_UUID = utils::GenerateUUID();
+		m_UUID = UUID::New();
 		m_Name = name;
 	}
 

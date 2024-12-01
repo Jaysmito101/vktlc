@@ -69,6 +69,7 @@ include_directories(
 
 add_executable(tlc
 # core
+    ./tlc/core/Uuid.cpp
     ./tlc/core/Logger.cpp
     ./tlc/core/Utils.cpp
     ./tlc/core/Window.cpp
@@ -85,6 +86,8 @@ add_executable(tlc
 # services
     ./tlc/services/Services.cpp
     ./tlc/services/ShaderCompilerService.cpp
+    ./tlc/services/assetmanager/AssetManagerService.cpp
+    ./tlc/services/assetmanager/AssetBundlerService.cpp
 # rendering
     ./tlc/rendering/Renderer.cpp
 # engine
@@ -94,6 +97,7 @@ add_executable(tlc
     ./tlc/engine/ecs/ECSBase.cpp
 # game
     ./tlc/game/Game.cpp
+    ./tlc/game/RegisterAssets.cpp
     ./tlc/game/scenes/MainScene.cpp
     ./tlc/game/scenes/TestScene.cpp
     ./tlc/game/components/TriangleUpDown.cpp

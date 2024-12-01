@@ -23,6 +23,9 @@ namespace tlc
 		inline static Application* Create() { s_Instance = CreateScope<GameApplication>(); return s_Instance.get(); }
 
 	private:
+		void RegisterAssets();
+
+	private:
 
 		I32 fps = 0;
 		F32 fpsTimer = 0.0f;

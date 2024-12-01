@@ -38,7 +38,7 @@ namespace tlc {
 		void MarkForDeletion() { m_MarkedForDeletion = true; }
 
 	private:
-		UUID m_UUID;
+		UUID m_UUID = UUID::Zero();
 		Raw<ECS> m_ECS = nullptr;
 		Raw<Entity> m_Entity = nullptr;
 		Bool m_MarkedForDeletion = false;

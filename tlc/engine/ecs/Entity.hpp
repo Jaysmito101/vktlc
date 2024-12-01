@@ -74,7 +74,7 @@ namespace tlc {
 		List<Raw<Entity>> m_Children;
 		Raw<Entity> m_Parent = nullptr;
 		Raw<ECS> m_ECS = nullptr;
-		UUID m_UUID;
+		UUID m_UUID = UUID::Zero();
 		String m_Name;
 		Map<Size, List<Raw<IComponent>>> m_Components;
 		Bool m_MarkedForDeletion = false;

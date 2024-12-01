@@ -72,22 +72,21 @@ namespace tlc
 
 		for (auto& pair : m_Components) 
 		{
+			List<Raw<IComponent>> componentsToDelete;
 			for (auto component : pair.second) 
 			{
-				List<Raw<IComponent>> componentsToDelete;
 
 				if (component->IsMarkedForDeletion()) 
 				{
 					componentsToDelete.push_back(component);
 				}
 
-
-				for (auto comp : componentsToDelete)
-				{
-					comp->End();
-					m_Components[pair.first].erase(std::find(m_Components[pair.first].begin(), m_Components[pair.first].end(), comp));
-					DeleteRaw(comp);
-				}
+			}
+			for (auto comp : componentsToDelete)
+			{
+				comp->End();
+				m_Components[pair.first].erase(std::find(m_Components[pair.first].begin(), m_Components[pair.first].end(), comp));
+				DeleteRaw(comp);
 			}
 		}
 	}
@@ -95,7 +94,7 @@ namespace tlc
 	Raw<Entity> ECS::CreateEntity(String name, Raw<Entity> parent) 
 	{
 		auto entity = new Entity(this, name);
-		entity->SetParent(parent);
+		entity->SetParent(parent ? parent : m_RootEntity);
 		m_Entities.push_back(entity);		
 		return entity;
 	}

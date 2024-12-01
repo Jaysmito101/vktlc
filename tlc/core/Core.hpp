@@ -73,8 +73,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <filesystem>
 
 // core includes
+#include "core/UUID.hpp"
 #include "core/Types.hpp"
 #include "core/Logger.hpp"
 #include "core/Utils.hpp"
