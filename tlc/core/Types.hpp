@@ -8,6 +8,10 @@
 #include <memory>
 #include <functional>
 #include <cstdint>
+#include <any>
+#include <utility>
+#include <stack>
+#include <queue>
 
 
 namespace tlc 
@@ -44,6 +48,8 @@ namespace tlc
 	template<typename Key, typename Value>
 	using Map = std::map<Key, Value>;
 
+	using Any = std::any;
+
 	template<typename Key, typename Value>
 	using UnorderedMap = std::unordered_map<Key, Value>;
 
@@ -61,6 +67,12 @@ namespace tlc
 	{
 		return std::make_pair(a, b);
 	}
+
+	template<typename T>
+	using Stack = std::stack<T>;
+
+	template<typename T>
+	using Queue = std::queue<T>;
 
 	template<typename T>
 	using Ref = std::shared_ptr<T>;

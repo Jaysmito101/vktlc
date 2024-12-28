@@ -93,16 +93,16 @@ add_executable(tlc
     ./tlc/rendering/Renderer.cpp
 # engine
     ./tlc/engine/Scene.cpp
-    ./tlc/engine/ecs/Component.cpp
-    ./tlc/engine/ecs/Entity.cpp
+    # ./tlc/engine/ecs/Component.cpp
+    # ./tlc/engine/ecs/Entity.cpp
     ./tlc/engine/ecs/ECSBase.cpp
 # game
     ./tlc/game/Game.cpp
     ./tlc/game/RegisterAssets.cpp
-    ./tlc/game/scenes/MainScene.cpp
-    ./tlc/game/scenes/TestScene.cpp
-    ./tlc/game/components/TriangleUpDown.cpp
-    ./tlc/game/components/TriangleLeftRight.cpp
+    # ./tlc/game/scenes/MainScene.cpp
+    # ./tlc/game/scenes/TestScene.cpp
+    # ./tlc/game/components/TriangleUpDown.cpp
+    # ./tlc/game/components/TriangleLeftRight.cpp
 # main
     ./tlc/Main.cpp
 )

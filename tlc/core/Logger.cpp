@@ -76,7 +76,13 @@ namespace tlc
 		timeStr << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
 
 		const auto logLevelString = GetLogLevelString(level);
-		const auto logMessage = "[" + logLevelString + "]" + std::string(8 - logLevelString.size(), ' ') + "[" + timeStr.str() + "]\t: " + message + "\n";
+		auto logMessage = std::string();
+		if (level != LogLevel::Raw)
+		{
+			logMessage = "[" + logLevelString + "]" + std::string(8 - logLevelString.size(), ' ') + "[" + timeStr.str() + "]\t: " + message + "\n";
+		} else {
+			logMessage = message;
+		}
 
 		if (m_EnableConsole)
 		{

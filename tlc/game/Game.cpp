@@ -10,6 +10,13 @@
 #include "services/assetmanager/AssetBundler.hpp"
 
 
+#include "engine/ecs/ECS.hpp"
+
+
+struct Transform {};
+struct Mesh {};
+struct Material {};
+struct Light {};
 
 
 namespace tlc
@@ -26,8 +33,8 @@ namespace tlc
 
 
         // Register scenes
-        RegisterScene<TestScene>("TestScene");
-        RegisterScene<MainScene>("MainScene");
+        // RegisterScene<TestScene>("TestScene");
+        // RegisterScene<MainScene>("MainScene");
     }
     
     void GameApplication::OnUnload()
@@ -43,6 +50,37 @@ namespace tlc
 
     void GameApplication::OnStart()
     {
+        auto ecs = CreateScope<ECS>();
+
+        auto camera = ecs->CreateEntity("Camera");
+        auto light = ecs->CreateEntity("Light");
+
+        auto world = ecs->CreateEntity("World");
+        auto cube = ecs->CreateEntity("Cube", world);
+        auto sphere = ecs->CreateEntity("Sphere", world);
+        auto plane = ecs->CreateEntity("Plane", world);
+
+        auto cubeRenderer = ecs->CreateEntity("CubeRenderer", cube);
+        auto sphereRenderer = ecs->CreateEntity("SphereRenderer", sphere);
+        auto planeRenderer = ecs->CreateEntity("PlaneRenderer", plane);
+
+        auto cubeMesh = ecs->CreateEntity("CubeMesh", cubeRenderer);
+
+        auto entities = ecs->CreatePath("World/Cube2/CubeRenderer2/CubeMesh2");
+
+        auto comp = ecs->CreateComponent<Transform>(cube, "Transform");
+        auto comp2 = ecs->CreateComponent<Mesh>(cube, "Mesh");
+        auto comp3 = ecs->CreateComponent<Material>(cube, "Material");
+
+        auto comp4 = ecs->CreateComponent<Light>(light, "Light");
+
+        auto comp5 = ecs->CreateComponent<Transform>(cube, "Transform");
+
+        // ecs->
+        log::Error("Entity Tree: ");
+        ecs->PrintEntityTree();
+
+
         ChangeScene("TestScene");
     }
     

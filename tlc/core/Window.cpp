@@ -157,15 +157,15 @@ namespace tlc
 			glfwSetWindowMonitor(
 				m_Handle,
 				nullptr,
-				m_LastPosition.x,
-				m_LastPosition.y,
-				m_LastSize.x,
-				m_LastSize.y,
+				m_LastPosition.first,
+				m_LastPosition.second,
+				m_LastSize.first,
+				m_LastSize.second,
 				0
 			);
 
-			SetSize(m_LastSize.x, m_LastSize.y);
-			SetPosition(m_LastPosition.x, m_LastPosition.y);
+			SetSize(m_LastSize.first, m_LastSize.second);
+			SetPosition(m_LastPosition.first, m_LastPosition.second);
 
 			m_IsFullscreen = false;
 		}

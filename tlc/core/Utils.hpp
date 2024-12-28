@@ -26,5 +26,6 @@ namespace tlc
 		U32 HashBuffer(const void* buffer, Size size);
 
 		U32 HashBuffer(const List<U8>& buffer);
+		List<String> SplitString(const String& str, const String& delimiter);
 	}
 }

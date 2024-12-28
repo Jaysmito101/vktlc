@@ -74,6 +74,8 @@
 #include <cstdlib>
 #include <limits>
 #include <filesystem>
+#include <stack>
+#include <queue>
 
 // core includes
 #include "core/UUID.hpp"

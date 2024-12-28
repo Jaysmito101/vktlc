@@ -24,20 +24,29 @@ namespace tlc {
             static UUID Zero();
 
             static constexpr size_t GetNumBytes() { return k_NumBytes; }
+
+            inline bool operator<(const UUID& other) const {
+                return std::lexicographical_compare(m_Data.begin(), m_Data.end(), other.m_Data.begin(), other.m_Data.end());
+            }
+
+            inline bool operator>(const UUID& other) const {
+                return other < *this;
+            }
+
+            inline bool operator==(const UUID& other) const {
+                return std::equal(m_Data.begin(), m_Data.end(), other.m_Data.begin());
+            }
+
+            inline bool operator!=(const UUID& other) const {
+                return !(*this == other);
+            }
+
         private:
             static uint32_t s_Counter;
 
             static constexpr size_t k_NumBytes = 16;
             std::array<uint8_t, k_NumBytes> m_Data;
     };
-}
-
-inline bool operator==(const tlc::UUID& lhs, const tlc::UUID& rhs) {
-    return std::equal(lhs.ToBytes(), lhs.ToBytes() + tlc::UUID::GetNumBytes(), rhs.ToBytes());
-}
-
-inline bool operator!=(const tlc::UUID& lhs, const tlc::UUID& rhs) {
-    return !(lhs == rhs);
 }
 
 inline std::ostream& operator<<(std::ostream& os, const tlc::UUID& uuid) {

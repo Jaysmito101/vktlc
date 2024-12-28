@@ -208,8 +208,23 @@ namespace tlc
 		}
 
 		U32 HashBuffer(const List<U8>& buffer)
-		{
+		{ 
 			return HashBuffer(buffer.data(), buffer.size());
+		}
+	
+		List<String> SplitString(const String& str, const String& delimiter)
+		{
+			List<String> result;
+			Size start = 0;
+			Size end = str.find(delimiter);
+			while (end != String::npos)
+			{
+				result.push_back(str.substr(start, end - start));
+				start = end + delimiter.size();
+				end = str.find(delimiter, start);
+			}
+			result.push_back(str.substr(start, end));
+			return result;
 		}
 
 	}

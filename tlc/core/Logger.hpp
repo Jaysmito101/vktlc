@@ -17,6 +17,7 @@ namespace tlc
 		Warning = 0b00001000,
 		Error = 0b00010000,
 		Fatal = 0b00100000,
+		Raw = 0b01000000,
 		All = 0b11111111,
 		None = 0b00000000
 	};
@@ -92,6 +93,12 @@ namespace tlc
 		}
 
 		template <typename... Args>
+		inline void Raw(const String& message, Args... args)
+		{
+			Logger::Get()->Log(LogLevel::Raw, message, args...);
+		}
+
+		template <typename... Args>
 		inline void Trace(const String& message, Args... args)
 		{
 			Logger::Get()->Log(LogLevel::Trace, message, args...);
@@ -122,7 +129,7 @@ namespace tlc
 		}
 
 		template <typename... Args>
-		inline void Fatal(const String& message, Args... args)
+		[[noreturn]]  inline void Fatal(const String& message, Args... args)
 		{
 			Logger::Get()->Log(LogLevel::Fatal, message, args...);
 			throw std::runtime_error(message);
