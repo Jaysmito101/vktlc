@@ -75,6 +75,16 @@ namespace tlc
 		printTree(m_RootEntity, 0);
 	}
 
+	void ECS::PrintSystems() const {
+		for (const auto& [trigger, systems] : m_Systems) {
+			log::Raw("Trigger: {}\n", SystemTriggerToString(trigger));
+			for (const auto& system : systems) {
+				log::Raw("  |--> {} (Priority: {})\n", system.Name, system.Priority);
+			}
+		}
+	}
+
+
 	void ECS::LinkInTree(const Entity& parent, const Entity& child)
 	{
 		TLC_ASSERT(parent != child, "ECS::LinkInTree: Parent and Child cannot be the same entity!");
@@ -235,6 +245,17 @@ namespace tlc
 		}
 
 		return entities;
+	}
+
+	void ECS::DispatchSystems(SystemTrigger trigger, const List<UUID>& entities, const List<UUID>& components) {
+		auto systems = m_Systems.find(trigger);
+		if (systems == m_Systems.end()) {
+			return;
+		}
+
+		for (const auto& system : systems->second) {
+			system.System->OnUpdate(this, entities, components);
+		}
 	}
 
 }

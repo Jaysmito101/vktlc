@@ -17,6 +17,15 @@ namespace tlc {
 		OnUpdate,
 	};
 
+	inline constexpr String SystemTriggerToString(SystemTrigger trigger) {
+		switch (trigger) {
+		case SystemTrigger::OnComponentCreate: return "OnComponentCreate";
+		case SystemTrigger::OnComponentDestroy: return "OnComponentDestroy";
+		case SystemTrigger::OnUpdate: return "OnUpdate";
+		}
+		return "Unknown";
+	}
+
 	namespace internal {
 		struct EntityHolder {
 			Entity ID = nullentity;
@@ -99,7 +108,7 @@ namespace tlc {
 					log::Warn("ComponentPool::GetComponent: Component does not exist!");
 					return nullptr;
 				}
-				return Data.data() + it->second.Index * (TypeSize + 1);
+				return Data.data() + it->second.Index * (TypeSize + 1) + 1;
 			}
 
 
@@ -114,7 +123,7 @@ namespace tlc {
 			}
 
 			template<typename T>
-			inline static ComponentPool Create(I32 typeId = typeid(T).hash_code()) {
+			inline static ComponentPool Create(Size typeId = typeid(T).hash_code()) {
 				ComponentPool pool;
 				pool.TypeSize = sizeof(T);
 				pool.TypeID = typeid(T).hash_code();
@@ -153,7 +162,7 @@ namespace tlc {
 			inline void FillSpot(Size index, const void* data) {
 				Count++;
 				Data[index * (TypeSize + 1)] = 1;
-				std::memcpy(Data.data() + index * (TypeSize + 1), data, TypeSize);
+				std::memcpy(Data.data() + index * (TypeSize + 1) + 1, data, TypeSize);
 			}
 
 			inline void ClearSpot(Size index) {
@@ -166,8 +175,9 @@ namespace tlc {
 			Ref<ISystem> System = nullptr;
 			String Name = "Unnamed_System";
 			U32 Priority = 0;
-			List<Size> Filter;			
+			Size Filter;			
 			SystemTrigger Trigger = SystemTrigger::OnUpdate;
+			UUID ID = UUID::Zero();
 
 			SystemHolder(Ref<ISystem> system, String name, U32 priority, SystemTrigger trigger = SystemTrigger::OnUpdate) : System(system), Name(name), Priority(priority), Trigger(trigger) {}
 		};
@@ -182,10 +192,10 @@ namespace tlc {
 
 		Entity CreateEntity(const String& name = "Unnamed_Entity", const Entity& parent = nullentity);
 
-		Bool IsChildOf(const UUID& parent, const UUID& child) const;
-		Bool IsParentOf(const UUID& parent, const UUID& child) const;
+		Bool IsChildOf(const Entity& parent, const Entity& child) const;
+		Bool IsParentOf(const Entity& parent, const Entity& child) const;
 
-		inline Entity GetParent(const UUID& entity) const { return m_Entities.at(entity).Parent; }
+		inline Entity GetParent(const Entity& entity) const { return m_Entities.at(entity).Parent; }
 		inline const List<Entity> GetChildren(const UUID& entity) const { auto& children = m_Entities.at(entity).Children; return List<Entity>(children.begin(), children.end()); }
 		inline const String& GetEntityName(const Entity& entity) const { return m_Entities.at(entity).Name; }
 		inline Bool IsValidEntity(const Entity& entity) const { return m_Entities.find(entity) != m_Entities.end(); }
@@ -196,24 +206,29 @@ namespace tlc {
 		List<Entity> CreatePath(const String& path, const Entity& parent = nullentity);
 
 		void PrintEntityTree() const;
+		void PrintSystems() const;
 
 
 		template<typename T>
-		inline UUID CreateComponent(const Entity& entity, const String& name = "Unnamed_Component", const T& component = T()) {
+		inline UUID CreateComponent(const Entity& entity, const String& name = std::format("Component<{0}>", std::string(typeid(T).name())), const T& component = T()) {
 			if (!IsValidEntity(entity)) {
 				log::Warn("ECS::CreateComponent: Entity does not exist!");
 				return UUID::Zero();
 			}
 			const auto componentTypeID = typeid(T).hash_code();
 			auto componentId = Assure<T>().AddComponent(internal::ComponentHolder(entity, UUID::New(), name), component);
+			m_ComponentTypeMap[componentId] = componentTypeID;
 			m_Entities[entity].Components.push_back(componentId);
+			DispatchSystems(SystemTrigger::OnComponentCreate, { entity }, { componentId });
 			return componentId;
 		}
 
 		inline void* GetComponentRaw(const UUID& component) {
-			for (auto& [_, pool] : m_Components) {
-				if (pool.HasComponent(component)) {
-					return pool.GetComponentRaw(component);
+			auto typeId = m_ComponentTypeMap[component];
+			auto it = m_Components.find(typeId);
+			if (it == m_Components.end()) {			
+				if (it->second.HasComponent(component)) {
+					return it->second.GetComponentRaw(component);
 				}
 			}
 		}
@@ -239,41 +254,43 @@ namespace tlc {
 		}
 
 		inline const String& GetComponentName(const UUID& component) const {
-			for (auto& [_, pool] : m_Components) {
-				if (pool.HasComponent(component)) {
-					return pool.GetHolder(component).Name;
-				}
-			}
-			log::Fatal("ECS::GetComponentName: Component does not exist!");
+			return GetComponentHolder(component).Name;
 		}
 
 		inline const UUID& GetComponentEntity(const UUID& component) const {
-			for (auto& [_, pool] : m_Components) {
-				if (pool.HasComponent(component)) {
-					return pool.GetHolder(component).EntityID;
-				}
-			}
-			log::Fatal("ECS::GetComponentEntity: Component does not exist!");
+			return GetComponentHolder(component).EntityID;
 		}
 
-		template<typename... Ts>
-		inline void RegisterSystem(Ref<ISystem> system, SystemTrigger trigger = SystemTrigger::OnUpdate, U32 priority = 0, const String& name = "Unnamed_System") {
+		inline Size GetComponentTypeID(const UUID& component) const {
+			return m_ComponentTypeMap.at(component);
+		}
+
+		template<typename Ts, typename SystemType> requires std::derived_from<SystemType, ISystem>
+		inline UUID RegisterSystem(Ref<SystemType> system, SystemTrigger trigger = SystemTrigger::OnUpdate, U32 priority = 0, const String& name = std::format("System<{0}>", std::string(typeid(SystemType).name()))) {
 			if (!name.starts_with("__")) {
 				priority = std::clamp(priority, 0u, 1000u); // allowed range for normal systems
 			}
 			auto holder = internal::SystemHolder(system, name, priority, trigger);
-			holder.Filter = { typeid(Ts).hash_code()... };
-			m_Systems.push_back(holder);
-			std::sort(m_Systems.begin(), m_Systems.end(), [](const auto& a, const auto& b) { return a.Priority < b.Priority; });
+			holder.Filter = typeid(Ts).hash_code();
+			holder.ID = UUID::New();
+			auto& systems = m_Systems[trigger]; // We want a default empty list if it doesn't exist
+			systems.push_back(holder);
+			std::sort(systems.begin(), systems.end(), [](const auto& a, const auto& b) { return a.Priority < b.Priority; });
 			system->OnLoad();
+			return holder.ID;
 		}
+
+		template<typename... Ts>
+		inline UUID RegisterSystemWithQuery(Ref<ISystem> system, SystemTrigger trigger = SystemTrigger::OnUpdate, U32 priority = 0, const String& name = std::format("SystemQuery<{0}>", std::string(typeid(Ts).name())));
 
 	private:
 		void LinkInTree(const UUID& parent, const UUID& child);
 		void UnlinkInTree(const UUID& parent, const UUID& child);
 
+		void DispatchSystems(SystemTrigger trigger, const List<UUID>& entities, const List<UUID>& components);
+
 		template<typename T>
-		inline internal::ComponentPool& Assure(I32 typeId = typeid(T).hash_code()) {
+		inline internal::ComponentPool& Assure(Size typeId = typeid(T).hash_code()) {
 			auto it = m_Components.find(typeId);
 			if (it == m_Components.end()) {
 				m_Components[typeId] = internal::ComponentPool::Create<T>();
@@ -281,11 +298,34 @@ namespace tlc {
 			return m_Components[typeId];
 		}
 
+		inline const internal::ComponentHolder& GetComponentHolder(const UUID& component) {
+			auto typeId = m_ComponentTypeMap[component];
+			auto it = m_Components.find(typeId);
+			if (it == m_Components.end()) {
+				log::Fatal("ECS::GetComponentHolder: Component does not exist!");
+			}
+			return it->second.GetHolder(component);
+		}
+
+		inline const internal::ComponentHolder& GetComponentHolder(const UUID& component) const {
+			auto typeId = m_ComponentTypeMap.find(component);
+			if (typeId == m_ComponentTypeMap.end()) {
+				log::Fatal("ECS::GetComponentHolder: Component does not exist!");
+			}
+			auto it = m_Components.find(typeId->second);
+			if (it == m_Components.end()) {
+				log::Fatal("ECS::GetComponentHolder: Component does not exist!");
+			}
+			return it->second.GetHolder(component);
+		}
+		
+
 	private:
 		Entity m_RootEntity = UUID::Zero();
 		UnorderedMap<Entity, internal::EntityHolder> m_Entities;
 		UnorderedMap<Size, internal::ComponentPool> m_Components;
-		List<internal::SystemHolder> m_Systems;
+		UnorderedMap<UUID, Size> m_ComponentTypeMap;
+		UnorderedMap<SystemTrigger, List<internal::SystemHolder>> m_Systems;
 	};
 
 }

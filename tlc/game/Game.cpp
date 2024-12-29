@@ -50,7 +50,20 @@ namespace tlc
 
     void GameApplication::OnStart()
     {
-        auto ecs = CreateScope<ECS>();
+        auto ecs = CreateRef<ECS>();
+
+        class System : public ISystem
+        {
+        public:
+            virtual void OnUpdate(Raw<ECS> ecs, const List<Entity>& entities, const List<UUID>& components) override
+            {
+                (void)ecs;
+                (void)entities;
+                (void)components;
+            }
+        };
+        auto system = CreateRef<System>();
+        ecs->RegisterSystemWithQuery<Transform, Mesh, Material>(system, SystemTrigger::OnUpdate, 0, "TestSystem");
 
         auto camera = ecs->CreateEntity("Camera");
         auto light = ecs->CreateEntity("Light");
@@ -68,17 +81,20 @@ namespace tlc
 
         auto entities = ecs->CreatePath("World/Cube2/CubeRenderer2/CubeMesh2");
 
-        auto comp = ecs->CreateComponent<Transform>(cube, "Transform");
+        auto comp = ecs->CreateComponent<Transform>(cube, "Transform"); 
         auto comp2 = ecs->CreateComponent<Mesh>(cube, "Mesh");
         auto comp3 = ecs->CreateComponent<Material>(cube, "Material");
 
-        auto comp4 = ecs->CreateComponent<Light>(light, "Light");
+        auto comp4 = ecs->CreateComponent<Light>(light);
 
-        auto comp5 = ecs->CreateComponent<Transform>(cube, "Transform");
+        auto comp5 = ecs->CreateComponent<Transform>(cube);
 
         // ecs->
         log::Error("Entity Tree: ");
         ecs->PrintEntityTree();
+
+        log::Error("Systems: ");
+        ecs->PrintSystems();
 
 
         ChangeScene("TestScene");

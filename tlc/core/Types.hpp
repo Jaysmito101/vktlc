@@ -12,6 +12,7 @@
 #include <utility>
 #include <stack>
 #include <queue>
+#include <tuple>
 
 
 namespace tlc 
@@ -58,6 +59,33 @@ namespace tlc
 
 	template <typename T, int N>
 	using Array = std::array<T, N>;
+
+	template <typename... Ts>
+	using Tuple = std::tuple<Ts...>;
+
+	namespace internal {
+		template<typename T, int N>
+		struct GenerateTupleNType {
+			template <typename = std::make_index_sequence<N>>
+			struct Impl;
+
+			template <size_t... I>
+			struct Impl<std::index_sequence<I...>> {
+				template <size_t>
+				using Wrap = T;
+
+				using Type = Tuple<Wrap<I>...>;
+			};
+
+			using Type = typename Impl<>::Type;
+		};
+	}
+
+	template<typename T, int N>
+	using HomoTuple = typename internal::GenerateTupleNType<T, N>::Type;
+
+	template<int N, typename... Ts>
+	using NthType = std::tuple_element_t<N, Tuple<Ts...>>;
 
 	template<typename A, typename B>
 	using Pair = std::pair<A, B>;

@@ -12,6 +12,7 @@ namespace tlc {
             UUID(void* data);
 
         public:
+			inline UUID() : UUID(nullptr) {}
             ~UUID() = default;
 
             std::string ToString() const;
