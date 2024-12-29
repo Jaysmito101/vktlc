@@ -99,6 +99,12 @@ namespace tlc
         log::Error("Entity Tree: ");
         ecs->PrintEntityTree();
 
+        ecs->DestroyEntity(world);   
+        ecs->ApplyDeletions();
+
+        log::Error("Entity Tree: ");
+        ecs->PrintEntityTree();
+
         log::Error("Systems: ");
         ecs->PrintSystems();
 

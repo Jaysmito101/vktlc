@@ -210,6 +210,9 @@ namespace tlc {
 
 		void ApplyDeletions();
 
+		inline bool IsComponentValid(const UUID& component) const { return m_ComponentTypeMap.find(component) != m_ComponentTypeMap.end(); }
+		inline bool IsEntityValid(const Entity& entity) const { return m_Entities.find(entity) != m_Entities.end(); }
+
 		// These functions are used to destroy entities and components
 		// but they just mark them for deletion, they are not actually deleted
 		// until ApplyDeletions is called
