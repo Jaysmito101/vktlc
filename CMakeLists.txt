@@ -14,8 +14,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(SHADERC_SKIP_TESTS ON)
 
-add_subdirectory(./dep/glfw)
-
 # Use FindVulkan module added with CMAKE 3.7
 if(NOT CMAKE_VERSION VERSION_LESS 3.7.0)
     message(STATUS "Using module to find Vulkan")
@@ -53,6 +51,10 @@ IF(NOT Vulkan_FOUND)
 ELSE()
     message(STATUS ${Vulkan_LIBRARY})
 ENDIF()
+
+add_subdirectory(./dep/glfw)
+add_subdirectory(./dep/imguibuilder)
+
 
 
 include_directories(
@@ -110,6 +112,7 @@ add_executable(tlc
 )
 target_link_libraries(tlc
     glfw
+    imgui
     ${Vulkan_LIBRARY}
     debug $ENV{VULKAN_SDK}/Lib/shaderc_combinedd.lib
     optimized $ENV{VULKAN_SDK}/Lib/shaderc_combined.lib
