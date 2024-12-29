@@ -16,11 +16,9 @@ namespace tlc
 			log::Fatal("Application already exists!");
 		}
 
-		log::Debug("Starting up application");
-
-		m_Window = Window::Get();
 		log::Info("Application started");
 
+		Window::Get(); // Setup window
 		Services::Setup();
 
 		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void {
@@ -30,22 +28,8 @@ namespace tlc
 		// TODO: Clean this up!
 		EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void {
 			m_Minimized = (width == 0 || height == 0);
-			static Pair<I32, I32> prevWindowSize = MakePair(0, 0);
-			if ((width != prevWindowSize.first || height != prevWindowSize.second) && (width > 0 && height > 0))
-			{
-				m_VulkanDevice->WaitIdle();
-				m_VulkanSwapchain->Recreate();
-				// TODO: Recreate the pipeline here
-				prevWindowSize = MakePair(width, height);
-			}
 			OnResize(width, height);
-			});
-
-
-		SetupVulkan();
-
-		m_Renderer = Renderer::Get(m_VulkanDevice, m_VulkanSwapchain.get());
-
+		});
 	}
 
 	Application::~Application()
@@ -56,53 +40,22 @@ namespace tlc
 
 		Services::Shutdown();
 
-		m_VulkanDevice->WaitIdle();
 
 		Renderer::Shutdown();
-
-		m_VulkanSwapchain.reset();
-
 		Window::Shutdown();
-		VulkanContext::Shutdown();
 		log::Info("Application shutdown");
-	}
-
-	void Application::SetupVulkan()
-	{
-		m_VulkanContext = VulkanContext::Get();
-
-		auto physicalDevice = m_VulkanContext->PickPhysicalDevice();
-		log::Info("Picked physical device: {}", physicalDevice.getProperties().deviceName.data());
-		m_VulkanDevice = m_VulkanContext->CreateDevice(physicalDevice);
-
-		log::Debug("Creating surface");
-		m_VulkanContext->CreateSurface(m_Window);
-
-		log::Debug("Creating swapchain");
-		m_VulkanSwapchain = m_VulkanDevice->CreateSwapchain(m_Window);
-		if (m_VulkanSwapchain == nullptr)
-		{
-			log::Fatal("Failed to create swapchain");
-		}
-		log::Info("Created swapchain");
-
 	}
 
 	void Application::Run()
 	{
-		m_VulkanDevice->WaitIdle();
 		OnLoad();
-
 		m_HasLoaded = true;
-
-	
 		m_LastFrameTime = static_cast<F32>(glfwGetTime());
-		m_Renderer->SetClearColor(0.2f, 0.21f, 0.22f, 1.0f);
-
 		OnStart();
 
-
 		if (m_CurrentScene != nullptr) m_CurrentScene->Start();
+
+		auto window = Window::Get();
 
 		try 
 		{
@@ -113,7 +66,7 @@ namespace tlc
 				m_LastFrameTime = m_CurentFrameTime;
 				
 				if(m_NextSceneOnLoading) PollForSceneChange();
-				m_Window->Update();
+				window->Update();
 
 				if (m_Minimized) continue;
 
@@ -139,9 +92,7 @@ namespace tlc
 
 		if (m_CurrentScene != nullptr) m_CurrentScene->Unload();
 
-		m_VulkanDevice->WaitIdle();
 		OnUnload();
-
 	}
 
 	void Application::ChangeSceneI(const String& name)
@@ -154,7 +105,7 @@ namespace tlc
 			m_CurrentScene->Unload();
 		}
 		
-		m_CurrentScene = m_Scenes[name].get();
+ 		m_CurrentScene = m_Scenes[name].get();
 		m_CurrentScene->Load(false);
 		m_CurrentScene->Start();
 		Services::PushSceneChangeEvent();

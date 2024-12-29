@@ -25,14 +25,9 @@ namespace tlc
 		inline F32 GetLastFrameTime() const { return m_LastFrameTime; }
 		inline F32 GetCurrentFrameTime() const { return m_CurentFrameTime; }
 
-		inline static Application* Get() { TLC_ASSERT(s_Instance != nullptr , "Instance cannot be null!"); return s_Instance.get(); }
+		inline static Raw<Application> Get() { TLC_ASSERT(s_Instance != nullptr , "Instance cannot be null!"); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }
-
-		// TODO: Maybe remove these
-		inline VulkanDevice* GetVulkanDevice() { return m_VulkanDevice; }
-		inline VulkanSwapchain* GetVulkanSwapchain() { return m_VulkanSwapchain.get(); }
-		inline Renderer* GetRenderer() { return m_Renderer; }
-		inline Scene* GetCurrentScene() { return m_CurrentScene; }
+		inline Raw<Scene> GetCurrentScene() { return m_CurrentScene; }
 
 		virtual void OnLoad() = 0;
 		virtual void OnUnload() = 0;
@@ -64,13 +59,6 @@ namespace tlc
 	protected:
 		
 		static Scope<Application> s_Instance;
-
-	
-		Raw<Window> m_Window = nullptr;
-		Raw<VulkanContext> m_VulkanContext = nullptr;
-		Raw<VulkanDevice> m_VulkanDevice = nullptr;
-		Raw<Renderer> m_Renderer = nullptr;
-		Ref<VulkanSwapchain> m_VulkanSwapchain = nullptr;		
 
 	private:
 		Bool m_Running = true;

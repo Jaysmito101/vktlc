@@ -89,6 +89,7 @@ add_executable(tlc
     ./tlc/services/CacheManagerService.cpp
     ./tlc/services/assetmanager/AssetManagerService.cpp
     ./tlc/services/assetmanager/AssetBundlerService.cpp
+    ./tlc/services/renderer/VulkanManagerService.cpp
 # rendering
     ./tlc/rendering/Renderer.cpp
 # engine

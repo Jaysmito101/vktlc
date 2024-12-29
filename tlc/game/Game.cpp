@@ -8,6 +8,7 @@
 #include "services/CacheManager.hpp"
 #include "services/assetmanager/AssetManager.hpp"
 #include "services/assetmanager/AssetBundler.hpp"
+#include "services/renderer/VulkanManager.hpp"
 
 
 #include "engine/ecs/ECS.hpp"
@@ -28,6 +29,7 @@ namespace tlc
         Services::RegisterService<CacheManager>(utils::GetExecutableDirectory() + "/cache");
         Services::RegisterService<AssetBundler>(utils::GetExecutableDirectory() + "/asset_bundles");
         Services::RegisterService<AssetManager>(utils::GetExecutableDirectory() + "/asset_bundles");
+        Services::RegisterService<VulkanManager>();
 
         RegisterAssets();
 
@@ -50,66 +52,7 @@ namespace tlc
 
     void GameApplication::OnStart()
     {
-        auto ecs = CreateRef<ECS>();
-
-        class System : public ISystem
-        {
-        public:
-            virtual void OnUpdate(Raw<ECS> ecs, const Entity& entity, const UUID& component) override
-            {
-                (void)ecs;
-                (void)entity;
-                (void)component;
-            }
-        };
-        auto system = CreateRef<System>();
-        ecs->RegisterSystemWithQuery<Transform, Mesh, Material>(system, SystemTrigger::OnUpdate, 0, "TestSystem");
-
-        auto camera = ecs->CreateEntity("Camera");
-        auto light = ecs->CreateEntity("Light");
-
-        auto world = ecs->CreateEntity("World");
-        auto cube = ecs->CreateEntity("Cube", world);
-        auto sphere = ecs->CreateEntity("Sphere", world);
-        auto plane = ecs->CreateEntity("Plane", world);
-
-        auto cubeRenderer = ecs->CreateEntity("CubeRenderer", cube);
-        auto sphereRenderer = ecs->CreateEntity("SphereRenderer", sphere);
-        auto planeRenderer = ecs->CreateEntity("PlaneRenderer", plane);
-
-        auto cubeMesh = ecs->CreateEntity("CubeMesh", cubeRenderer);
-
-        auto entities = ecs->CreatePath("World/Cube2/CubeRenderer2/CubeMesh2");
-
-        auto comp = ecs->CreateComponent<Transform>(cube, "Transform"); 
-        auto comp2 = ecs->CreateComponent<Mesh>(cube, "Mesh");
-        auto comp3 = ecs->CreateComponent<Material>(cube, "Material");
-
-        auto comp4 = ecs->CreateComponent<Light>(light);
-
-        auto comp5 = ecs->CreateComponent<Transform>(plane);
-
-        // ecs->
-        log::Error("Entity Tree: ");
-        ecs->PrintEntityTree();
-
-        ecs->DestroyComponent(comp3);
-        ecs->ApplyDeletions();
-
-        log::Error("Entity Tree: ");
-        ecs->PrintEntityTree();
-
-        ecs->DestroyEntity(world);   
-        ecs->ApplyDeletions();
-
-        log::Error("Entity Tree: ");
-        ecs->PrintEntityTree();
-
-        log::Error("Systems: ");
-        ecs->PrintSystems();
-
-
-        ChangeScene("TestScene");
+        // ChangeScene("TestScene");
     }
     
     void GameApplication::OnUpdate()
@@ -118,7 +61,8 @@ namespace tlc
         fps++;
         if (fpsTimer >= 1.0f)
         {
-            m_Window->SetTitle(std::format("TLC [Delta time: {}, FPS: {}, Scene: {}]", GetDeltaTime(), fps, GetCurrentScene()->GetName()));
+            
+            //Window::Get()->SetTitle(std::format("TLC [Delta time: {}, FPS: {}, Scene: {}]", GetDeltaTime(), fps, GetCurrentScene()->GetName()));
             fps = 0;
             fpsTimer = 0.0f;
         }
