@@ -87,9 +87,15 @@ namespace tlc
 
         auto comp4 = ecs->CreateComponent<Light>(light);
 
-        auto comp5 = ecs->CreateComponent<Transform>(cube);
+        auto comp5 = ecs->CreateComponent<Transform>(plane);
 
         // ecs->
+        log::Error("Entity Tree: ");
+        ecs->PrintEntityTree();
+
+        ecs->DestroyComponent(comp3);
+        ecs->ApplyDeletions();
+
         log::Error("Entity Tree: ");
         ecs->PrintEntityTree();
 

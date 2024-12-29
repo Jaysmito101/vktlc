@@ -208,6 +208,14 @@ namespace tlc {
 		void PrintEntityTree() const;
 		void PrintSystems() const;
 
+		void ApplyDeletions();
+
+		// These functions are used to destroy entities and components
+		// but they just mark them for deletion, they are not actually deleted
+		// until ApplyDeletions is called
+		inline void DestroyEntity(const Entity& entity) { m_EntitiesToRemove.insert(entity); }
+		inline void DestroyComponent(const UUID& component) { m_ComponentsToRemove.insert(component); DispatchSystems(SystemTrigger::OnComponentDestroy, { component }); }
+
 
 		template<typename T>
 		inline UUID CreateComponent(const Entity& entity, const String& name = std::format("Component<{0}>", std::string(typeid(T).name())), const T& component = T()) {
@@ -231,6 +239,29 @@ namespace tlc {
 					return it->second.GetComponentRaw(component);
 				}
 			}
+		}
+
+		template <typename T>
+		inline UUID GetComponentIDFromEntity(const Entity& entity) {
+			auto& components = GetComponents(entity);
+			auto typeId = typeid(T).hash_code();
+			auto it = std::find_if(components.begin(), components.end(), [this, typeId](const auto& component) {
+				return m_ComponentTypeMap[component] == typeId;
+			});
+			if (it == components.end()) {
+				log::Warn("ECS::GetComponentIDFromEntity: Component does not exist!");
+				return UUID::Zero();
+			}
+			return *it;
+		}
+
+		template <typename T>
+		inline T& GetComponentFromEntity(const Entity& entity, const T& defaultValue = T()) {
+			auto component = GetComponentIDFromEntity<T>(entity);
+			if (component == UUID::Zero()) {
+				return defaultValue;
+			}
+			return GetComponent<T>(component);
 		}
 
 		template<typename T>
@@ -287,6 +318,10 @@ namespace tlc {
 		void LinkInTree(const UUID& parent, const UUID& child);
 		void UnlinkInTree(const UUID& parent, const UUID& child);
 
+		void MarkEntitiesForDeletion(const UUID& entity);
+		void DeleteComponentApply(const UUID& component);
+
+
 		// NOTE: This function expects the TypeId for all the components to be the same
 		void DispatchSystems(SystemTrigger trigger, const List<UUID>& components);
 
@@ -327,6 +362,9 @@ namespace tlc {
 		UnorderedMap<Size, internal::ComponentPool> m_Components;
 		UnorderedMap<UUID, Size> m_ComponentTypeMap;
 		UnorderedMap<SystemTrigger, List<internal::SystemHolder>> m_Systems;
+
+		Set<Entity> m_EntitiesToRemove;
+		Set<UUID> m_ComponentsToRemove;
 	};
 
 }

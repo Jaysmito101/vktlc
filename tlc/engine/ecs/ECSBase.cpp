@@ -121,20 +121,27 @@ namespace tlc
 		TLC_ASSERT(parent != child, "ECS::UnlinkInTree: Parent and Child cannot be the same entity!");
 		TLC_ASSERT(child != m_RootEntity, "ECS::UnlinkInTree: Cannot unlink the root entity!");
 
-		auto parentActual = parent;
-		if (parent == nullentity) {
-			parentActual = m_RootEntity;
-		}
-
-		auto parentEntity = m_Entities.find(parentActual);
 		auto childEntity = m_Entities.find(child);
-		if (parentEntity == m_Entities.end() || childEntity == m_Entities.end()) {
-			log::Warn("ECS::UnlinkInTree: Parent or Child entity not found!");
+		if (childEntity == m_Entities.end()) {
+			log::Warn("ECS::UnlinkInTree: Child entity not found!");
+			return;
+		}
+		
+		if (parent == nullentity) {
+			// If the parent is null, just remove the parent
+			childEntity->second.Parent = nullentity;
 			return;
 		}
 
+		auto parentEntity = m_Entities.find(parent);
+		if (parentEntity == m_Entities.end()) {
+			log::Warn("ECS::UnlinkInTree: Parent entity not found!");
+			return;
+		}
+
+
 		// if it is not a child of the parent, do nothing
-		if (childEntity->second.Parent != parentActual) {
+		if (childEntity->second.Parent != parent) {
 			return;
 		}
 
@@ -265,4 +272,67 @@ namespace tlc
 		}
 	}
 
+	void ECS::DeleteComponentApply(const UUID& component) {
+		if (m_ComponentTypeMap.find(component) == m_ComponentTypeMap.end()) {
+			log::Warn("ECS::DeleteComponentApply: Component does not exist!");
+			return;
+		}
+
+		// remove from type map
+		auto componentType = m_ComponentTypeMap[component];
+
+		// remove from entity
+		auto componentHolder = GetComponentHolder(component);
+
+		m_ComponentTypeMap.erase(component);
+
+		auto entity = m_Entities.find(componentHolder.EntityID);
+		if (entity != m_Entities.end()) {
+			auto& components = entity->second.Components;
+			components.erase(std::remove(components.begin(), components.end(), component), components.end());
+		}
+
+		// remove from component pool
+		auto pool = m_Components.find(componentType);
+		if (pool != m_Components.end()) {
+			pool->second.RemoveComponent(component);
+		}
+	}
+
+	void ECS::MarkEntitiesForDeletion(const UUID& entity) {
+		TLC_ASSERT(entity != m_RootEntity, "ECS::MarkEntitiesForDeletion: Cannot delete the root entity!");
+		TLC_ASSERT(entity != nullentity, "ECS::MarkEntitiesForDeletion: Cannot delete a null entity!");
+		TLC_ASSERT(m_Entities.find(entity) != m_Entities.end(), "ECS::MarkEntitiesForDeletion: Entity does not exist!");
+
+		// Mark all components of the entity for deletion
+		auto& components = GetComponents(entity);
+		for (const auto& component : components) {
+			DestroyComponent(component);
+		}
+
+		// Mark all children for deletion
+		auto& children = GetChildren(entity);
+		for (const auto& child : children) {
+			MarkEntitiesForDeletion(child);
+		}
+	}
+
+	void ECS::ApplyDeletions() {
+		for (const auto& entity : m_EntitiesToRemove) {
+			MarkEntitiesForDeletion(entity);
+		}
+
+		// Now actually delete the components
+		for (const auto& component : m_ComponentsToRemove) {
+			DeleteComponentApply(component);
+		}
+
+		for (const auto& entity : m_EntitiesToRemove) {
+			UnlinkInTree(GetParent(entity), entity);
+			m_Entities.erase(entity);
+		}
+
+		m_EntitiesToRemove.clear();
+		m_ComponentsToRemove.clear();		
+	}
 }

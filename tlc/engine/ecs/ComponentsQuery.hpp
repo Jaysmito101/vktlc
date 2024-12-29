@@ -6,6 +6,7 @@
 
 namespace tlc
 {
+    namespace internal {
     template<typename... Ts>
     class ComponentsQuery : public HomoTuple<UUID, sizeof...(Ts)>
     {
@@ -91,6 +92,16 @@ namespace tlc
             }
         }
 
+        static void UninjectIfNeeded(Raw<ECS> ecs, const Entity& entity)
+        {
+            // No need to check if the entity matches the query
+            // because if it has the injected component, it must match the query
+            if (IsEntityInjected(ecs, entity))
+            {
+                ecs->DestroyComponent(ecs->GetComponentIDFromEntity<SelfType>(entity));
+            }
+        }
+
         class InjectorAdd : public ISystem
         {
         public:
@@ -107,30 +118,33 @@ namespace tlc
             virtual void OnUpdate(Raw<ECS> ecs, const Entity& entity, const UUID& component) override
             {
                 (void)component;
+                SelfType::UninjectIfNeeded(ecs, entity);
             }
         };
     };
+
+    } // namespace internal
     
     template<int N, typename... Ts>
     inline void RegisterSystemWithQueryImpl(Raw<ECS> ecs, Ref<ISystem> systemAdd, Ref<ISystem> systemRem, const String& name) {        
         if constexpr (N < sizeof...(Ts)) {
             using ComponentType = NthType<N, Ts...>;
             auto componentTypeName = std::string(typeid(ComponentType).name());
-            ecs->RegisterSystem<ComponentType>(systemAdd, SystemTrigger::OnComponentCreate, 100000, std::vformat("__QueryInjectorAdd<{0} : Listner<{1}>>", std::make_format_args(name, componentTypeName)));
-            ecs->RegisterSystem<ComponentType>(systemRem, SystemTrigger::OnComponentDestroy, 100000, std::vformat("__QueryInjectorRem<{0} : Listner<{1}>>", std::make_format_args(name, componentTypeName)));
+            ecs->RegisterSystem<ComponentType>(systemAdd, SystemTrigger::OnComponentCreate, 100000, std::vformat("__QueryInjectorAdd<{0} : Listener<{1}>>", std::make_format_args(name, componentTypeName)));
+            ecs->RegisterSystem<ComponentType>(systemRem, SystemTrigger::OnComponentDestroy, 100000, std::vformat("__QueryInjectorRem<{0} : Listener<{1}>>", std::make_format_args(name, componentTypeName)));
             RegisterSystemWithQueryImpl<N + 1, Ts...>(ecs, systemAdd, systemRem, name);
         }
     }
 
     template<typename... Ts>
 	inline UUID ECS::RegisterSystemWithQuery(Ref<ISystem> system, SystemTrigger trigger, U32 priority, const String& name) {
-        using QueryType = ComponentsQuery<Ts...>;
+        using QueryType = internal::ComponentsQuery<Ts...>;
         auto query = QueryType();
         auto queryTypeName = std::string(typeid(QueryType).name());
 
         auto systemAdd = CreateRef<typename QueryType::InjectorAdd>();
         auto systemRem = CreateRef<typename QueryType::InjectorRem>();
         RegisterSystemWithQueryImpl<0, Ts...>(this, systemAdd, systemRem, queryTypeName);
-        return RegisterSystem<ComponentsQuery<Ts...>>(system, trigger, priority, name);
+        return RegisterSystem<internal::ComponentsQuery<Ts...>>(system, trigger, priority, name);
 	}
 }
