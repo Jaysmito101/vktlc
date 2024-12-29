@@ -15,7 +15,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(SHADERC_SKIP_TESTS ON)
 
 add_subdirectory(./dep/glfw)
-# add_subdirectory(./dep/shaderc)
 
 # Use FindVulkan module added with CMAKE 3.7
 if(NOT CMAKE_VERSION VERSION_LESS 3.7.0)
@@ -60,6 +59,8 @@ include_directories(
     ./tlc
     ./dep/glfw/include
     ./dep/glm
+    ./dep/imgui
+    ./dep/imgui/backends
     # ./dep/shaderc/libshaderc/include
     # PUBLIC "$ENV{VULKAN_SDK}/include"
     ${Vulkan_INCLUDE_DIRS}
