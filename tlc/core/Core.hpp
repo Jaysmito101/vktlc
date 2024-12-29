@@ -74,6 +74,7 @@
 #include <cstdlib>
 #include <limits>
 #include <filesystem>
+#include <ranges>
 #include <stack>
 #include <queue>
 

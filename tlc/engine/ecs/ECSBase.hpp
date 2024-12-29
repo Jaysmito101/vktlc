@@ -219,7 +219,7 @@ namespace tlc {
 			auto componentId = Assure<T>().AddComponent(internal::ComponentHolder(entity, UUID::New(), name), component);
 			m_ComponentTypeMap[componentId] = componentTypeID;
 			m_Entities[entity].Components.push_back(componentId);
-			DispatchSystems(SystemTrigger::OnComponentCreate, { entity }, { componentId });
+			DispatchSystems(SystemTrigger::OnComponentCreate, { componentId });
 			return componentId;
 		}
 
@@ -275,7 +275,7 @@ namespace tlc {
 			holder.ID = UUID::New();
 			auto& systems = m_Systems[trigger]; // We want a default empty list if it doesn't exist
 			systems.push_back(holder);
-			std::sort(systems.begin(), systems.end(), [](const auto& a, const auto& b) { return a.Priority < b.Priority; });
+			std::sort(systems.begin(), systems.end(), [](const auto& a, const auto& b) { return a.Priority > b.Priority; });
 			system->OnLoad();
 			return holder.ID;
 		}
@@ -287,7 +287,8 @@ namespace tlc {
 		void LinkInTree(const UUID& parent, const UUID& child);
 		void UnlinkInTree(const UUID& parent, const UUID& child);
 
-		void DispatchSystems(SystemTrigger trigger, const List<UUID>& entities, const List<UUID>& components);
+		// NOTE: This function expects the TypeId for all the components to be the same
+		void DispatchSystems(SystemTrigger trigger, const List<UUID>& components);
 
 		template<typename T>
 		inline internal::ComponentPool& Assure(Size typeId = typeid(T).hash_code()) {

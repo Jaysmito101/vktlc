@@ -11,7 +11,7 @@ namespace tlc
     {
     public:
         virtual ~ISystem() = default;
-        virtual void OnUpdate(Raw<ECS> ecs, const List<UUID>& entities, const List<UUID>& components) = 0;
+        virtual void OnUpdate(Raw<ECS> ecs, const UUID& entity, const UUID& component) = 0;
 
         virtual void OnLoad() {}
         virtual void OnUnload() {}

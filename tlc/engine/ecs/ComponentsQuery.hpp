@@ -87,7 +87,6 @@ namespace tlc
         {
             if (MatchEntity(ecs, entity) && !IsEntityInjected(ecs, entity))
             {
-                log::Error("Injecting {} into entity {}", typeid(SelfType).name(), entity);
                 Inject(ecs, entity);
             }
         }
@@ -95,33 +94,19 @@ namespace tlc
         class InjectorAdd : public ISystem
         {
         public:
-            virtual void OnUpdate(Raw<ECS> ecs, const List<Entity>& entities, const List<UUID>& components) override
+            virtual void OnUpdate(Raw<ECS> ecs, const Entity& entity, const UUID& component) override
             {
-                (void)components;
-
-                // usually this will be a single entity
-                // because of the trigger of this system
-                for (const auto& entity : entities) 
-                {
-                    SelfType::InjectIfNeeded(ecs, entity);
-                }
+                (void)component;
+                SelfType::InjectIfNeeded(ecs, entity);
             }
         };
 
         class InjectorRem : public ISystem
         {
         public:
-            virtual void OnUpdate(Raw<ECS> ecs, const List<Entity>& entities, const List<UUID>& components) override
+            virtual void OnUpdate(Raw<ECS> ecs, const Entity& entity, const UUID& component) override
             {
-                (void)components;
-                (void)ecs;
-
-                // usually this will be a single entity
-                // because of the trigger of this system
-                for (const auto& entity : entities) 
-                {
-                    // SelfType::InjectIfNeeded(m_ECS, entity);
-                }
+                (void)component;
             }
         };
     };

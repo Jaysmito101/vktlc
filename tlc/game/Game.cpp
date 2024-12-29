@@ -55,11 +55,11 @@ namespace tlc
         class System : public ISystem
         {
         public:
-            virtual void OnUpdate(Raw<ECS> ecs, const List<Entity>& entities, const List<UUID>& components) override
+            virtual void OnUpdate(Raw<ECS> ecs, const Entity& entity, const UUID& component) override
             {
                 (void)ecs;
-                (void)entities;
-                (void)components;
+                (void)entity;
+                (void)component;
             }
         };
         auto system = CreateRef<System>();

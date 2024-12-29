@@ -247,14 +247,21 @@ namespace tlc
 		return entities;
 	}
 
-	void ECS::DispatchSystems(SystemTrigger trigger, const List<UUID>& entities, const List<UUID>& components) {
+	void ECS::DispatchSystems(SystemTrigger trigger, const List<UUID>& components) {
 		auto systems = m_Systems.find(trigger);
 		if (systems == m_Systems.end()) {
 			return;
 		}
 
-		for (const auto& system : systems->second) {
-			system.System->OnUpdate(this, entities, components);
+		auto componentType = m_ComponentTypeMap[components[0]]; // All components are of the same type (assumption)
+		auto filteredSystems = systems->second | std::ranges::views::filter([componentType](const auto& system) {
+			return system.Filter == componentType;
+		});
+
+		for (const auto& system : filteredSystems) {
+			for (const auto& component : components) {
+				system.System->OnUpdate(this, GetComponentEntity(component), component);
+			}
 		}
 	}
 
