@@ -34,6 +34,11 @@ namespace tlc
 			m_Device.destroyCommandPool(commandPool);
 		}
 
+		if (m_DescriptorPool != static_cast<vk::DescriptorPool>(VK_NULL_HANDLE))
+		{
+			m_Device.destroyDescriptorPool(m_DescriptorPool);
+		}
+
 		m_Device.destroy();
 	}
 
@@ -197,6 +202,13 @@ namespace tlc
 			return false;
 		}
 
+		// TODO: Increase this if needed
+		if (!CreateDescriptorPool(1000))
+		{
+			log::Error("Failed to create descriptor pool");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -220,6 +232,39 @@ namespace tlc
 				log::Error("Failed to create command pool");
 				return false;
 			}
+		}
+
+		return true;
+	}
+
+	Bool VulkanDevice::CreateDescriptorPool(U32 maxSets) {
+		auto poolSizes = {
+			vk::DescriptorPoolSize()
+				.setType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(maxSets),
+			vk::DescriptorPoolSize()
+				.setType(vk::DescriptorType::eCombinedImageSampler)
+				.setDescriptorCount(maxSets),
+			vk::DescriptorPoolSize()
+				.setType(vk::DescriptorType::eStorageBuffer)
+				.setDescriptorCount(maxSets),
+			vk::DescriptorPoolSize()
+				.setType(vk::DescriptorType::eStorageImage)
+				.setDescriptorCount(maxSets),
+		};
+
+		vk::DescriptorPoolCreateInfo poolCreateInfo = vk::DescriptorPoolCreateInfo()
+			.setPoolSizeCount(static_cast<U32>(poolSizes.size()))
+			.setPPoolSizes(poolSizes.begin())
+			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+			.setMaxSets(maxSets * static_cast<U32>(poolSizes.size()));
+
+		m_DescriptorPool = m_Device.createDescriptorPool(poolCreateInfo);
+
+		if (m_DescriptorPool == static_cast<vk::DescriptorPool>(VK_NULL_HANDLE))
+		{
+			log::Error("Failed to create descriptor pool");
+			return false;
 		}
 
 		return true;

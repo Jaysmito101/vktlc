@@ -85,6 +85,7 @@ namespace tlc
 		inline const VulkanDeviceSettings& GetSettings() const { return m_Settings; }
 		inline const vk::Queue GetQueue(VulkanQueueType type) const { return m_Queues[type]; }
 		inline const vk::CommandPool GetCommandPool(VulkanQueueType type) const { return m_CommandPools[type]; }
+		inline const vk::DescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
 
 
 		friend class VulkanContext;
@@ -93,6 +94,7 @@ namespace tlc
 	private:
 		Bool CreateDevice();
 		Bool CreateCommandPools();
+		Bool CreateDescriptorPool(U32 maxSets);
 
 		I32 FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos);
 		static I32 FindQueueFamily(const vk::PhysicalDevice& physicalDevice, const vk::QueueFlags& flags, const vk::SurfaceKHR& surface = VK_NULL_HANDLE);
@@ -104,10 +106,10 @@ namespace tlc
 		vk::Device m_Device;
 		
 		Array<I32, VulkanQueueType::Count> m_QueueFamilyIndices;
-
 		Array<vk::Queue, VulkanQueueType::Count> m_Queues;
-
 		Array<vk::CommandPool, VulkanQueueType::Count> m_CommandPools;
+		vk::DescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
+
 
 		Bool m_IsReady = false;
 		Set<I32> m_UniqeQueueFamiliesIndices;

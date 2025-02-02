@@ -9,6 +9,7 @@
 #include "services/assetmanager/AssetManager.hpp"
 #include "services/assetmanager/AssetBundler.hpp"
 #include "services/renderer/VulkanManager.hpp"
+#include "services/DebugUIManager.hpp"
 
 
 #include "engine/ecs/ECS.hpp"
@@ -30,6 +31,7 @@ namespace tlc
         Services::RegisterService<AssetBundler>(utils::GetExecutableDirectory() + "/asset_bundles");
         Services::RegisterService<AssetManager>(utils::GetExecutableDirectory() + "/asset_bundles");
         Services::RegisterService<VulkanManager>();
+        Services::RegisterService<DebugUIManager>();
 
         RegisterAssets();
 

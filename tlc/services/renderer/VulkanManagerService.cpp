@@ -39,8 +39,8 @@ namespace tlc
 
         m_VulkanContext = VulkanContext::Get();
 
-        auto physicalDevice = m_VulkanContext->PickPhysicalDevice();
-        m_VulkanDevice = m_VulkanContext->CreateDevice(physicalDevice);
+        m_PhysicalDevice = m_VulkanContext->PickPhysicalDevice();
+        m_VulkanDevice = m_VulkanContext->CreateDevice(m_PhysicalDevice);
 
         log::Trace("Creating surface");
         m_VulkanContext->CreateSurface(Window::Get());
