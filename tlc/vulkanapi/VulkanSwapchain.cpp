@@ -103,7 +103,6 @@ namespace tlc
 		m_SwapchainExtent.setWidth(std::clamp(static_cast<U32>(width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width));
 		m_SwapchainExtent.setHeight(std::clamp(static_cast<U32>(height), capabilities.minImageExtent.height, capabilities.maxImageExtent.height));
 
-
 		return true;
 	}
 
@@ -168,20 +167,26 @@ namespace tlc
 			.setClipped(true)
 			.setOldSwapchain(m_Swapchain);
 
-		auto oldSwapchain = m_Swapchain;
+		
+		auto newSwapChain = m_Device->GetDevice().createSwapchainKHR(createInfo);
 
-		m_Swapchain = m_Device->GetDevice().createSwapchainKHR(createInfo);
-
-		if (oldSwapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
-		{
-			m_Device->GetDevice().destroySwapchainKHR(oldSwapchain);
+		if (newSwapChain == static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE)) {
+			if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE)) {
+				log::Warn("Failed to create new swapchain, using old one");
+				newSwapChain = m_Swapchain;
+				m_Swapchain = static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE);
+			} else {
+				log::Error("Failed to create swapchain");
+				return false;
+			}
 		}
 
-		if (m_Swapchain == static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
+	    if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
 		{
-			log::Error("Failed to create swapchain");
-			return false;
+			m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		}
+		
+		m_Swapchain = newSwapChain;
 
 		if (!QuerySwapchainImages())
 		{
@@ -192,18 +197,6 @@ namespace tlc
 		if (!CreateImageViews())
 		{
 			log::Error("Failed to create image views");
-			return false;
-		}
-
-		if (!CreateRenderPass())
-		{
-			log::Error("Failed to create render pass");
-			return false;
-		}
-
-		if (!CreateFramebuffers())
-		{
-			log::Error("Failed to create frambuffers");
 			return false;
 		}
 
@@ -250,97 +243,17 @@ namespace tlc
 		return true;
 	}
 
-	Bool VulkanSwapchain::CreateRenderPass()
-	{
-		auto attachment = vk::AttachmentDescription()
-			.setFormat(m_SwapchainImageFormat.format)
-			.setSamples(vk::SampleCountFlagBits::e1)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
-			.setStoreOp(vk::AttachmentStoreOp::eStore)
-			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setInitialLayout(vk::ImageLayout::eUndefined)
-			.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
-		auto subpassAttachment = vk::AttachmentReference()
-			.setAttachment(0)
-			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-		auto subpass = vk::SubpassDescription()
-			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
-			.setColorAttachmentCount(1)
-			.setPColorAttachments(&subpassAttachment)
-			.setPDepthStencilAttachment(nullptr)
-			.setPInputAttachments(nullptr)
-			.setPreserveAttachmentCount(0)
-			.setPResolveAttachments(nullptr);
-
-		auto subpassDependency = vk::SubpassDependency()
-			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-			.setDstSubpass(0)
-			.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-			.setSrcAccessMask(vk::AccessFlagBits::eNoneKHR)
-			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-
-		auto renderPassCreateInfo = vk::RenderPassCreateInfo()
-			.setAttachmentCount(1)
-			.setPAttachments(&attachment)
-			.setSubpassCount(1)
-			.setPSubpasses(&subpass)
-			.setDependencyCount(1)
-			.setPDependencies(&subpassDependency);
-		
-		m_RenderPass = m_Device->GetDevice().createRenderPass(renderPassCreateInfo);
-
-		if (m_RenderPass == static_cast<vk::RenderPass>(VK_NULL_HANDLE))
-		{
-			log::Error("VulkanFramebuffer::RecreateRenderPass: failed to create render pass");
-			return false;
-		}
-
-		return true;
-	}
-
-	Bool VulkanSwapchain::CreateFramebuffers()
-	{
-		m_Framebuffers.clear();
-
-		auto settings = VulkanFramebufferSettings()
-			.SetRenderPass(m_RenderPass)
-			.SetSwapchain(this);
-
-		for (U32 i = 0; i < m_ImageViews.size(); i++)
-		{
-			settings.SetSwapchainImageIndex(i);
-			auto framebuffer = m_Device->CreateFramebuffer(settings);
-			if (!framebuffer->IsReady())
-			{
-				log::Error("VulkanSwapchain::CreateFramebuffers: Failed to create framebuffer");
-				return false;
-			}
-			m_Framebuffers.push_back(framebuffer);
-		}
-
-		return true;
-	}
-
 	void VulkanSwapchain::Cleanup(Bool forRecreate)
 	{
-		if (!m_IsReady)
-		{
+		if (!m_IsReady) {
 			return;
 		}
 
 		m_Device->WaitIdle();
-		for (auto& imageView : m_ImageViews)
-		{
+		for (auto& imageView : m_ImageViews) {
 			m_Device->GetDevice().destroyImageView(imageView);
 		}
-
-		m_Device->GetDevice().destroyRenderPass(m_RenderPass);
 		m_ImageViews.clear();
-		m_Framebuffers.clear();
 		if(!forRecreate) m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		m_IsReady = false;
 	}

@@ -1,7 +1,6 @@
 #pragma once
 #include "core/Core.hpp"
 #include "engine/ecs/ECS.hpp"
-#include "rendering/Renderer.hpp"
 
 namespace tlc 
 {

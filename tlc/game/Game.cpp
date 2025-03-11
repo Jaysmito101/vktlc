@@ -44,12 +44,6 @@ namespace tlc
            
     }
     
-
-    void GameApplication::OnResize(U32 width, U32 height)
-    {
-        (void)width; (void)height;
-    }
-
     void GameApplication::OnStart()
     {
         // ChangeScene("TestScene");

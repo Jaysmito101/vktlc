@@ -3,7 +3,6 @@
 #include "core/Window.hpp"
 #include "vulkanapi/VulkanContext.hpp"
 #include "vulkanapi/VulkanSwapchain.hpp"
-#include "rendering/Renderer.hpp"
 
 #include "engine/Scene.hpp"
 
@@ -34,7 +33,6 @@ namespace tlc
 		virtual void OnStart() = 0;
 		virtual void OnUpdate() = 0;
 		virtual void OnEnd() = 0;
-		virtual void OnResize(U32 width, U32 height) = 0;
 
 
 		template <typename T>

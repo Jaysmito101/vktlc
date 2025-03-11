@@ -17,8 +17,6 @@ namespace tlc
 		virtual void OnUpdate() override;
 		virtual void OnEnd() override;
 
-		virtual void OnResize(U32 width, U32 height) override;
-
 
 		inline static Application* Create() { s_Instance = CreateScope<GameApplication>(); return s_Instance.get(); }
 

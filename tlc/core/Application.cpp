@@ -25,11 +25,6 @@ namespace tlc
 			m_Running = false;
 			});
 
-		// TODO: Clean this up!
-		EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void {
-			m_Minimized = (width == 0 || height == 0);
-			OnResize(width, height);
-		});
 	}
 
 	Application::~Application()
@@ -41,7 +36,6 @@ namespace tlc
 		Services::Shutdown();
 
 
-		Renderer::Shutdown();
 		Window::Shutdown();
 		log::Info("Application shutdown");
 	}
