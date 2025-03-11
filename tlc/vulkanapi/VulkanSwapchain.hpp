@@ -15,10 +15,10 @@ namespace tlc
 	public:
 		VulkanSwapchain(Raw<VulkanDevice> device, Raw<Window> window);
 		~VulkanSwapchain();
-
+	
 		U32 AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
 		void PresentImage(U32 index, vk::Semaphore waitSemaphore = VK_NULL_HANDLE);
-
+	
 		inline Bool IsReady() const { return m_IsReady; }
 		inline const vk::SurfaceFormatKHR& GetSurfaceFormat() const { return m_SwapchainImageFormat; }
 		inline const vk::Extent2D& GetExtent() const { return m_SwapchainExtent; }
@@ -26,15 +26,13 @@ namespace tlc
 		inline const List<vk::ImageView>& GetImageViews() const { return m_ImageViews; }
 		
 		Bool Recreate();
-
+	
 	private:
 		Bool ChooseSufaceFormat();
 		Bool ChoosePresentMode();
 		Bool ChooseExtent();
 		Bool QuerySwapchainImages();
 		Bool CreateImageViews();
-		Bool CreateRenderPass();
-		Bool CreateFramebuffers();
 
 		void Cleanup(Bool forRecreate);
 
@@ -51,6 +49,5 @@ namespace tlc
 		List<vk::ImageView> m_ImageViews;
 
 		Bool m_IsReady = false;
-		static Scope<VulkanSwapchain> s_Instance;
 	};
 }
