@@ -4,12 +4,9 @@
 
 namespace tlc
 {
-	VulkanSwapchain::VulkanSwapchain(VulkanDevice* device, Window* window)
+	VulkanSwapchain::VulkanSwapchain(Raw<VulkanDevice> device, Raw<VulkanContext> context, Raw<Window> window, vk::SurfaceKHR surface)
+		: m_Context(context), m_Device(device), m_Window(window), m_Surface(surface)
 	{
-		m_Context = device->GetParentContext();
-		m_Device = device;
-		m_Window = window;
-
 		Recreate();
 	}
 
@@ -19,6 +16,17 @@ namespace tlc
 		if (m_IsReady)
 		{
 			Cleanup(false);
+		}
+
+		if (m_Surface != static_cast<vk::SurfaceKHR>(VK_NULL_HANDLE))
+		{
+			log::Debug("Destroying Window Surface");
+			// Note a good idea to access context here
+			// as this code is usally executed inside the
+			// destructor of the context :
+			// ~VulkanContext() -> ~VulkanDevice() -> ~VulkanSwapchain()
+			m_Device->GetParentContext()->DestroySurface(m_Surface);
+			log::Info("Window Surface destroyed");
 		}
 	}
 
@@ -32,11 +40,11 @@ namespace tlc
 	void VulkanSwapchain::PresentImage(U32 index, vk::Semaphore waitSemaphore)
 	{
 		auto presentInfo = vk::PresentInfoKHR()
-			.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&waitSemaphore)
-			.setSwapchainCount(1)
-			.setPSwapchains(&m_Swapchain)
-			.setPImageIndices(&index);
+							   .setWaitSemaphoreCount(1)
+							   .setPWaitSemaphores(&waitSemaphore)
+							   .setSwapchainCount(1)
+							   .setPSwapchains(&m_Swapchain)
+							   .setPImageIndices(&index);
 
 		// VkCritCall(m_Device->GetDevice().queuePresentKHR(m_Context->GetPresentQueue(), &presentInfo));
 		VkCall(m_Device->GetQueue(Present).presentKHR(presentInfo));
@@ -44,7 +52,7 @@ namespace tlc
 
 	Bool VulkanSwapchain::ChooseSufaceFormat()
 	{
-		const auto formats = m_Device->GetPhysicalDevice().getSurfaceFormatsKHR(m_Context->GetSurface());
+		const auto formats = m_Device->GetPhysicalDevice().getSurfaceFormatsKHR(m_Surface);
 
 		if (formats.empty())
 		{
@@ -52,7 +60,7 @@ namespace tlc
 			return false;
 		}
 
-		for (const auto& format : formats)
+		for (const auto &format : formats)
 		{
 			if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
 			{
@@ -67,7 +75,7 @@ namespace tlc
 
 	Bool VulkanSwapchain::ChoosePresentMode()
 	{
-		const auto modes = m_Device->GetPhysicalDevice().getSurfacePresentModesKHR(m_Context->GetSurface());
+		const auto modes = m_Device->GetPhysicalDevice().getSurfacePresentModesKHR(m_Surface);
 
 		if (modes.empty())
 		{
@@ -75,7 +83,7 @@ namespace tlc
 			return false;
 		}
 
-		for (const auto& mode : modes)
+		for (const auto &mode : modes)
 		{
 			if (mode == vk::PresentModeKHR::eMailbox)
 			{
@@ -90,7 +98,7 @@ namespace tlc
 
 	Bool VulkanSwapchain::ChooseExtent()
 	{
-		const auto capabilities = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Context->GetSurface());
+		const auto capabilities = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Surface);
 
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 		{
@@ -128,7 +136,7 @@ namespace tlc
 			return false;
 		}
 
-		const auto capabilities = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Context->GetSurface());
+		const auto capabilities = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Surface);
 
 		U32 imageCount = capabilities.minImageCount + 1;
 
@@ -138,18 +146,18 @@ namespace tlc
 		}
 
 		vk::SwapchainCreateInfoKHR createInfo = vk::SwapchainCreateInfoKHR()
-			.setSurface(m_Context->GetSurface())
-			.setMinImageCount(imageCount)
-			.setImageFormat(m_SwapchainImageFormat.format)
-			.setImageColorSpace(m_SwapchainImageFormat.colorSpace)
-			.setImageExtent(m_SwapchainExtent)
-			.setImageArrayLayers(1)
-			.setQueueFamilyIndexCount(0)
-			.setPQueueFamilyIndices(nullptr)
-			// .setImageUsage(vk::ImageUsageFlagBits::eTransferDst);
-			.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
+													.setSurface(m_Surface)
+													.setMinImageCount(imageCount)
+													.setImageFormat(m_SwapchainImageFormat.format)
+													.setImageColorSpace(m_SwapchainImageFormat.colorSpace)
+													.setImageExtent(m_SwapchainExtent)
+													.setImageArrayLayers(1)
+													.setQueueFamilyIndexCount(0)
+													.setPQueueFamilyIndices(nullptr)
+													// .setImageUsage(vk::ImageUsageFlagBits::eTransferDst);
+													.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
-		const U32 queueFamilyIndices[] = { static_cast<U32>(m_Device->GetGraphicsQueueFamilyIndex()), static_cast<U32>(m_Device->GetPresentQueueFamilyIndex()) };
+		const U32 queueFamilyIndices[] = {static_cast<U32>(m_Device->GetGraphicsQueueFamilyIndex()), static_cast<U32>(m_Device->GetPresentQueueFamilyIndex())};
 		if (m_Device->GetGraphicsQueueFamilyIndex() != m_Device->GetPresentQueueFamilyIndex())
 		{
 			createInfo.setImageSharingMode(vk::SharingMode::eConcurrent)
@@ -167,25 +175,28 @@ namespace tlc
 			.setClipped(true)
 			.setOldSwapchain(m_Swapchain);
 
-		
 		auto newSwapChain = m_Device->GetDevice().createSwapchainKHR(createInfo);
 
-		if (newSwapChain == static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE)) {
-			if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE)) {
+		if (newSwapChain == static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
+		{
+			if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
+			{
 				log::Warn("Failed to create new swapchain, using old one");
 				newSwapChain = m_Swapchain;
 				m_Swapchain = static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE);
-			} else {
+			}
+			else
+			{
 				log::Error("Failed to create swapchain");
 				return false;
 			}
 		}
 
-	    if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
+		if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
 		{
 			m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		}
-		
+
 		m_Swapchain = newSwapChain;
 
 		if (!QuerySwapchainImages())
@@ -218,18 +229,18 @@ namespace tlc
 		for (U32 i = 0; i < m_Images.size(); i++)
 		{
 			VkImageSubresourceRange subresourceRange = vk::ImageSubresourceRange()
-				.setAspectMask(vk::ImageAspectFlagBits::eColor)
-				.setBaseMipLevel(0)
-				.setLevelCount(1)
-				.setBaseArrayLayer(0)
-				.setLayerCount(1);
+														   .setAspectMask(vk::ImageAspectFlagBits::eColor)
+														   .setBaseMipLevel(0)
+														   .setLevelCount(1)
+														   .setBaseArrayLayer(0)
+														   .setLayerCount(1);
 
 			vk::ImageViewCreateInfo createInfo = vk::ImageViewCreateInfo()
-				.setImage(m_Images[i])
-				.setViewType(vk::ImageViewType::e2D)
-				.setFormat(m_SwapchainImageFormat.format)
-				.setComponents(vk::ComponentMapping())
-				.setSubresourceRange(subresourceRange);
+													 .setImage(m_Images[i])
+													 .setViewType(vk::ImageViewType::e2D)
+													 .setFormat(m_SwapchainImageFormat.format)
+													 .setComponents(vk::ComponentMapping())
+													 .setSubresourceRange(subresourceRange);
 
 			m_ImageViews[i] = m_Device->GetDevice().createImageView(createInfo);
 
@@ -245,16 +256,19 @@ namespace tlc
 
 	void VulkanSwapchain::Cleanup(Bool forRecreate)
 	{
-		if (!m_IsReady) {
+		if (!m_IsReady)
+		{
 			return;
 		}
 
 		m_Device->WaitIdle();
-		for (auto& imageView : m_ImageViews) {
+		for (auto &imageView : m_ImageViews)
+		{
 			m_Device->GetDevice().destroyImageView(imageView);
 		}
 		m_ImageViews.clear();
-		if(!forRecreate) m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
+		if (!forRecreate)
+			m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		m_IsReady = false;
 	}
 

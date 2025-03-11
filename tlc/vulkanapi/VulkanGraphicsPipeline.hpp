@@ -7,7 +7,6 @@ namespace tlc
 
 	class VulkanContext;
 	class VulkanDevice;
-	class VulkanSwapchain;
 	class VulkanFramebuffer;
 	class VulkanShaderModule;
 
@@ -130,7 +129,6 @@ namespace tlc
 	private:
 		Raw<VulkanContext> m_Context;
 		Raw<VulkanDevice> m_Device;
-		Raw<VulkanSwapchain> m_Swapchain;
 
 		VulkanGraphicsPipelineSettings m_Settings;
 		VulkanGraphicsPipelineProperties m_Properties;

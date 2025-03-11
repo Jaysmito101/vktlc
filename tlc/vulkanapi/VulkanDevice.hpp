@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkanapi/VulkanBase.hpp"
-#include "vulkanapi/VulkanFramebuffer.hpp"
 
 namespace tlc
 {
@@ -53,12 +52,10 @@ namespace tlc
 	class VulkanDevice 
 	{
 	public:
-		VulkanDevice(VulkanContext* parentContext, vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings);
+		VulkanDevice(VulkanContext* parentContext, vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings, vk::SurfaceKHR);
 		~VulkanDevice();
 
-		Ref<VulkanSwapchain> CreateSwapchain(Window* window);
 		Ref<VulkanShaderModule> CreateShaderModule(const List<U32>& shaderCode);
-		Ref<VulkanFramebuffer> CreateFramebuffer(const VulkanFramebufferSettings& settings = VulkanFramebufferSettings());
 		Ref<VulkanCommandBuffer> CreateCommandBuffer(VulkanQueueType type);
 		Ref<VulkanBuffer> CreateBuffer();
 
@@ -91,10 +88,10 @@ namespace tlc
 		friend class VulkanCommandBuffer;
 	
 	private:
-		Bool CreateDevice();
+		Bool CreateDevice(vk::SurfaceKHR surface = VK_NULL_HANDLE);
 		Bool CreateCommandPools();
 
-		I32 FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos);
+		I32 FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos, vk::SurfaceKHR surface = VK_NULL_HANDLE);
 		static I32 FindQueueFamily(const vk::PhysicalDevice& physicalDevice, const vk::QueueFlags& flags, const vk::SurfaceKHR& surface = VK_NULL_HANDLE);
 		static vk::DeviceQueueCreateInfo CreateQueueCreateInfo(I32 queueFamilyIndex, F32* queuePriority);
 

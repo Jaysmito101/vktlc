@@ -5,6 +5,7 @@
 #include "vulkanapi/VulkanShader.hpp"
 #include "vulkanapi/VulkanBuffer.hpp"
 #include "vulkanapi/VulkanCommandBuffer.hpp"
+#include "vulkanapi/VulkanSwapchain.hpp"
 #include "vulkanapi/VulkanGraphicsPipeline.hpp"
 
 namespace tlc
@@ -23,8 +24,12 @@ namespace tlc
 		List<vk::PhysicalDevice> QueryPhysicalDevices();
 		vk::PhysicalDevice PickPhysicalDevice();
 
-		VulkanDevice* CreateDevice(vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings = VulkanDeviceSettings());
-		const vk::SurfaceKHR& CreateSurface(Window* window);
+		VulkanDevice* CreateDevice(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface = VK_NULL_HANDLE, const VulkanDeviceSettings& settings = VulkanDeviceSettings());
+		vk::SurfaceKHR CreateSurface(Window* window);
+		void DestroySurface(vk::SurfaceKHR surface);
+
+		Raw<VulkanSwapchain> CreateSwapchain(Raw<Window> window, Raw<VulkanDevice> device, vk::SurfaceKHR surface);
+
 
 		inline static VulkanContext* Get() { if (!s_Instance) s_Instance = CreateScope<VulkanContext>(); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }
@@ -34,8 +39,6 @@ namespace tlc
 		inline const List<CString>& GetExtensions() const { return m_Extensions; }
 		inline const List<CString>& GetLayers() const { return m_Layers; }
 
-		inline const vk::SurfaceKHR& GetSurface() const { return m_Surface; }
-
 	private:
 		Bool CreateInstance();
 
@@ -44,12 +47,13 @@ namespace tlc
 
 	private:
 		vk::Instance m_Instance = VK_NULL_HANDLE;
-		vk::Device m_Device = VK_NULL_HANDLE;
-		vk::SurfaceKHR m_Surface = VK_NULL_HANDLE;
+
+		Scope<VulkanSwapchain> m_Swapchain = nullptr;
 
 		List<CString> m_Extensions;
 		List<CString> m_Layers;
 		List<Scope<VulkanDevice>> m_Devices;
+		
 		// vk::DebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 

@@ -20,7 +20,6 @@ namespace tlc
 
     void VulkanManager::OnEnd()
     {
-        m_VulkanSwapchain.reset();
         VulkanContext::Shutdown();
         log::Trace("Vulkan shutdown");
     }
@@ -39,14 +38,13 @@ namespace tlc
 
         m_VulkanContext = VulkanContext::Get();
 
-        auto physicalDevice = m_VulkanContext->PickPhysicalDevice();
-        m_VulkanDevice = m_VulkanContext->CreateDevice(physicalDevice);
-
         log::Trace("Creating surface");
-        m_VulkanContext->CreateSurface(Window::Get());
+        auto surfaceKHR =  m_VulkanContext->CreateSurface(Window::Get());
 
+        m_PhysicalDevice = m_VulkanContext->PickPhysicalDevice();
+        m_VulkanDevice = m_VulkanContext->CreateDevice(m_PhysicalDevice, surfaceKHR);
         log::Trace("Creating swapchain");
-        m_VulkanSwapchain = m_VulkanDevice->CreateSwapchain(Window::Get());
+        m_VulkanSwapchain = m_VulkanContext->CreateSwapchain(Window::Get(), m_VulkanDevice, surfaceKHR);
         if (m_VulkanSwapchain == nullptr)
         {
             log::Fatal("Failed to create swapchain");

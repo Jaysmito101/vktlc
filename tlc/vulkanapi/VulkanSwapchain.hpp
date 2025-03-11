@@ -13,7 +13,7 @@ namespace tlc
 	class VulkanSwapchain
 	{
 	public:
-		VulkanSwapchain(Raw<VulkanDevice> device, Raw<Window> window);
+		VulkanSwapchain(Raw<VulkanDevice> device, Raw<VulkanContext> context, Raw<Window> window, vk::SurfaceKHR surface);
 		~VulkanSwapchain();
 	
 		U32 AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
@@ -41,6 +41,7 @@ namespace tlc
 		Raw<VulkanDevice> m_Device;
 		Raw<Window> m_Window;
 
+		vk::SurfaceKHR m_Surface = VK_NULL_HANDLE;
 		vk::SwapchainKHR m_Swapchain = VK_NULL_HANDLE;
 		vk::SurfaceFormatKHR m_SwapchainImageFormat = vk::Format::eUndefined;
 		vk::PresentModeKHR m_PresentMode = vk::PresentModeKHR::eFifo;

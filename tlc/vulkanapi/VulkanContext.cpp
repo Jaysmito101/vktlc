@@ -81,18 +81,13 @@ namespace tlc
 	{
 		log::Debug("Shutting down VulkanContext");
 
+		m_Swapchain.reset();
+
 		for (I32 i = 0 ; i < m_Devices.size() ; i++)
 		{
 			m_Devices[i].reset();
 		}
 		m_Devices.clear();
-
-		if (m_Surface != static_cast<vk::SurfaceKHR>(VK_NULL_HANDLE))
-		{
-			log::Debug("Destroying Window Surface");
-			m_Instance.destroySurfaceKHR(m_Surface);
-			log::Info("Window Surface destroyed");
-		}
 
 #if !defined(NDEBUG)
 		DestroyDebugMessenger();
@@ -231,7 +226,6 @@ namespace tlc
 
 		VkCritCall(vk::createInstance(&createInfo, nullptr, &m_Instance));
 
-
 #if !defined(NDEBUG)
 		CreateDebugMessenger();
 #endif
@@ -283,17 +277,16 @@ namespace tlc
 
 	}
 
-	VulkanDevice* VulkanContext::CreateDevice(vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings)
+	VulkanDevice* VulkanContext::CreateDevice(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface, const VulkanDeviceSettings& settings)
 	{
-		m_Devices.push_back(CreateScope<VulkanDevice>(this, physicalDevice, settings));
+		m_Devices.push_back(CreateScope<VulkanDevice>(this, physicalDevice, settings, surface));
 		return m_Devices.back().get();
 	}
 
-	const vk::SurfaceKHR& VulkanContext::CreateSurface(Window* window)
+	vk::SurfaceKHR VulkanContext::CreateSurface(Window* window)
 	{
 		TLC_ASSERT(window, "Window is null");
 		TLC_ASSERT(m_Instance, "Vulkan instance is null");	
-		TLC_ASSERT(m_Surface == (vk::SurfaceKHR)VK_NULL_HANDLE, "Surface already created");
 
 		log::Debug("Creating Window Surface");
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -301,10 +294,23 @@ namespace tlc
 		{
 			log::Fatal("Failed to create window surface");
 		}
-		m_Surface = surface;
 		log::Info("Window Surface created");
-
-		return m_Surface;
+		return surface;
 	}
 
+	void VulkanContext::DestroySurface(vk::SurfaceKHR surface)
+	{
+		TLC_ASSERT(m_Instance, "Vulkan instance is null");
+		vk::SurfaceKHR surfaceKHR = vk::SurfaceKHR(surface);
+		m_Instance.destroySurfaceKHR(surfaceKHR);
+	}
+
+	Raw<VulkanSwapchain> VulkanContext::CreateSwapchain(Raw<Window> window, Raw<VulkanDevice> device, vk::SurfaceKHR surface)
+	{
+		if (!m_Swapchain)
+		{
+			m_Swapchain = CreateScope<VulkanSwapchain>(device, this, window, surface);
+		}
+		return m_Swapchain.get();
+	}
 }

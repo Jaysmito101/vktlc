@@ -83,7 +83,6 @@ add_executable(tlc
     ./tlc/vulkanapi/VulkanSwapchain.cpp
     ./tlc/vulkanapi/VulkanBuffer.cpp
     ./tlc/vulkanapi/VulkanShader.cpp
-    ./tlc/vulkanapi/VulkanFramebuffer.cpp
     ./tlc/vulkanapi/VulkanCommandBuffer.cpp
     ./tlc/vulkanapi/VulkanGraphicsPipeline.cpp
 # services

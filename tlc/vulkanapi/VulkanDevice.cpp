@@ -7,13 +7,13 @@
 
 namespace tlc
 {
-	VulkanDevice::VulkanDevice(VulkanContext* parentContext, vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings)
+	VulkanDevice::VulkanDevice(VulkanContext* parentContext, vk::PhysicalDevice physicalDevice, const VulkanDeviceSettings& settings, vk::SurfaceKHR surface)
 		: m_ParentContext(parentContext)
 		, m_PhysicalDevice(physicalDevice)
 		, m_Settings(settings)
 	{
 		log::Debug("Creating Vulkan Logical Device");
-		if (!CreateDevice())
+		if (!CreateDevice(surface))
 		{
 			log::Error("Failed to create device");
 			return;
@@ -28,6 +28,7 @@ namespace tlc
 	{
 		m_Device.waitIdle();
 
+
 		for (auto& commandPool : m_CommandPools)
 		{
 			if (commandPool == static_cast<vk::CommandPool>(VK_NULL_HANDLE)) continue;
@@ -35,16 +36,6 @@ namespace tlc
 		}
 
 		m_Device.destroy();
-	}
-
-	Ref<VulkanSwapchain> VulkanDevice::CreateSwapchain(Window* window)
-	{
-		if (!m_IsReady) 
-		{
-			log::Error("Device is not ready");
-			return nullptr;
-		}
-		return CreateRef<VulkanSwapchain>(this, window);
 	}
 
 	Ref<VulkanShaderModule> VulkanDevice::CreateShaderModule(const List<U32>& shaderCode)
@@ -55,16 +46,6 @@ namespace tlc
 			return nullptr;
 		}
 		return CreateRef<VulkanShaderModule>(this, shaderCode);
-	}
-
-	Ref<VulkanFramebuffer> VulkanDevice::CreateFramebuffer(const VulkanFramebufferSettings& settings)
-	{
-		if (!m_IsReady)
-		{
-			log::Error("Device is not ready");
-			return nullptr;
-		}
-		return CreateRef<VulkanFramebuffer>(this, settings);
 	}
 
 	Ref<VulkanCommandBuffer> VulkanDevice::CreateCommandBuffer(VulkanQueueType type)
@@ -131,14 +112,14 @@ namespace tlc
 		return std::numeric_limits<U32>::max();
 	}
 
-	Bool VulkanDevice::CreateDevice()
+	Bool VulkanDevice::CreateDevice(vk::SurfaceKHR surface)
 	{
 
 		vk::DeviceCreateInfo deviceCreateInfo = vk::DeviceCreateInfo();
 
 		List<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
-		if ((m_QueueFamilyIndices[Present] = m_QueueFamilyIndices[Graphics] = FindAndAddQueueCreateInfo(m_Settings.requireGraphicsQueue, vk::QueueFlagBits::eGraphics, &m_Settings.graphicsQueuePriority, queueCreateInfos)) == -1)
+		if ((m_QueueFamilyIndices[Present] = m_QueueFamilyIndices[Graphics] = FindAndAddQueueCreateInfo(m_Settings.requireGraphicsQueue, vk::QueueFlagBits::eGraphics, &m_Settings.graphicsQueuePriority, queueCreateInfos, surface)) == -1)
 		{
 			log::Warn("Failed to find graphics queue family");
 		}
@@ -225,11 +206,11 @@ namespace tlc
 		return true;
 	}
 
-	I32 VulkanDevice::FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos)
+	I32 VulkanDevice::FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos, vk::SurfaceKHR surface)
 	{
 		if (!enable) return 1000;
 
-		I32 queueFamilyIndex = FindQueueFamily(m_PhysicalDevice, flags, flags & vk::QueueFlagBits::eGraphics ? m_ParentContext->GetSurface() : nullptr);
+		I32 queueFamilyIndex = FindQueueFamily(m_PhysicalDevice, flags, flags & vk::QueueFlagBits::eGraphics ? surface : nullptr);
 		if (queueFamilyIndex == -1)
 		{
 			log::Warn("Failed to find queue family");

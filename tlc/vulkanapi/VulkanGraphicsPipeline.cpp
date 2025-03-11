@@ -1,13 +1,9 @@
 #include "vulkanapi/VulkanContext.hpp"
 #include "vulkanapi/VulkanGraphicsPipeline.hpp"
-#include "vulkanapi/VulkanSwapchain.hpp"
-#include "vulkanapi/VulkanFramebuffer.hpp"
 #include "vulkanapi/VulkanShader.hpp"
 
 namespace tlc
 {
-
-
 
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDevice* device, const VulkanGraphicsPipelineSettings& settings)
 	{

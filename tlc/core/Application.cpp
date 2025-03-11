@@ -34,8 +34,6 @@ namespace tlc
 		log::Debug("Shutting down application");
 
 		Services::Shutdown();
-
-
 		Window::Shutdown();
 		log::Info("Application shutdown");
 	}
