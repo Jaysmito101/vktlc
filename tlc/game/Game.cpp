@@ -50,17 +50,6 @@ namespace tlc
     
     void GameApplication::OnUpdate()
     {
-        fpsTimer += GetDeltaTime();
-        fps++;
-        if (fpsTimer >= 1.0f)
-        {
-            
-            //Window::Get()->SetTitle(std::format("TLC [Delta time: {}, FPS: {}, Scene: {}]", GetDeltaTime(), fps, GetCurrentScene()->GetName()));
-            fps = 0;
-            fpsTimer = 0.0f;
-        }
-
-
     }
 
     void GameApplication::OnEnd()

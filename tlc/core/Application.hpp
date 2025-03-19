@@ -23,6 +23,7 @@ namespace tlc
 		inline F32 GetDeltaTime() const { return m_DeltaTime; }
 		inline F32 GetLastFrameTime() const { return m_LastFrameTime; }
 		inline F32 GetCurrentFrameTime() const { return m_CurentFrameTime; }
+		inline I32 GetCurrentFramerate() const { return m_CurrentFramerate; }
 
 		inline static Raw<Application> Get() { TLC_ASSERT(s_Instance != nullptr , "Instance cannot be null!"); return s_Instance.get(); }
 		inline static void Shutdown() { s_Instance.reset(); }
@@ -66,6 +67,9 @@ namespace tlc
 		F32 m_DeltaTime = 0.0f;
 		F32 m_LastFrameTime = 0.0f;
 		F32 m_CurentFrameTime = 0.0f;
+		I32 m_CurrentFramerate = 0;
+		I32 m_CurrentFramerateCounter = 0;
+		F32 m_FramerateTimer = 0.0f;
 
 		Map<String, Scope<Scene>> m_Scenes;
 		Raw<Scene> m_CurrentScene = nullptr;

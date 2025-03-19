@@ -56,6 +56,14 @@ namespace tlc
 				m_CurentFrameTime = static_cast<F32>(glfwGetTime());
 				m_DeltaTime = static_cast<F32>(m_CurentFrameTime - m_LastFrameTime);
 				m_LastFrameTime = m_CurentFrameTime;
+				m_FramerateTimer += m_DeltaTime;
+				m_CurrentFramerateCounter += 1;
+				if (m_FramerateTimer >= 1.0f)
+				{
+					m_CurrentFramerate = m_CurrentFramerateCounter;
+					m_FramerateTimer = 0.0f;
+				}
+
 				
 				if(m_NextSceneOnLoading) PollForSceneChange();
 				window->Update();
