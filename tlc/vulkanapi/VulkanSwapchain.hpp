@@ -24,6 +24,7 @@ namespace tlc
 		inline const vk::Extent2D& GetExtent() const { return m_SwapchainExtent; }
 		inline const List<vk::Image>& GetImages() const { return m_Images; }
 		inline const List<vk::ImageView>& GetImageViews() const { return m_ImageViews; }
+		inline const Size GetImageCount() const { return m_Images.size(); }
 		
 		Bool Recreate();
 	

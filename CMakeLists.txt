@@ -101,6 +101,7 @@ add_executable(tlc
 # game
     ./tlc/game/Game.cpp
     ./tlc/game/RegisterAssets.cpp
+    ./tlc/game/RegisterServices.cpp
     # ./tlc/game/scenes/MainScene.cpp
     # ./tlc/game/scenes/TestScene.cpp
     # ./tlc/game/components/TriangleUpDown.cpp

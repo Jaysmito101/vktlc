@@ -16,6 +16,12 @@ namespace tlc {
         virtual void OnSceneChange() override;
         virtual void OnEvent(const String& event, const String& eventParams) override;
 
+        Raw<VulkanSwapchain> GetSwapchain() { return m_VulkanSwapchain; }
+        Raw<VulkanDevice> GetDevice() { return m_VulkanDevice; }
+        Raw<VulkanContext> GetContext() { return m_VulkanContext; }
+        const vk::PhysicalDevice& GetPhysicalDevice() { return m_PhysicalDevice; }
+
+
     private:
         void SetupVulkan();
         void ShutdownVulkan();

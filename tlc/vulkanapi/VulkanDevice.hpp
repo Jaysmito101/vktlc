@@ -76,12 +76,12 @@ namespace tlc
 		inline Bool IsReady() const { return m_IsReady; }
 
 		inline void WaitIdle() const { m_Device.waitIdle(); }
-		inline VulkanContext* GetParentContext() const { return m_ParentContext; }
-		inline const vk::Device GetDevice() const { return m_Device; }
-		inline const vk::PhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+		inline Raw<VulkanContext> GetParentContext() const { return m_ParentContext; }
+		inline const vk::Device& GetDevice() const { return m_Device; }
+		inline const vk::PhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
 		inline const VulkanDeviceSettings& GetSettings() const { return m_Settings; }
-		inline const vk::Queue GetQueue(VulkanQueueType type) const { return m_Queues[type]; }
-		inline const vk::CommandPool GetCommandPool(VulkanQueueType type) const { return m_CommandPools[type]; }
+		inline const vk::Queue& GetQueue(VulkanQueueType type) const { return m_Queues[type]; }
+		inline const vk::CommandPool& GetCommandPool(VulkanQueueType type) const { return m_CommandPools[type]; }
 
 
 		friend class VulkanContext;
