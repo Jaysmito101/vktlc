@@ -22,7 +22,7 @@ namespace tlc
 		const auto swapchain = Application::Get()->GetVulkanSwapchain();
 		const auto device = Application::Get()->GetVulkanDevice();
 
-		auto cacheService = Services::GetService<CacheManager>();
+		auto cacheService = Services::Get<CacheManager>();
 		auto vertShaderModule = device->CreateShaderModule(cacheService->GetCacheDataTyped<U32>("shaders/vert.glsl"));
 		auto fragShaderModule = device->CreateShaderModule(cacheService->GetCacheDataTyped<U32>("shaders/frag.glsl"));
 

@@ -4,6 +4,7 @@
 
 namespace tlc 
 {
+	class VulkanManager;
 
 	class GameApplication : public Application
 	{
@@ -24,7 +25,6 @@ namespace tlc
 		void RegisterAssets();
 
 	private:
-
 		I32 fps = 0;
 		F32 fpsTimer = 0.0f;
 	};

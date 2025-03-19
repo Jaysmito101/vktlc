@@ -172,8 +172,8 @@ namespace tlc {
     }
 
     void CacheManager::CacheShaders() {
-        auto shaderCompiler = Services::GetService<ShaderCompiler>();
-        auto assetManager = Services::GetService<AssetManager>();
+        auto shaderCompiler = Services::Get<ShaderCompiler>();
+        auto assetManager = Services::Get<AssetManager>();
 
         if (!shaderCompiler || !assetManager) {
             log::Warn("CacheManager::CacheShaders: ShaderCompiler or AssetManager service not found!");

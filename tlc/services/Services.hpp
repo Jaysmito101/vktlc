@@ -13,6 +13,24 @@ namespace tlc
         virtual void OnEvent(const String& event, const String& eventParams) {}
     };
 
+    namespace internal {
+        template <typename T>
+        class ServiceStaticHolder {
+        public:
+            inline static Raw<T> Get() { return s_Instance.get(); }
+            inline static Raw<T> Init() { 
+                TLC_ASSERT(s_Instance == nullptr, "Service already exists!");
+                s_Instance = CreateScope<T>();
+                return s_Instance.get();
+            }
+        private:
+            static Scope<T> s_Instance;
+        };
+
+        template <typename T>
+        Scope<T> ServiceStaticHolder<T>::s_Instance = nullptr;
+    }
+
     class Services
     {
     public:
@@ -21,21 +39,16 @@ namespace tlc
         {
             // Ensure T is a service
             static_assert(std::is_base_of<IService, T>::value, "Service must derive from IService!");
-
-            Size hash = typeid(T).hash_code();
-            TLC_ASSERT(s_Services.find(hash) == s_Services.end(), "Service already exists!");
-
-            s_Services[hash] = CreateScope<T>();
-            static_cast<Raw<T>>(s_Services[hash].get())->Setup(std::forward<Args>(args)...);
-            s_Services[hash]->OnStart();
+            auto service = internal::ServiceStaticHolder<T>::Init();
+            service->Setup(std::forward<Args>(args)...);
+            service->OnStart();
+            s_Services.push_back(service);
         }
 
         template<typename T>
-        static Raw<T> GetService()
+        static Raw<T> Get()
         {
-            Size hash = typeid(T).hash_code();
-            TLC_ASSERT(s_Services.find(hash) != s_Services.end(), "Service does not exist!");
-            return static_cast<Raw<T>>(s_Services[hash].get());
+            return internal::ServiceStaticHolder<T>::Get();
         }
 
         static void PushEvent(const String& event, const String& eventParams);
@@ -49,7 +62,7 @@ namespace tlc
         ~Services() = delete;
 
     private:
-        static std::unordered_map<Size, Scope<IService>> s_Services;
+        static List<Raw<IService>> s_Services;
 
         friend class Application;
     };

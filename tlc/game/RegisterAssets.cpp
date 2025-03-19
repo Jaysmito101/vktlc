@@ -34,17 +34,17 @@ namespace tlc
 
 
 
-        auto bundler = Services::GetService<AssetBundler>();
+        auto bundler = Services::Get<AssetBundler>();
         bundler->RegisterFromDirectory(assetsPath, "standard");
         bundler->LogAssets();
         bundler->Pack();
 
-        auto assetManager = Services::GetService<AssetManager>();
+        auto assetManager = Services::Get<AssetManager>();
         assetManager->ReloadAssetMetadata();
         assetManager->LogAssets();
         assetManager->LoadAllBundles();
 
-        auto cacheManager = Services::GetService<CacheManager>();
+        auto cacheManager = Services::Get<CacheManager>();
         cacheManager->CacheShaders();
 
     }

@@ -54,7 +54,6 @@ namespace tlc
 		List<CString> m_Layers;
 		List<Scope<VulkanDevice>> m_Devices;
 		
-		// vk::DebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 
 		static Scope<VulkanContext> s_Instance;

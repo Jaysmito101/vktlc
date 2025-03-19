@@ -33,7 +33,6 @@ namespace tlc
 
         RegisterAssets();
 
-
         // Register scenes
         // RegisterScene<TestScene>("TestScene");
         // RegisterScene<MainScene>("MainScene");

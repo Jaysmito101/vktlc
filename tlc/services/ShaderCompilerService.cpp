@@ -240,7 +240,7 @@ namespace tlc
 
     Pair<String, String> ShaderCompiler::GetInclude(const String& requestedSource, const String& requestingSource, U32 includeDepth)
     {
-        auto assetManager = Services::GetService<AssetManager>();
+        auto assetManager = Services::Get<AssetManager>();
         auto include = assetManager->GetAssetDataString(requestedSource);
         return { requestedSource, include };
     }
