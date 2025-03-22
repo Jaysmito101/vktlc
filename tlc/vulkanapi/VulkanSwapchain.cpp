@@ -273,7 +273,7 @@ namespace tlc
 			}
 		}
 
-		return {};
+		return framebuffers;
 	}
 
 	void VulkanSwapchain::Cleanup(Bool forRecreate)
