@@ -254,6 +254,10 @@ namespace tlc
 		return true;
 	}
 
+	List<Ref<VulkanFramebuffer>> CreateFramebuffers(vk::RenderPass renderPass) {
+		return {};
+	}
+
 	void VulkanSwapchain::Cleanup(Bool forRecreate)
 	{
 		if (!m_IsReady)
@@ -271,5 +275,7 @@ namespace tlc
 			m_Device->GetDevice().destroySwapchainKHR(m_Swapchain);
 		m_IsReady = false;
 	}
+
+	
 
 }

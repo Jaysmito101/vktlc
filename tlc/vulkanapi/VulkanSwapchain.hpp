@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkanapi/VulkanBase.hpp"
+#include "vulkanapi/VulkanSwapchain.hpp"
 
 namespace tlc
 {
@@ -18,6 +19,8 @@ namespace tlc
 	
 		Result<U32, vk::Result> AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
 		void PresentImage(U32 index, vk::Semaphore waitSemaphore = VK_NULL_HANDLE);
+
+		List<Ref<VulkanFramebuffer>> CreateFramebuffers(vk::RenderPass renderPass) const;
 	
 		inline Bool IsReady() const { return m_IsReady; }
 		inline const vk::SurfaceFormatKHR& GetSurfaceFormat() const { return m_SwapchainImageFormat; }

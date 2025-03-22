@@ -80,50 +80,52 @@ namespace tlc {
         auto device = vulkan->GetDevice();
         auto swapchain = vulkan->GetSwapchain();
         
-        Array<vk::AttachmentDescription, 1> attachments;
+        Array<vk::AttachmentDescription, 1> attachments = {
+            vk::AttachmentDescription()
+            .setFormat(swapchain->GetSurfaceFormat().format)
+            .setSamples(vk::SampleCountFlagBits::e1)
+            .setLoadOp(vk::AttachmentLoadOp::eClear)
+            .setStoreOp(vk::AttachmentStoreOp::eStore)
+            .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+            .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+            .setInitialLayout(vk::ImageLayout::eUndefined)
+            .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+        };
+            
+        auto colorAttachmentRef = vk::AttachmentReference()
+            .setLayout(vk::ImageLayout::eColorAttachmentOptimal)
+            .setAttachment(0);
 
-        attachments[0].format = swapchain->GetSurfaceFormat().format;
-        attachments[0].samples = vk::SampleCountFlagBits::e1;
-        attachments[0].loadOp = vk::AttachmentLoadOp::eClear;
-        attachments[0].storeOp = vk::AttachmentStoreOp::eStore;
-        attachments[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-        attachments[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-        attachments[0].initialLayout = vk::ImageLayout::eUndefined;
-        attachments[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-        vk::AttachmentReference colorAttachmentRef = {};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-        vk::SubpassDescription subpass = {};
-        subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-        subpass.colorAttachmentCount = 1;
-        subpass.preserveAttachmentCount = 0;
-        subpass.inputAttachmentCount = 0;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pInputAttachments = nullptr;
-        subpass.pResolveAttachments = nullptr;
-        subpass.pDepthStencilAttachment = nullptr;
-        subpass.pPreserveAttachments = nullptr;
-
-        Array<vk::SubpassDependency, 1> dependencies = {};
+        auto subpass = vk::SubpassDescription()
+            .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+            .setColorAttachmentCount(1)
+            .setInputAttachmentCount(0)
+            .setPColorAttachments(&colorAttachmentRef)
+            .setPInputAttachments(nullptr)
+            .setPResolveAttachments(nullptr)
+            .setPDepthStencilAttachment(nullptr)
+            .setPPreserveAttachments(nullptr);
+            
         
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dependencies[0].srcAccessMask = vk::AccessFlagBits::eNone;
-        dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead;
+        Array<vk::SubpassDependency, 1> dependencies = {
+            vk::SubpassDependency()
+            .setSrcSubpass(VK_SUBPASS_EXTERNAL)
+            .setDstSubpass(0)
+            .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+            .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+            .setSrcAccessMask(vk::AccessFlagBits::eNone)
+            .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead)
+        };
+        
 
-        vk::RenderPassCreateInfo renderPassInfo = {};
-        renderPassInfo.sType = vk::StructureType::eRenderPassCreateInfo;
-        renderPassInfo.attachmentCount = static_cast<U32>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = static_cast<U32>(dependencies.size());
-        renderPassInfo.pDependencies = dependencies.data();
-        renderPassInfo.pNext = nullptr;
+        auto renderPassInfo = vk::RenderPassCreateInfo()
+            .setAttachmentCount(static_cast<U32>(attachments.size()))
+            .setPAttachments(attachments.data())
+            .setSubpassCount(1)
+            .setPSubpasses(&subpass)
+            .setDependencyCount(static_cast<U32>(dependencies.size()))
+            .setPDependencies(dependencies.data())
+            .setPNext(nullptr);
 
         VkCritCall(device->GetDevice().createRenderPass(&renderPassInfo, nullptr, &m_RenderPass));
     }
@@ -170,6 +172,9 @@ namespace tlc {
         auto device = vulkan->GetDevice();
         DestroySynchronizationObjects();
         CreateSynchronizationObjects();
+
+        m_Pipeline->GetSettings().SetExtent(vulkan->GetSwapchain()->GetExtent());
+        m_Pipeline->Recreate();
     }
 
     void PresentationRenderer::CreatePipeline() {
