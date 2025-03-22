@@ -47,7 +47,7 @@ namespace tlc {
         // a new image from the swapchain
         // and draws the scene and also 
         // draws the debug ui layer (using the vulkan imgui renderer)
-    //    RenderEngineFrame();
+       RenderEngineFrame();
     }
 
     void GameApplication::OnEnd()

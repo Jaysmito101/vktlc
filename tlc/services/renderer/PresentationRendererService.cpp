@@ -12,6 +12,7 @@ namespace tlc {
         CreateSynchronizationObjects();
         CreateRenderPass();
         CreateFramebuffers();
+        CreateCommandBuffers();
         CreatePipeline();
     }
 
@@ -22,6 +23,7 @@ namespace tlc {
         device->WaitIdle();
         DestroySynchronizationObjects();
         DestroyFramebuffers();
+        DestroyCommandBuffers();
         DestroyRenderPass();
 
         m_Pipeline.reset();
@@ -65,12 +67,73 @@ namespace tlc {
                 VkCritCall(error);
             }
         }
+
+
+        // TODO : TEMP CODE
+
+        Array<vk::ClearValue, 1> clearValues = {
+            vk::ClearValue()
+            .setColor(vk::ClearColorValue(std::array<F32, 4>{0.2f, 0.2f, 0.2f, 1.0f}))
+        };
+
+        auto renderPassBeginInfo = vk::RenderPassBeginInfo()
+            .setRenderPass(m_RenderPass)
+            .setFramebuffer(m_Framebuffers[m_CurrentImageIndex])
+            .setRenderArea(vk::Rect2D()
+                .setOffset(vk::Offset2D(0, 0))
+                .setExtent(swapchain->GetExtent()))
+            .setClearValueCount(static_cast<U32>(clearValues.size()))
+            .setPClearValues(clearValues.data());
+
+        m_CurrentCommandBuffer = m_CommandBuffers[m_CurrentFrameIndex];
+        m_CurrentCommandBuffer.reset();
+        m_CurrentCommandBuffer.begin(vk::CommandBufferBeginInfo()
+            .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse)
+            .setPInheritanceInfo(nullptr));
+        
+        m_CurrentCommandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+        m_CurrentCommandBuffer.setViewport(0, vk::Viewport()
+            .setX(0.0f)
+            .setY(0.0f)
+            .setWidth(static_cast<F32>(swapchain->GetExtent().width))
+            .setHeight(static_cast<F32>(swapchain->GetExtent().height))
+            .setMinDepth(0.0f)
+            .setMaxDepth(1.0f));
+        m_CurrentCommandBuffer.setScissor(0, vk::Rect2D()
+            .setOffset(vk::Offset2D(0, 0))
+            .setExtent(swapchain->GetExtent()));
+
+        m_CurrentCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
+        m_CurrentCommandBuffer.draw(3, 1, 0, 0);
+        m_CurrentCommandBuffer.endRenderPass();
+        m_CurrentCommandBuffer.end();
+
+        // TODO : TEMP CODE
     }
 
     void PresentationRenderer::EndRenderingCurrentFrame() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
         auto swapchain = vulkan->GetSwapchain();
+
+        // TODO : TEMP CODE
+
+        auto waitStages = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
+        auto submitInfo = vk::SubmitInfo()
+            .setCommandBufferCount(1)
+            .setPCommandBuffers(&m_CurrentCommandBuffer)
+            .setSignalSemaphoreCount(1)
+            .setPSignalSemaphores(&m_RenderFinishedSemaphores[m_CurrentFrameIndex])
+            .setWaitSemaphoreCount(1)
+            .setPWaitSemaphores(&m_ImageAvailableSemaphores[m_CurrentFrameIndex])
+            .setPWaitDstStageMask(&waitStages);
+
+        device->GetQueue(VulkanQueueType::Graphics).submit({submitInfo}, m_InFlightFences[m_CurrentFrameIndex]);
+
+        // TODO : TEMP CODE
+
 
         swapchain->PresentImage(m_CurrentImageIndex, m_RenderFinishedSemaphores[m_CurrentFrameIndex]);
         m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames;
@@ -149,7 +212,7 @@ namespace tlc {
         {
             m_ImageAvailableSemaphores.push_back(device->CreateVkSemaphore());
             m_RenderFinishedSemaphores.push_back(device->CreateVkSemaphore());
-            m_InFlightFences.push_back(device->CreateVkFence());
+            m_InFlightFences.push_back(device->CreateVkFence(vk::FenceCreateFlagBits::eSignaled));
         }
         m_CurrentFrameIndex = 0;
     }
