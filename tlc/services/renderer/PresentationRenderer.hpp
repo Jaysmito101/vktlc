@@ -30,11 +30,15 @@ namespace tlc {
 		void CreateSynchronizationObjects();
 		void DestroySynchronizationObjects();
 
+        void CreatePipeline();
+
 		void RecreateRenderResources();
 
 
     private:
         U32 m_CurrentImageIndex = 0;
+
+        Scope<VulkanGraphicsPipeline> m_Pipeline = nullptr;
 
         Size m_NumInflightFrames = 0;
 		Size m_CurrentFrameIndex = 0;

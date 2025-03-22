@@ -1,5 +1,7 @@
 #include "services/renderer/PresentationRenderer.hpp"
 
+#include "services/CacheManager.hpp"
+
 namespace tlc {
     
     void PresentationRenderer::Setup() {
@@ -9,6 +11,7 @@ namespace tlc {
     void PresentationRenderer::OnStart() {
         CreateSynchronizationObjects();
         CreateRenderPass();
+        CreatePipeline();
     }
 
     void PresentationRenderer::OnEnd() {
@@ -18,6 +21,8 @@ namespace tlc {
         device->WaitIdle();
         DestroySynchronizationObjects();
         DestroyRenderPass();
+
+        m_Pipeline.reset();
     }
     
     void PresentationRenderer::OnSceneChange() {
@@ -64,7 +69,7 @@ namespace tlc {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
         auto swapchain = vulkan->GetSwapchain();
-        
+
         swapchain->PresentImage(m_CurrentImageIndex, m_RenderFinishedSemaphores[m_CurrentFrameIndex]);
         m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames;
     }
@@ -165,6 +170,29 @@ namespace tlc {
         auto device = vulkan->GetDevice();
         DestroySynchronizationObjects();
         CreateSynchronizationObjects();
+    }
 
+    void PresentationRenderer::CreatePipeline() {
+        auto cacheManager = Services::Get<CacheManager>();
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+
+        auto vertShaderModule = device->CreateShaderModule(
+            cacheManager->GetCacheDataTyped<U32>("shaders/presentation/vert.glsl")
+        );
+        auto fragShaderModule = device->CreateShaderModule(
+            cacheManager->GetCacheDataTyped<U32>("shaders/presentation/frag.glsl")
+        );  
+
+        auto pipelineSettings = VulkanGraphicsPipelineSettings()
+            .SetRenderPass(m_RenderPass)
+            .SetVertexShaderModule(vertShaderModule)
+            .SetFragmentShaderModule(fragShaderModule)
+            .SetExtent(vulkan->GetSwapchain()->GetExtent());
+
+        m_Pipeline = CreateScope<VulkanGraphicsPipeline>(
+            device, 
+            pipelineSettings
+        );
     }
 }

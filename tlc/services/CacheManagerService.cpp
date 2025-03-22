@@ -72,6 +72,7 @@ namespace tlc {
     List<U8> CacheManager::GetCacheData(const String& key) const {
         auto cache = m_Cache.find(key);
         if (cache == m_Cache.end()) {
+            log::Error("Cache with key: {} does not exist!", key);
             return {};
         }
 
