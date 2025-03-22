@@ -11,6 +11,7 @@ namespace tlc {
     void PresentationRenderer::OnStart() {
         CreateSynchronizationObjects();
         CreateRenderPass();
+        CreateFramebuffers();
         CreatePipeline();
     }
 
@@ -20,6 +21,7 @@ namespace tlc {
 
         device->WaitIdle();
         DestroySynchronizationObjects();
+        DestroyFramebuffers();
         DestroyRenderPass();
 
         m_Pipeline.reset();
@@ -166,12 +168,33 @@ namespace tlc {
         m_InFlightFences.clear();
     }
 
+    void PresentationRenderer::CreateFramebuffers() {
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+        auto swapchain = vulkan->GetSwapchain();
+
+        m_Framebuffers = swapchain->CreateFramebuffers(m_RenderPass);
+    }
+    
+    void PresentationRenderer::DestroyFramebuffers() {
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+        for (auto framebuffer : m_Framebuffers) {
+            device->GetDevice().destroyFramebuffer(framebuffer);
+        }
+        m_Framebuffers.clear();
+    }
+
 
     void PresentationRenderer::RecreateRenderResources() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
+
         DestroySynchronizationObjects();
         CreateSynchronizationObjects();
+
+        DestroyFramebuffers();
+        CreateFramebuffers();
 
         m_Pipeline->GetSettings().SetExtent(vulkan->GetSwapchain()->GetExtent());
         m_Pipeline->Recreate();

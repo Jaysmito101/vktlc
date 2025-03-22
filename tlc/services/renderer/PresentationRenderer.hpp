@@ -30,6 +30,10 @@ namespace tlc {
 		void CreateSynchronizationObjects();
 		void DestroySynchronizationObjects();
 
+        void CreateFramebuffers();
+        void DestroyFramebuffers();
+
+
         void CreatePipeline();
 
 		void RecreateRenderResources();
@@ -45,6 +49,7 @@ namespace tlc {
 		List<vk::Semaphore> m_ImageAvailableSemaphores;
 		List<vk::Semaphore> m_RenderFinishedSemaphores;
 		List<vk::Fence> m_InFlightFences;
+        List<vk::Framebuffer> m_Framebuffers;
 		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
     };
 

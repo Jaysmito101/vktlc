@@ -254,7 +254,25 @@ namespace tlc
 		return true;
 	}
 
-	List<Ref<VulkanFramebuffer>> CreateFramebuffers(vk::RenderPass renderPass) {
+	List<vk::Framebuffer> VulkanSwapchain::CreateFramebuffers(const vk::RenderPass& renderPass) const {
+		List<vk::Framebuffer> framebuffers(m_Images.size());
+		for (U32 i = 0; i < m_Images.size(); i++)
+		{
+			Array<vk::ImageView, 1> attachments = { m_ImageViews[i] };
+			vk::FramebufferCreateInfo framebufferInfo = vk::FramebufferCreateInfo()
+				.setRenderPass(renderPass)
+				.setAttachmentCount(static_cast<U32>(attachments.size()))
+				.setPAttachments(attachments.data())
+				.setWidth(m_SwapchainExtent.width)
+				.setHeight(m_SwapchainExtent.height)
+				.setLayers(1);
+
+			framebuffers[i] = m_Device->GetDevice().createFramebuffer(framebufferInfo);
+			if (framebuffers[i] == static_cast<vk::Framebuffer>(VK_NULL_HANDLE)) {
+				log::Fatal("Failed to create framebuffer from swapchain image view: {}", i);
+			}
+		}
+
 		return {};
 	}
 
