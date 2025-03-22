@@ -16,7 +16,7 @@ namespace tlc
 		VulkanSwapchain(Raw<VulkanDevice> device, Raw<VulkanContext> context, Raw<Window> window, vk::SurfaceKHR surface);
 		~VulkanSwapchain();
 	
-		U32 AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
+		Result<U32, vk::Result> AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
 		void PresentImage(U32 index, vk::Semaphore waitSemaphore = VK_NULL_HANDLE);
 	
 		inline Bool IsReady() const { return m_IsReady; }

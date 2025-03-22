@@ -146,4 +146,55 @@ namespace tlc
 	}
 	*/
 #define DeleteRaw(x) if (x != nullptr) { delete x; x = nullptr; }
+
+	template<typename T>
+	struct Option {
+		T value;
+		bool hasValue = false;
+
+		Option() = default;
+		Option(T value) : value(value), hasValue(true) {}
+
+		inline operator bool() const { return hasValue; }
+		inline T& operator*() { return value; }
+		inline const T& operator*() const { return value; }
+		inline T* operator->() { return &value; }
+		inline const T* operator->() const { return &value; }
+	};
+
+	template<typename T, typename Err>
+	struct Result {
+		T value;
+		Err error;
+		bool hasValue = false;
+		bool hasError = true;
+
+		Result() = default;
+
+		
+		inline operator bool() const { return hasValue; }
+		inline T& operator*() { return value; }
+		inline const T& operator*() const { return value; }
+		inline T* operator->() { return &value; }
+		inline const T* operator->() const { return &value; }
+		inline Err& Error() { return error; }
+		inline const Err& Error() const { return error; }
+		inline bool IsError() const { return hasError; }
+		inline bool IsOk() const { return hasValue; }
+
+	private:
+		Result(Option<T> option, Option<Err> error) : value(option.value), error(error.value), hasValue(option.hasValue), hasError(error.hasValue) {}
+
+		template<typename U, typename E>
+		friend Result<U, E> Ok(U value);	
+
+		template<typename U, typename E>
+		friend Result<U, E> Err(E error);
+	};
+
+	template<typename T, typename Err>
+	inline Result<T, Err> Ok(T value) { return Result<T, Err>(Option<T>(value), Option<Err>()); }
+
+	template<typename T, typename ErrT>
+	inline Result<T, ErrT> Err(ErrT error) { return Result<T, ErrT>(Option<T>(), Option<ErrT>(error)); }
 }

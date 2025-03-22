@@ -19,6 +19,7 @@ namespace tlc
 		log::Info("Application started");
 
 		Window::Get(); // Setup window
+		(void*)VulkanContext::Get(); // Setup vulkan context
 		Services::Setup();
 
 		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void {
@@ -34,6 +35,7 @@ namespace tlc
 		log::Debug("Shutting down application");
 
 		Services::Shutdown();
+		VulkanContext::Shutdown();
 		Window::Shutdown();
 		log::Info("Application shutdown");
 	}

@@ -30,11 +30,11 @@ namespace tlc
 		}
 	}
 
-	U32 VulkanSwapchain::AcquireNextImage(vk::Semaphore semaphore, vk::Fence fence, U64 timeout)
+	Result<U32, vk::Result> VulkanSwapchain::AcquireNextImage(vk::Semaphore semaphore, vk::Fence fence, U64 timeout)
 	{
 		U32 imageIndex = 0;
-		VkCritCall(m_Device->GetDevice().acquireNextImageKHR(m_Swapchain, timeout, semaphore, fence, &imageIndex));
-		return imageIndex;
+		auto result = m_Device->GetDevice().acquireNextImageKHR(m_Swapchain, timeout, semaphore, fence, &imageIndex);
+		return result == vk::Result::eSuccess ? Ok<U32, vk::Result>(imageIndex) : Err<U32, vk::Result>(result);
 	}
 
 	void VulkanSwapchain::PresentImage(U32 index, vk::Semaphore waitSemaphore)

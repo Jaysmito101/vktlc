@@ -6,12 +6,11 @@
 
 
 #include "engine/ecs/ECS.hpp"
-
 #include "services/renderer/VulkanManager.hpp"
+#include "services/renderer/PresentationRenderer.hpp"
 
 
-namespace tlc
-{
+namespace tlc {
     void GameApplication::OnLoad()
     {
         RegisterServices();
@@ -24,22 +23,10 @@ namespace tlc
     
     void GameApplication::OnUnload()
     {
-           
     }
     
     void GameApplication::OnStart()
     {
-        auto vulkan = Services::Get<VulkanManager>();
-        auto device = vulkan->GetDevice();
-        m_NumInflightFrames = std::clamp(vulkan->GetSwapchain()->GetImageCount(), (Size)1, (Size)2);
-        for (Size i = 0; i < m_NumInflightFrames; i++)
-        {
-            m_ImageAvailableSemaphores.push_back(device->CreateVkSemaphore());
-            m_RenderFinishedSemaphores.push_back(device->CreateVkSemaphore());
-            m_InFlightFences.push_back(device->CreateVkFence());
-        }
-        m_CurrentFrameIndex = 0;
-
         // ChangeScene("TestScene");
 
     }
@@ -60,35 +47,19 @@ namespace tlc
         // a new image from the swapchain
         // and draws the scene and also 
         // draws the debug ui layer (using the vulkan imgui renderer)
-        RenderEngineFrame();
-
+    //    RenderEngineFrame();
     }
 
     void GameApplication::OnEnd()
     {
-        auto vulkan = Services::Get<VulkanManager>();
-        auto device = vulkan->GetDevice();
-        for (Size i = 0; i < m_NumInflightFrames; i++)
-        {
-            device->DestroyVkSemaphore(m_ImageAvailableSemaphores[i]);
-            device->DestroyVkSemaphore(m_RenderFinishedSemaphores[i]);
-            device->DestroyVkFence(m_InFlightFences[i]);
-        }
-        m_ImageAvailableSemaphores.clear();
-        m_RenderFinishedSemaphores.clear();
-        m_InFlightFences.clear();
+        
     }
 
     void GameApplication::RenderEngineFrame() {
-        auto vulkan = Services::Get<VulkanManager>();
-        auto device = vulkan->GetDevice();
-        auto swapchain = vulkan->GetSwapchain();
+        auto presentationRenderer = Services::Get<PresentationRenderer>();
+
+        presentationRenderer->BeginRenderingCurrentFrame();
         
-        VkCall(device->GetDevice().waitForFences({m_InFlightFences[m_CurrentFrameIndex]}, VK_TRUE, UINT64_MAX));
-        device->GetDevice().resetFences({m_InFlightFences[m_CurrentFrameIndex]});
-
-        auto imageIndex = swapchain->AcquireNextImage(m_ImageAvailableSemaphores[m_CurrentFrameIndex]);
-
         // auto frame = GetCurrentScene()->GetActiveCamera()->GetFrame();
         // auto frameRenderedSemaphore = frame.GetFrameRenderedSemaphore();
 
@@ -98,9 +69,7 @@ namespace tlc
         // and signal the render finished semaphore
         // and also set signal fense to the inflight fence
 
+        presentationRenderer->EndRenderingCurrentFrame();        
+    } 
 
-        swapchain->PresentImage(imageIndex, m_RenderFinishedSemaphores[m_CurrentFrameIndex]);
-        m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames;        
-    }
 }
-

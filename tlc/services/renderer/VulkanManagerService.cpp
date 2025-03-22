@@ -20,7 +20,6 @@ namespace tlc
 
     void VulkanManager::OnEnd()
     {
-        VulkanContext::Shutdown();
         log::Trace("Vulkan shutdown");
     }
 

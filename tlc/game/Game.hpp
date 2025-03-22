@@ -27,11 +27,7 @@ namespace tlc
 		void RenderEngineFrame();
 
 	private:
-		Size m_NumInflightFrames = 0;
-		Size m_CurrentFrameIndex = 0;
-		List<vk::Semaphore> m_ImageAvailableSemaphores;
-		List<vk::Semaphore> m_RenderFinishedSemaphores;
-		List<vk::Fence> m_InFlightFences;
+		
 	};
 
 }
