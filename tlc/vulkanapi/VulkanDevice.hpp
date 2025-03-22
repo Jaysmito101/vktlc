@@ -56,7 +56,6 @@ namespace tlc
 		~VulkanDevice();
 
 		Ref<VulkanShaderModule> CreateShaderModule(const List<U32>& shaderCode);
-		Ref<VulkanCommandBuffer> CreateCommandBuffer(VulkanQueueType type);
 		Ref<VulkanBuffer> CreateBuffer();
 
 		vk::Semaphore CreateVkSemaphore(vk::SemaphoreCreateFlags flags = vk::SemaphoreCreateFlags()) const;

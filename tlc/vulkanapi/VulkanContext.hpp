@@ -4,7 +4,6 @@
 #include "vulkanapi/VulkanDevice.hpp"
 #include "vulkanapi/VulkanShader.hpp"
 #include "vulkanapi/VulkanBuffer.hpp"
-#include "vulkanapi/VulkanCommandBuffer.hpp"
 #include "vulkanapi/VulkanSwapchain.hpp"
 #include "vulkanapi/VulkanGraphicsPipeline.hpp"
 

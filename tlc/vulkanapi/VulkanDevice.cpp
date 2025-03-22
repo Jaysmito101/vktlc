@@ -3,7 +3,6 @@
 #include "vulkanapi/VulkanShader.hpp"
 #include "vulkanapi/VulkanSwapchain.hpp"
 #include "vulkanapi/VulkanBuffer.hpp"
-#include "vulkanapi/VulkanCommandBuffer.hpp"
 
 namespace tlc
 {
@@ -46,16 +45,6 @@ namespace tlc
 			return nullptr;
 		}
 		return CreateRef<VulkanShaderModule>(this, shaderCode);
-	}
-
-	Ref<VulkanCommandBuffer> VulkanDevice::CreateCommandBuffer(VulkanQueueType type)
-	{
-		if (!m_IsReady)
-		{
-			log::Error("Device is not ready");
-			return nullptr;
-		}
-		return CreateRef<VulkanCommandBuffer>(this, type);
 	}
 
 	vk::Semaphore VulkanDevice::CreateVkSemaphore(vk::SemaphoreCreateFlags flags) const

@@ -185,13 +185,40 @@ namespace tlc {
         m_Framebuffers.clear();
     }
 
+    
+    void PresentationRenderer::CreateCommandBuffers() {
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+        auto swapchain = vulkan->GetSwapchain();
+
+        auto commandBufferAllocateInfo = vk::CommandBufferAllocateInfo()
+            .setCommandPool(device->GetCommandPool(VulkanQueueType::Graphics))
+            .setLevel(vk::CommandBufferLevel::ePrimary)
+            .setCommandBufferCount(static_cast<U32>(m_NumInflightFrames));
+
+        m_CommandBuffers.resize(m_NumInflightFrames);
+        m_CommandBuffers = device->GetDevice().allocateCommandBuffers(commandBufferAllocateInfo);
+    }
+
+    void PresentationRenderer::DestroyCommandBuffers() {
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+        device->GetDevice().freeCommandBuffers(device->GetCommandPool(VulkanQueueType::Graphics), m_CommandBuffers);
+        m_CommandBuffers.clear();
+        m_CurrentCommandBuffer = VK_NULL_HANDLE;
+    }
 
     void PresentationRenderer::RecreateRenderResources() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
 
+        // TODO: This is not necessary for everytime RecreateRenderResources is called
         DestroySynchronizationObjects();
         CreateSynchronizationObjects();
+
+        // TODO: This is not necessary for everytime RecreateRenderResources is called
+        DestroyCommandBuffers();
+        CreateCommandBuffers();
 
         DestroyFramebuffers();
         CreateFramebuffers();
@@ -199,6 +226,7 @@ namespace tlc {
         m_Pipeline->GetSettings().SetExtent(vulkan->GetSwapchain()->GetExtent());
         m_Pipeline->Recreate();
     }
+
 
     void PresentationRenderer::CreatePipeline() {
         auto cacheManager = Services::Get<CacheManager>();

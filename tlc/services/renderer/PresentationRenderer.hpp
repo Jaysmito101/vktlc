@@ -33,6 +33,8 @@ namespace tlc {
         void CreateFramebuffers();
         void DestroyFramebuffers();
 
+        void CreateCommandBuffers();
+        void DestroyCommandBuffers();
 
         void CreatePipeline();
 
@@ -50,6 +52,9 @@ namespace tlc {
 		List<vk::Semaphore> m_RenderFinishedSemaphores;
 		List<vk::Fence> m_InFlightFences;
         List<vk::Framebuffer> m_Framebuffers;
+        List<vk::CommandBuffer> m_CommandBuffers;
+
+        vk::CommandBuffer m_CurrentCommandBuffer = VK_NULL_HANDLE;
 		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
     };
 
