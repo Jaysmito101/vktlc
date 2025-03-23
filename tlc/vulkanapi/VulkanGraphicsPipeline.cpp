@@ -103,19 +103,26 @@ namespace tlc
 
 	vk::PipelineVertexInputStateCreateInfo VulkanGraphicsPipeline::GetVertexInputStateCreateInfo()
 	{
-		m_Properties.vertexInputBindingDescription = vk::VertexInputBindingDescription()
-			.setBinding(0)
-			.setStride(sizeof(VulkanVertex))
-			.setInputRate(vk::VertexInputRate::eVertex);
-
-		m_Properties.vertexInputAttributeDescriptions = VulkanVertex::GetAttributeDescriptions();
-
-		auto vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo()
-			.setVertexBindingDescriptionCount(1)
-			.setPVertexBindingDescriptions(&m_Properties.vertexInputBindingDescription)
-			.setVertexAttributeDescriptionCount(static_cast<uint32_t>(m_Properties.vertexInputAttributeDescriptions.size()))
-			.setPVertexAttributeDescriptions(m_Properties.vertexInputAttributeDescriptions.data());
-
+		vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
+		if (m_Settings.vertexInputAttributeDescriptions)
+		{
+			m_Properties.vertexInputBindingDescription = vk::VertexInputBindingDescription()
+				.setBinding(0)
+				.setStride(m_Settings.vertexInputBindingDescriptionStride)
+				.setInputRate(vk::VertexInputRate::eVertex);
+			m_Properties.vertexInputAttributeDescriptions = *m_Settings.vertexInputAttributeDescriptions;
+			vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo()
+				.setVertexBindingDescriptionCount(1)
+				.setPVertexBindingDescriptions(&m_Properties.vertexInputBindingDescription)
+				.setVertexAttributeDescriptionCount(static_cast<uint32_t>(m_Properties.vertexInputAttributeDescriptions.size()))
+				.setPVertexAttributeDescriptions(m_Properties.vertexInputAttributeDescriptions.data());
+		} else {
+			vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo()
+				.setVertexBindingDescriptionCount(0)
+				.setPVertexBindingDescriptions(nullptr)
+				.setVertexAttributeDescriptionCount(0)
+				.setPVertexAttributeDescriptions(nullptr);
+		}
 		return vertexInputStateCreateInfo;
 	}
 

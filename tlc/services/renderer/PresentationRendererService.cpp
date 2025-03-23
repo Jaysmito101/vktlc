@@ -15,9 +15,6 @@ namespace tlc {
         CreateCommandBuffers();
         CreatePipeline();
 
-        m_VertexBuffer = Services::Get<VulkanManager>()->GetDevice()->CreateBuffer();
-        m_VertexBuffer->Resize(3 * sizeof(VulkanVertex));
-
     }
 
     void PresentationRenderer::OnEnd() {
@@ -25,8 +22,6 @@ namespace tlc {
         auto device = vulkan->GetDevice();
 
         device->WaitIdle();
-
-        m_VertexBuffer.reset();
 
         DestroySynchronizationObjects();
         DestroyFramebuffers();
@@ -120,7 +115,6 @@ namespace tlc {
             .setExtent(swapchain->GetExtent()));
 
         m_CurrentCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
-        m_CurrentCommandBuffer.bindVertexBuffers(0, m_VertexBuffer->GetBuffer(), {0});
         m_CurrentCommandBuffer.draw(3, 1, 0, 0);
         m_CurrentCommandBuffer.endRenderPass();
         m_CurrentCommandBuffer.end();

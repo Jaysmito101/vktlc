@@ -2,13 +2,6 @@
 
 #pragma shader_stage(vertex)
 
-layout (location = 0) in vec4 inPosition;
-layout (location = 1) in vec4 inNormal;
-layout (location = 2) in vec4 inTexCoord;
-layout (location = 3) in vec4 inColor;
-layout (location = 4) in vec4 inBoneWeights;
-layout (location = 5) in ivec4 inBoneIDs;
-
 layout(location = 0) out vec3 fragColor;
 
 const vec2 positions[3] = vec2[3](

@@ -54,7 +54,6 @@ namespace tlc {
         List<vk::CommandBuffer> m_CommandBuffers;
 
         Pair<I32, I32> m_LastWindowSize = MakePair(0, 0);
-        Ref<VulkanBuffer> m_VertexBuffer = nullptr;
         vk::CommandBuffer m_CurrentCommandBuffer = VK_NULL_HANDLE;
 		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
     };

@@ -64,8 +64,9 @@ namespace tlc
 		Ref<VulkanShaderModule> vertexShaderModule;
 		Ref<VulkanShaderModule> fragmentShaderModule;
 		vk::RenderPass renderPass;
+		Option<List<vk::VertexInputAttributeDescription>> vertexInputAttributeDescriptions;
+		U32 vertexInputBindingDescriptionStride = 0;
 
-		VulkanFramebuffer* framebuffer = nullptr;
 
 		VulkanGraphicsPipelineSettings() = default;
 		VulkanGraphicsPipelineSettings(const VulkanGraphicsPipelineSettings&) = default;
@@ -74,7 +75,11 @@ namespace tlc
 		inline VulkanGraphicsPipelineSettings& SetVertexShaderModule(Ref<VulkanShaderModule> shModule) { this->vertexShaderModule = std::move(shModule); return *this; }
 		inline VulkanGraphicsPipelineSettings& SetFragmentShaderModule(Ref<VulkanShaderModule> shModule) { this->fragmentShaderModule = std::move(shModule); return *this; }
 		inline VulkanGraphicsPipelineSettings& SetRenderPass(vk::RenderPass r) { this->renderPass = r; return *this; }
+		inline VulkanGraphicsPipelineSettings& ClearVertexInputAttributeDescriptions() { this->vertexInputAttributeDescriptions = {}; this->vertexInputBindingDescriptionStride = 0; return *this; }
 
+		template<typename T>
+		requires(T::GetAttributeDescriptions())
+		inline VulkanGraphicsPipelineSettings& SetVertexInputAttributeDescriptions(const T& vertex) { this->vertexInputAttributeDescriptions = vertex.GetAttributeDescriptions(); vertexInputBindingDescriptionStride = sizeof(T); return *this; }
 	};
 
 	struct VulkanGraphicsPipelineProperties
