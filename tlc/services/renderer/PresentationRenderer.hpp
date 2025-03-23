@@ -17,7 +17,7 @@ namespace tlc {
         virtual void OnSceneChange() override;
         virtual void OnEvent(const String& event, const String& eventParams) override;
 
-        void BeginRenderingCurrentFrame();
+        Bool BeginRenderingCurrentFrame();
         void EndRenderingCurrentFrame();
 
         inline Size GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
@@ -40,7 +40,6 @@ namespace tlc {
 
 		void RecreateRenderResources();
 
-
     private:
         U32 m_CurrentImageIndex = 0;
 
@@ -54,6 +53,8 @@ namespace tlc {
         List<vk::Framebuffer> m_Framebuffers;
         List<vk::CommandBuffer> m_CommandBuffers;
 
+        Pair<I32, I32> m_LastWindowSize = MakePair(0, 0);
+        Ref<VulkanBuffer> m_VertexBuffer = nullptr;
         vk::CommandBuffer m_CurrentCommandBuffer = VK_NULL_HANDLE;
 		vk::RenderPass m_RenderPass = VK_NULL_HANDLE;
     };

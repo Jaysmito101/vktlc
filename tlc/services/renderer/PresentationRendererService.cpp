@@ -14,6 +14,10 @@ namespace tlc {
         CreateFramebuffers();
         CreateCommandBuffers();
         CreatePipeline();
+
+        m_VertexBuffer = Services::Get<VulkanManager>()->GetDevice()->CreateBuffer();
+        m_VertexBuffer->Resize(3 * sizeof(VulkanVertex));
+
     }
 
     void PresentationRenderer::OnEnd() {
@@ -21,6 +25,9 @@ namespace tlc {
         auto device = vulkan->GetDevice();
 
         device->WaitIdle();
+
+        m_VertexBuffer.reset();
+
         DestroySynchronizationObjects();
         DestroyFramebuffers();
         DestroyCommandBuffers();
@@ -37,7 +44,7 @@ namespace tlc {
         
     }
 
-    void PresentationRenderer::BeginRenderingCurrentFrame() {
+    Bool PresentationRenderer::BeginRenderingCurrentFrame() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
         auto swapchain = vulkan->GetSwapchain();
@@ -45,7 +52,15 @@ namespace tlc {
         if (m_NumInflightFrames > vulkan->GetSwapchain()->GetImageCount()) {
             log::Warn("Number of inflight frames is greater than swapchain image count. Recreating render resources.");
             RecreateRenderResources();
-            return;
+            return false;
+        }
+
+        // if the size of the swapchain is different from the last size, recreate the render resources
+        if (swapchain->GetExtent().width != m_LastWindowSize.first || swapchain->GetExtent().height != m_LastWindowSize.second) {
+            log::Warn("Swapchain size has changed. Recreating render resources.");
+            m_LastWindowSize = MakePair(swapchain->GetExtent().width, swapchain->GetExtent().height);
+            RecreateRenderResources();
+            return false;
         }
         
         VkCall(device->GetDevice().waitForFences({m_InFlightFences[m_CurrentFrameIndex]}, VK_TRUE, UINT64_MAX));
@@ -62,7 +77,7 @@ namespace tlc {
                 RecreateRenderResources();
                 device->GetDevice().resetFences({m_InFlightFences[m_CurrentFrameIndex]}); // reset the inflight fence
                 m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames; // increment the current frame index
-                return;
+                return false;
             } else {
                 VkCritCall(error);
             }
@@ -105,11 +120,14 @@ namespace tlc {
             .setExtent(swapchain->GetExtent()));
 
         m_CurrentCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
+        m_CurrentCommandBuffer.bindVertexBuffers(0, m_VertexBuffer->GetBuffer(), {0});
         m_CurrentCommandBuffer.draw(3, 1, 0, 0);
         m_CurrentCommandBuffer.endRenderPass();
         m_CurrentCommandBuffer.end();
 
         // TODO : TEMP CODE
+
+        return true;
     }
 
     void PresentationRenderer::EndRenderingCurrentFrame() {
@@ -274,14 +292,16 @@ namespace tlc {
     void PresentationRenderer::RecreateRenderResources() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
+        log::Warn("Recreating render resources.");
 
-        // TODO: This is not necessary for everytime RecreateRenderResources is called
-        DestroySynchronizationObjects();
-        CreateSynchronizationObjects();
+        
+        if (m_NumInflightFrames > vulkan->GetSwapchain()->GetImageCount()) {
+            DestroySynchronizationObjects();
+            CreateSynchronizationObjects();
 
-        // TODO: This is not necessary for everytime RecreateRenderResources is called
-        DestroyCommandBuffers();
-        CreateCommandBuffers();
+            DestroyCommandBuffers();
+            CreateCommandBuffers();
+        }
 
         DestroyFramebuffers();
         CreateFramebuffers();

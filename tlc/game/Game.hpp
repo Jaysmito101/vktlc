@@ -27,7 +27,7 @@ namespace tlc
 		void RenderEngineFrame();
 
 	private:
-		
+		F32 m_LastFrameTime = 0.0f;
 	};
 
 }

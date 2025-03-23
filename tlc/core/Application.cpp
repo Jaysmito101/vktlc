@@ -64,6 +64,7 @@ namespace tlc
 				{
 					m_CurrentFramerate = m_CurrentFramerateCounter;
 					m_FramerateTimer = 0.0f;
+					m_CurrentFramerateCounter = 0;
 				}
 
 				

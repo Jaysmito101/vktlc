@@ -28,6 +28,7 @@ namespace tlc
 		inline Size GetSize() const { return m_Size; }
 
 		inline void SetUsageFlags(vk::BufferUsageFlags usageFlags) { m_UsageFlags = usageFlags; }
+		inline void SetMemoryPropertyFlags(vk::MemoryPropertyFlags memoryPropertyFlags) { m_MemoryPropertyFlags = memoryPropertyFlags; }
 
 
 	private:
