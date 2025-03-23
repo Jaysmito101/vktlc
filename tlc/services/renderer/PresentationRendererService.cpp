@@ -318,8 +318,13 @@ namespace tlc {
         log::Warn("Recreating render resources.");
 
         auto size = Window::Get()->GetSize();
-            swapchain->Recreate(); // recreate the swapchain
 
+        if (size.first == 0 || size.second == 0) {
+            log::Warn("Window size is 0. Not recreating render resources.");
+            return;
+        }
+        
+        swapchain->Recreate(); // recreate the swapchain
         device->WaitIdle();
 
         

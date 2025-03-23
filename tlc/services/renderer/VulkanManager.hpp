@@ -26,14 +26,10 @@ namespace tlc {
         void SetupVulkan();
         void ShutdownVulkan();
 
-        void HandleWindowResize(U32 width, U32 height);
-
         vk::PhysicalDevice m_PhysicalDevice;
         Raw<VulkanDevice> m_VulkanDevice = nullptr;
         Raw<VulkanContext> m_VulkanContext = nullptr;
         Raw<VulkanSwapchain> m_VulkanSwapchain = nullptr;
-
-        Pair<I32, I32> m_LastWindowSize = MakePair(0, 0);
     };
 
 }

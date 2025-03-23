@@ -11,11 +11,6 @@ namespace tlc
     {
         // Setup vulkan context, device and swapchain, etc
         SetupVulkan();
-
-        // create an window resize event hook to handle resizing
-        EventManager<EventType::WindowFramebufferSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void {
-            HandleWindowResize(width, height);
-        });
     }
 
     void VulkanManager::OnEnd()
@@ -50,24 +45,5 @@ namespace tlc
         }
 
         log::Info("Vulkan setup complete");
-    }
-
-    void VulkanManager::HandleWindowResize(U32 width, U32 height)
-    {
-        // window is minimized
-        if (width == 0 || height == 0)
-        {
-            return;
-        }
-
-        // window is already at the same size
-        if (width == m_LastWindowSize.first && height == m_LastWindowSize.second)
-        {
-            return;
-        }
-
-        m_LastWindowSize = MakePair(width, height);
-        m_VulkanDevice->WaitIdle();
-        m_VulkanSwapchain->Recreate();
     }
 }
