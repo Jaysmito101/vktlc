@@ -37,7 +37,7 @@ namespace tlc
 		return result == vk::Result::eSuccess ? Ok<U32, vk::Result>(imageIndex) : Err<U32, vk::Result>(result);
 	}
 
-	void VulkanSwapchain::PresentImage(U32 index, vk::Semaphore waitSemaphore)
+	vk::Result VulkanSwapchain::PresentImage(U32 index, vk::Semaphore waitSemaphore)
 	{
 		auto presentInfo = vk::PresentInfoKHR()
 							   .setWaitSemaphoreCount(1)
@@ -46,13 +46,13 @@ namespace tlc
 							   .setPSwapchains(&m_Swapchain)
 							   .setPImageIndices(&index);
 
-		// VkCritCall(m_Device->GetDevice().queuePresentKHR(m_Context->GetPresentQueue(), &presentInfo));
-		VkCall(m_Device->GetQueue(Present).presentKHR(presentInfo));
+		return m_Device->GetQueue(Present).presentKHR(presentInfo);
 	}
 
 	Bool VulkanSwapchain::ChooseSufaceFormat()
 	{
-		const auto formats = m_Device->GetPhysicalDevice().getSurfaceFormatsKHR(m_Surface);
+		const auto [result, formats] = m_Device->GetPhysicalDevice().getSurfaceFormatsKHR(m_Surface);
+		VkCritCall(result);
 
 		if (formats.empty())
 		{
@@ -75,7 +75,8 @@ namespace tlc
 
 	Bool VulkanSwapchain::ChoosePresentMode()
 	{
-		const auto modes = m_Device->GetPhysicalDevice().getSurfacePresentModesKHR(m_Surface);
+		const auto [result, modes] = m_Device->GetPhysicalDevice().getSurfacePresentModesKHR(m_Surface);
+		VkCritCall(result);
 
 		if (modes.empty())
 		{
@@ -98,7 +99,8 @@ namespace tlc
 
 	Bool VulkanSwapchain::ChooseExtent()
 	{
-		const auto capabilities = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Surface);
+		const auto [result, capabilities] = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Surface);
+		VkCritCall(result);
 
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 		{
@@ -136,7 +138,12 @@ namespace tlc
 			return false;
 		}
 
-		const auto capabilities = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Surface);
+		const auto [result, capabilities] = m_Device->GetPhysicalDevice().getSurfaceCapabilitiesKHR(m_Surface);
+		if (result != vk::Result::eSuccess)
+		{
+			log::Error("Failed to get surface capabilities: {}", vk::to_string(result));
+			return false;
+		}
 
 		U32 imageCount = capabilities.minImageCount + 1;
 
@@ -175,9 +182,9 @@ namespace tlc
 			.setClipped(true)
 			.setOldSwapchain(m_Swapchain);
 
-		auto newSwapChain = m_Device->GetDevice().createSwapchainKHR(createInfo);
+		auto [result2, newSwapChain] = m_Device->GetDevice().createSwapchainKHR(createInfo);
 
-		if (newSwapChain == static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
+		if (result2 != vk::Result::eSuccess)
 		{
 			if (m_Swapchain != static_cast<vk::SwapchainKHR>(VK_NULL_HANDLE))
 			{
@@ -218,7 +225,13 @@ namespace tlc
 
 	Bool VulkanSwapchain::QuerySwapchainImages()
 	{
-		m_Images = m_Device->GetDevice().getSwapchainImagesKHR(m_Swapchain);
+		auto [result, images] = m_Device->GetDevice().getSwapchainImagesKHR(m_Swapchain);
+		if (result != vk::Result::eSuccess)
+		{
+			log::Error("Failed to get swapchain images: {}", vk::to_string(result));
+			return false;
+		}
+		m_Images = images;
 		return true;
 	}
 
@@ -242,7 +255,13 @@ namespace tlc
 													 .setComponents(vk::ComponentMapping())
 													 .setSubresourceRange(subresourceRange);
 
-			m_ImageViews[i] = m_Device->GetDevice().createImageView(createInfo);
+			auto [result, imageView] = m_Device->GetDevice().createImageView(createInfo);
+			if (result != vk::Result::eSuccess)
+			{
+				log::Error("Failed to create image view: {}", vk::to_string(result));
+				return false;
+			}
+			m_ImageViews[i] = imageView;
 
 			if (m_ImageViews[i] == static_cast<vk::ImageView>(VK_NULL_HANDLE))
 			{
@@ -267,7 +286,14 @@ namespace tlc
 				.setHeight(m_SwapchainExtent.height)
 				.setLayers(1);
 
-			framebuffers[i] = m_Device->GetDevice().createFramebuffer(framebufferInfo);
+			auto [result, framebuffer] = m_Device->GetDevice().createFramebuffer(framebufferInfo);
+			if (result != vk::Result::eSuccess)
+			{
+				log::Error("Failed to create framebuffer: {}", vk::to_string(result));
+				return {};
+			}
+
+			framebuffers[i] = framebuffer;
 			if (framebuffers[i] == static_cast<vk::Framebuffer>(VK_NULL_HANDLE)) {
 				log::Fatal("Failed to create framebuffer from swapchain image view: {}", i);
 			}

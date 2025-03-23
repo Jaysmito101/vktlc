@@ -129,7 +129,7 @@ namespace tlc
 			return false;
 		}
 
-		m_Device->GetDevice().bindBufferMemory(m_Buffer, m_Memory, 0);
+		VkCall(m_Device->GetDevice().bindBufferMemory(m_Buffer, m_Memory, 0));
 
 		m_IsReady = true;
 

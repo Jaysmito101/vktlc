@@ -17,7 +17,7 @@ namespace tlc
 		~VulkanSwapchain();
 	
 		Result<U32, vk::Result> AcquireNextImage(vk::Semaphore semaphore = VK_NULL_HANDLE, vk::Fence fence = VK_NULL_HANDLE, U64 timeout = UINT64_MAX);
-		void PresentImage(U32 index, vk::Semaphore waitSemaphore = VK_NULL_HANDLE);
+		vk::Result PresentImage(U32 index, vk::Semaphore waitSemaphore = VK_NULL_HANDLE);
 
 		List<vk::Framebuffer> CreateFramebuffers(const vk::RenderPass& renderPass) const;
 	

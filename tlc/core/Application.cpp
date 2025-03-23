@@ -18,14 +18,15 @@ namespace tlc
 
 		log::Info("Application started");
 
-		Window::Get(); // Setup window
-		(void*)VulkanContext::Get(); // Setup vulkan context
+		Window::Get();				  // Setup window
+		(void *)VulkanContext::Get(); // Setup vulkan context
 		Services::Setup();
 
-		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void {
-			m_Running = false;
-			});
+		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void
+															   { m_Running = false; });
 
+		EventManager<EventType::WindowSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void
+															 { m_Minimized = (width == 0 || height == 0); });
 	}
 
 	Application::~Application()
@@ -47,58 +48,57 @@ namespace tlc
 		m_LastFrameTime = static_cast<F32>(glfwGetTime());
 		OnStart();
 
-		if (m_CurrentScene != nullptr) m_CurrentScene->Start();
+		if (m_CurrentScene != nullptr)
+			m_CurrentScene->Start();
 
 		auto window = Window::Get();
 
-		try 
+		while (m_Running)
 		{
-			while (m_Running)
+			m_CurentFrameTime = static_cast<F32>(glfwGetTime());
+			m_DeltaTime = static_cast<F32>(m_CurentFrameTime - m_LastFrameTime);
+			m_LastFrameTime = m_CurentFrameTime;
+			m_FramerateTimer += m_DeltaTime;
+			m_CurrentFramerateCounter += 1;
+			if (m_FramerateTimer >= 1.0f)
 			{
-				m_CurentFrameTime = static_cast<F32>(glfwGetTime());
-				m_DeltaTime = static_cast<F32>(m_CurentFrameTime - m_LastFrameTime);
-				m_LastFrameTime = m_CurentFrameTime;
-				m_FramerateTimer += m_DeltaTime;
-				m_CurrentFramerateCounter += 1;
-				if (m_FramerateTimer >= 1.0f)
-				{
-					m_CurrentFramerate = m_CurrentFramerateCounter;
-					m_FramerateTimer = 0.0f;
-					m_CurrentFramerateCounter = 0;
-				}
+				m_CurrentFramerate = m_CurrentFramerateCounter;
+				m_FramerateTimer = 0.0f;
+				m_CurrentFramerateCounter = 0;
+			}
 
-				
-				if(m_NextSceneOnLoading) PollForSceneChange();
-				window->Update();
+			if (m_NextSceneOnLoading)
+				PollForSceneChange();
+			window->Update();
 
-				if (m_Minimized) continue;
+			if (m_Minimized)
+				continue;
 
-				if(m_CurrentScene != nullptr && !m_CurrentScene->IsPaused()) m_CurrentScene->Update();
-				OnUpdate();
+			if (m_CurrentScene != nullptr && !m_CurrentScene->IsPaused())
+				m_CurrentScene->Update();
+			OnUpdate();
 
-				if (m_SceneChangeRequest.has_value()) {
-					if (m_SceneChangeRequest.value().second)
-						ChangeSceneAsyncI(m_SceneChangeRequest.value().first);
-					else
-						ChangeSceneI(m_SceneChangeRequest.value().first);
-					m_SceneChangeRequest.reset();
-				}
+			if (m_SceneChangeRequest.has_value())
+			{
+				if (m_SceneChangeRequest.value().second)
+					ChangeSceneAsyncI(m_SceneChangeRequest.value().first);
+				else
+					ChangeSceneI(m_SceneChangeRequest.value().first);
+				m_SceneChangeRequest.reset();
 			}
 		}
-		catch (const std::exception& e)
-		{
-			log::Error("Exception: {}", e.what());
-		}
 
-		if (m_CurrentScene != nullptr) m_CurrentScene->End();
+		if (m_CurrentScene != nullptr)
+			m_CurrentScene->End();
 		OnEnd();
 
-		if (m_CurrentScene != nullptr) m_CurrentScene->Unload();
+		if (m_CurrentScene != nullptr)
+			m_CurrentScene->Unload();
 
 		OnUnload();
 	}
 
-	void Application::ChangeSceneI(const String& name)
+	void Application::ChangeSceneI(const String &name)
 	{
 		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
 
@@ -107,14 +107,14 @@ namespace tlc
 			m_CurrentScene->End();
 			m_CurrentScene->Unload();
 		}
-		
- 		m_CurrentScene = m_Scenes[name].get();
+
+		m_CurrentScene = m_Scenes[name].get();
 		m_CurrentScene->Load(false);
 		m_CurrentScene->Start();
 		Services::PushSceneChangeEvent();
 	}
 
-	void Application::ChangeSceneAsyncI(const String& name)
+	void Application::ChangeSceneAsyncI(const String &name)
 	{
 		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
 
@@ -130,13 +130,12 @@ namespace tlc
 			return;
 		}
 
-
 		// First load the new scene async
 		m_NextSceneOnLoading = m_Scenes[name].get();
 
-		std::thread([this]() -> void {
-			m_NextSceneOnLoading->Load(true);
-			}).detach();
+		std::thread([this]() -> void
+					{ m_NextSceneOnLoading->Load(true); })
+			.detach();
 	}
 
 	void Application::PollForSceneChange()
@@ -156,7 +155,5 @@ namespace tlc
 			Services::PushSceneChangeEvent();
 		}
 	}
-
-
 
 }

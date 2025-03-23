@@ -1,8 +1,16 @@
 #include "services/renderer/PresentationRenderer.hpp"
 
 #include "services/CacheManager.hpp"
+#include "core/Window.hpp"
 
 namespace tlc {
+
+    struct PresentationPipelineConfig {
+        F32 viewportWidth = 0.0f;
+        F32 viewportHeight = 0.0f;
+        F32 renderFrameWidth = 0.0f;
+        F32 renderFrameHeight = 0.0f;        
+    };
     
     void PresentationRenderer::Setup() {
 
@@ -68,7 +76,6 @@ namespace tlc {
             auto error = imageIndex.Error();
             if (error == vk::Result::eErrorOutOfDateKHR || error == vk::Result::eSuboptimalKHR) {
                 log::Warn("Swapchain is out of date or suboptimal. Recreating swapchain, framebuffers and render resources.");
-                swapchain->Recreate(); // recreate the swapchain
                 RecreateRenderResources();
                 device->GetDevice().resetFences({m_InFlightFences[m_CurrentFrameIndex]}); // reset the inflight fence
                 m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames; // increment the current frame index
@@ -81,6 +88,8 @@ namespace tlc {
 
         // TODO : TEMP CODE
 
+        const auto& swaphcainExtent = swapchain->GetExtent();
+
         Array<vk::ClearValue, 1> clearValues = {
             vk::ClearValue()
             .setColor(vk::ClearColorValue(std::array<F32, 4>{0.2f, 0.2f, 0.2f, 1.0f}))
@@ -91,33 +100,41 @@ namespace tlc {
             .setFramebuffer(m_Framebuffers[m_CurrentImageIndex])
             .setRenderArea(vk::Rect2D()
                 .setOffset(vk::Offset2D(0, 0))
-                .setExtent(swapchain->GetExtent()))
+                .setExtent(swaphcainExtent))
             .setClearValueCount(static_cast<U32>(clearValues.size()))
             .setPClearValues(clearValues.data());
 
         m_CurrentCommandBuffer = m_CommandBuffers[m_CurrentFrameIndex];
         m_CurrentCommandBuffer.reset();
-        m_CurrentCommandBuffer.begin(vk::CommandBufferBeginInfo()
+        VkCall(m_CurrentCommandBuffer.begin(vk::CommandBufferBeginInfo()
             .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse)
-            .setPInheritanceInfo(nullptr));
+            .setPInheritanceInfo(nullptr)));
         
         m_CurrentCommandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
         m_CurrentCommandBuffer.setViewport(0, vk::Viewport()
             .setX(0.0f)
             .setY(0.0f)
-            .setWidth(static_cast<F32>(swapchain->GetExtent().width))
-            .setHeight(static_cast<F32>(swapchain->GetExtent().height))
+            .setWidth(static_cast<F32>(swaphcainExtent.width))
+            .setHeight(static_cast<F32>(swaphcainExtent.height))
             .setMinDepth(0.0f)
             .setMaxDepth(1.0f));
         m_CurrentCommandBuffer.setScissor(0, vk::Rect2D()
             .setOffset(vk::Offset2D(0, 0))
-            .setExtent(swapchain->GetExtent()));
+            .setExtent(swaphcainExtent));
+
+        const auto presentationConfig = PresentationPipelineConfig {
+            .viewportWidth = static_cast<F32>(swaphcainExtent.width),
+            .viewportHeight = static_cast<F32>(swaphcainExtent.height),
+            .renderFrameWidth = static_cast<F32>(1000),
+            .renderFrameHeight = static_cast<F32>(1000)
+        };
 
         m_CurrentCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
-        m_CurrentCommandBuffer.draw(3, 1, 0, 0);
+        m_CurrentCommandBuffer.pushConstants(m_Pipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0, sizeof(PresentationPipelineConfig), &presentationConfig);
+        m_CurrentCommandBuffer.draw(6, 1, 0, 0);
         m_CurrentCommandBuffer.endRenderPass();
-        m_CurrentCommandBuffer.end();
+        VkCall(m_CurrentCommandBuffer.end());
 
         // TODO : TEMP CODE
 
@@ -142,12 +159,20 @@ namespace tlc {
             .setPWaitSemaphores(&m_ImageAvailableSemaphores[m_CurrentFrameIndex])
             .setPWaitDstStageMask(&waitStages);
 
-        device->GetQueue(VulkanQueueType::Graphics).submit({submitInfo}, m_InFlightFences[m_CurrentFrameIndex]);
+        VkCall(device->GetQueue(VulkanQueueType::Graphics).submit({submitInfo}, m_InFlightFences[m_CurrentFrameIndex]));
 
         // TODO : TEMP CODE
 
 
-        swapchain->PresentImage(m_CurrentImageIndex, m_RenderFinishedSemaphores[m_CurrentFrameIndex]);
+        auto result = swapchain->PresentImage(m_CurrentImageIndex, m_RenderFinishedSemaphores[m_CurrentFrameIndex]);
+        if (result != vk::Result::eSuccess) {
+            if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR) {
+                log::Warn("Swapchain is out of date or suboptimal. Recreating swapchain, framebuffers and render resources.");
+                RecreateRenderResources();
+            } else {
+                VkCritCall(result);
+            }
+        }
         m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames;
     }
     
@@ -272,7 +297,9 @@ namespace tlc {
             .setCommandBufferCount(static_cast<U32>(m_NumInflightFrames));
 
         m_CommandBuffers.resize(m_NumInflightFrames);
-        m_CommandBuffers = device->GetDevice().allocateCommandBuffers(commandBufferAllocateInfo);
+        auto [result, commandBuffers] = device->GetDevice().allocateCommandBuffers(commandBufferAllocateInfo);
+        VkCritCall(result);
+        m_CommandBuffers = commandBuffers;
     }
 
     void PresentationRenderer::DestroyCommandBuffers() {
@@ -286,7 +313,14 @@ namespace tlc {
     void PresentationRenderer::RecreateRenderResources() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
+        auto swapchain = vulkan->GetSwapchain();
+        
         log::Warn("Recreating render resources.");
+
+        auto size = Window::Get()->GetSize();
+            swapchain->Recreate(); // recreate the swapchain
+
+        device->WaitIdle();
 
         
         if (m_NumInflightFrames > vulkan->GetSwapchain()->GetImageCount()) {
@@ -299,9 +333,6 @@ namespace tlc {
 
         DestroyFramebuffers();
         CreateFramebuffers();
-
-        m_Pipeline->GetSettings().SetExtent(vulkan->GetSwapchain()->GetExtent());
-        m_Pipeline->Recreate();
     }
 
 
@@ -321,7 +352,8 @@ namespace tlc {
             .SetRenderPass(m_RenderPass)
             .SetVertexShaderModule(vertShaderModule)
             .SetFragmentShaderModule(fragShaderModule)
-            .SetExtent(vulkan->GetSwapchain()->GetExtent());
+            .SetExtent(vulkan->GetSwapchain()->GetExtent())
+            .AddPushConstantRange(vk::ShaderStageFlagBits::eVertex, 0, sizeof(PresentationPipelineConfig));
 
         m_Pipeline = CreateScope<VulkanGraphicsPipeline>(
             device, 

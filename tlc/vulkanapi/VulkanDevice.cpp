@@ -25,7 +25,7 @@ namespace tlc
 
 	VulkanDevice::~VulkanDevice()
 	{
-		m_Device.waitIdle();
+		(void)m_Device.waitIdle();
 
 
 		for (auto& commandPool : m_CommandPools)
@@ -52,7 +52,9 @@ namespace tlc
 		auto semaphoreCreateInfo = vk::SemaphoreCreateInfo()
 			.setFlags(flags);
 
-		return m_Device.createSemaphore(semaphoreCreateInfo);
+		auto [result, semaphore] = m_Device.createSemaphore(semaphoreCreateInfo);
+		VkCall(result);
+		return semaphore;
 	}
 
 	void VulkanDevice::DestroyVkSemaphore(vk::Semaphore semaphore) const
@@ -66,7 +68,9 @@ namespace tlc
 		auto fenceCreateInfo = vk::FenceCreateInfo()
 			.setFlags(flags);
 
-		return m_Device.createFence(fenceCreateInfo);
+		auto [result, fence] = m_Device.createFence(fenceCreateInfo);
+		VkCall(result);
+		return fence;
 	}
 
 	void VulkanDevice::DestroyVkFence(vk::Fence fence) const
@@ -142,7 +146,9 @@ namespace tlc
 				.setPpEnabledLayerNames(layers.data());
 		}
 
-		m_Device = m_PhysicalDevice.createDevice(deviceCreateInfo);
+		auto [result, device] = m_PhysicalDevice.createDevice(deviceCreateInfo);
+		VkCritCall(result);
+		m_Device = device;
 
 		if (m_Device == static_cast<vk::Device>(VK_NULL_HANDLE))
 		{
@@ -184,7 +190,11 @@ namespace tlc
 				continue;
 			}
 			poolCreateInfo.setQueueFamilyIndex(m_QueueFamilyIndices[i]);
-			m_CommandPools[i] = m_Device.createCommandPool(poolCreateInfo);
+			
+			auto [result, commandPool] = m_Device.createCommandPool(poolCreateInfo);
+			VkCritCall(result);
+			m_CommandPools[i] = commandPool;
+
 			if (m_CommandPools[i] == static_cast<vk::CommandPool>(VK_NULL_HANDLE))
 			{
 				log::Error("Failed to create command pool");
@@ -227,7 +237,7 @@ namespace tlc
 			{
 				if (surface)
 				{
-					if (physicalDevice.getSurfaceSupportKHR(i, surface))
+					if (physicalDevice.getSurfaceSupportKHR(i, surface).value)
 					{
 						return i;
 					}

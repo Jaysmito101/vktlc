@@ -159,7 +159,7 @@ namespace tlc
 			.setRasterizerDiscardEnable(false)
 			.setPolygonMode(vk::PolygonMode::eFill)
 			.setLineWidth(1.0f)
-			.setCullMode(vk::CullModeFlagBits::eBack)
+			.setCullMode(vk::CullModeFlagBits::eNone)
 			.setFrontFace(vk::FrontFace::eClockwise)
 			.setDepthBiasEnable(false)
 			.setDepthBiasConstantFactor(0.0f)
@@ -223,10 +223,12 @@ namespace tlc
 		auto pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
 			.setSetLayoutCount(0)
 			.setPSetLayouts(nullptr)
-			.setPushConstantRangeCount(0)
-			.setPPushConstantRanges(nullptr);
+			.setPushConstantRangeCount(static_cast<uint32_t>(m_Settings.pushConstantRanges.size()))
+			.setPPushConstantRanges(m_Settings.pushConstantRanges.data());
 
-		return m_Device->GetDevice().createPipelineLayout(pipelineLayoutCreateInfo);
+		auto [result, pipelineLayout] = m_Device->GetDevice().createPipelineLayout(pipelineLayoutCreateInfo);
+		VkCall(result);
+		return pipelineLayout;
 	}
 
 	void VulkanGraphicsPipeline::Cleanup()

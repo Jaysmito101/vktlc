@@ -66,6 +66,7 @@ namespace tlc
 		vk::RenderPass renderPass;
 		Option<List<vk::VertexInputAttributeDescription>> vertexInputAttributeDescriptions;
 		U32 vertexInputBindingDescriptionStride = 0;
+		List<vk::PushConstantRange> pushConstantRanges;
 
 
 		VulkanGraphicsPipelineSettings() = default;
@@ -76,10 +77,12 @@ namespace tlc
 		inline VulkanGraphicsPipelineSettings& SetFragmentShaderModule(Ref<VulkanShaderModule> shModule) { this->fragmentShaderModule = std::move(shModule); return *this; }
 		inline VulkanGraphicsPipelineSettings& SetRenderPass(vk::RenderPass r) { this->renderPass = r; return *this; }
 		inline VulkanGraphicsPipelineSettings& ClearVertexInputAttributeDescriptions() { this->vertexInputAttributeDescriptions = {}; this->vertexInputBindingDescriptionStride = 0; return *this; }
-
 		template<typename T>
 		requires(T::GetAttributeDescriptions())
 		inline VulkanGraphicsPipelineSettings& SetVertexInputAttributeDescriptions(const T& vertex) { this->vertexInputAttributeDescriptions = vertex.GetAttributeDescriptions(); vertexInputBindingDescriptionStride = sizeof(T); return *this; }
+
+		inline VulkanGraphicsPipelineSettings& AddPushConstantRange(vk::ShaderStageFlags stageFlags, U32 offset, U32 size) { this->pushConstantRanges.push_back(vk::PushConstantRange().setStageFlags(stageFlags).setOffset(offset).setSize(size)); return *this; }
+		inline VulkanGraphicsPipelineSettings& ClearPushConstantRanges() { this->pushConstantRanges.clear(); return *this; }
 	};
 
 	struct VulkanGraphicsPipelineProperties

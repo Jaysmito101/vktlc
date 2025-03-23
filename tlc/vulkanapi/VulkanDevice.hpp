@@ -74,7 +74,7 @@ namespace tlc
 
 		inline Bool IsReady() const { return m_IsReady; }
 
-		inline void WaitIdle() const { m_Device.waitIdle(); }
+		inline void WaitIdle() const { (void)m_Device.waitIdle(); }
 		inline Raw<VulkanContext> GetParentContext() const { return m_ParentContext; }
 		inline const vk::Device& GetDevice() const { return m_Device; }
 		inline const vk::PhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
