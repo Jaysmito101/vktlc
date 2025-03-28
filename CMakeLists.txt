@@ -83,6 +83,7 @@ add_executable(tlc
     ./tlc/vulkanapi/VulkanSwapchain.cpp
     ./tlc/vulkanapi/VulkanBuffer.cpp
     ./tlc/vulkanapi/VulkanShader.cpp
+    ./tlc/vulkanapi/VulkanImage.cpp
     ./tlc/vulkanapi/VulkanGraphicsPipeline.cpp
 # services
     ./tlc/services/Services.cpp
@@ -92,7 +93,7 @@ add_executable(tlc
     ./tlc/services/assetmanager/AssetBundlerService.cpp
     ./tlc/services/renderer/VulkanManagerService.cpp
     ./tlc/services/renderer/PresentationRendererService.cpp
-    # ./tlc/services/DebugUIService.cpp
+    ./tlc/services/renderer/DebugUIManager.cpp
 # engine
     ./tlc/engine/Scene.cpp
     # ./tlc/engine/ecs/Component.cpp
