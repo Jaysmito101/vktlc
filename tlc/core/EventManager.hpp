@@ -16,7 +16,8 @@ namespace tlc
 	{
 		None = 0,
 		WindowClose, WindowSize, WindowPos, WindowCursorPos, WindowMouseButton,
-		WindowKey, WindowChar, WindowScroll, WindowFocus, WindowFramebufferSize
+		WindowKey, WindowChar, WindowScroll, WindowFocus, WindowFramebufferSize,
+		SwapchainRecreate
 	};
 
 

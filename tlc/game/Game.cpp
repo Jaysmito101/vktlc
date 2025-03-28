@@ -60,20 +60,8 @@ namespace tlc
     void GameApplication::RenderEngineFrame()
     {
         auto presentationRenderer = Services::Get<PresentationRenderer>();
-
-        if (presentationRenderer->BeginRenderingCurrentFrame())
-        {
-
-            // auto frame = GetCurrentScene()->GetActiveCamera()->GetFrame();
-            // auto frameRenderedSemaphore = frame.GetFrameRenderedSemaphore();
-
-            // do the actual rendering here
-            // also the debug ui rendering
-            // wait on both the frame rendered semaphore(to start rendering) and the image available semaphore(for wrting color output)
-            // and signal the render finished semaphore
-            // and also set signal fense to the inflight fence
-
-            presentationRenderer->EndRenderingCurrentFrame();
+        if(!presentationRenderer->RenderCurrentFrame()) {
+            log::Warn("Engine frame skipped...");
         }
     }
 

@@ -17,8 +17,7 @@ namespace tlc {
         virtual void OnSceneChange() override;
         virtual void OnEvent(const String& event, const String& eventParams) override;
 
-        Bool BeginRenderingCurrentFrame();
-        void EndRenderingCurrentFrame();
+        Bool RenderCurrentFrame();
 
         inline Size GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
         inline Size GetNumInflightFrames() const { return m_NumInflightFrames; }

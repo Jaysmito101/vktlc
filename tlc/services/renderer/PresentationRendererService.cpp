@@ -47,11 +47,13 @@ namespace tlc {
         
     }
 
-    Bool PresentationRenderer::BeginRenderingCurrentFrame() {
+    Bool PresentationRenderer::RenderCurrentFrame() {
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
         auto swapchain = vulkan->GetSwapchain();
 
+
+        // If the number of inflight frames is greater than the swapchain image count, recreate the render resources
         if (m_NumInflightFrames > vulkan->GetSwapchain()->GetImageCount()) {
             log::Warn("Number of inflight frames is greater than swapchain image count. Recreating render resources.");
             RecreateRenderResources();
@@ -85,12 +87,8 @@ namespace tlc {
             }
         }
 
-
-        // TODO : TEMP CODE
-
         const auto& swaphcainExtent = swapchain->GetExtent();
-
-        Array<vk::ClearValue, 1> clearValues = {
+        static Array<vk::ClearValue, 1> clearValues = {
             vk::ClearValue()
             .setColor(vk::ClearColorValue(std::array<F32, 4>{0.2f, 0.2f, 0.2f, 1.0f}))
         };
@@ -106,6 +104,7 @@ namespace tlc {
 
         m_CurrentCommandBuffer = m_CommandBuffers[m_CurrentFrameIndex];
         m_CurrentCommandBuffer.reset();
+
         VkCall(m_CurrentCommandBuffer.begin(vk::CommandBufferBeginInfo()
             .setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse)
             .setPInheritanceInfo(nullptr)));
@@ -133,20 +132,10 @@ namespace tlc {
         m_CurrentCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
         m_CurrentCommandBuffer.pushConstants(m_Pipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0, sizeof(PresentationPipelineConfig), &presentationConfig);
         m_CurrentCommandBuffer.draw(6, 1, 0, 0);
+
+
         m_CurrentCommandBuffer.endRenderPass();
         VkCall(m_CurrentCommandBuffer.end());
-
-        // TODO : TEMP CODE
-
-        return true;
-    }
-
-    void PresentationRenderer::EndRenderingCurrentFrame() {
-        auto vulkan = Services::Get<VulkanManager>();
-        auto device = vulkan->GetDevice();
-        auto swapchain = vulkan->GetSwapchain();
-
-        // TODO : TEMP CODE
 
         auto waitStages = vk::PipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
@@ -161,8 +150,6 @@ namespace tlc {
 
         VkCall(device->GetQueue(VulkanQueueType::Graphics).submit({submitInfo}, m_InFlightFences[m_CurrentFrameIndex]));
 
-        // TODO : TEMP CODE
-
 
         auto result = swapchain->PresentImage(m_CurrentImageIndex, m_RenderFinishedSemaphores[m_CurrentFrameIndex]);
         if (result != vk::Result::eSuccess) {
@@ -174,6 +161,8 @@ namespace tlc {
             }
         }
         m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_NumInflightFrames;
+
+        return true;
     }
     
 
@@ -338,6 +327,9 @@ namespace tlc {
 
         DestroyFramebuffers();
         CreateFramebuffers();
+
+        // raise the event for the swapchain recreate
+        EventManager<EventType::SwapchainRecreate, U32>::Get()->RaiseEvent(m_NumInflightFrames); 
     }
 
 
