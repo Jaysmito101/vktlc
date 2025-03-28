@@ -108,6 +108,8 @@ add_executable(tlc
     # ./tlc/game/components/TriangleLeftRight.cpp
 # main
     ./tlc/Main.cpp
+# third party
+    ./dep/imgui/backends/imgui_impl_glfw.cpp
 )
 target_link_libraries(tlc
     glfw
