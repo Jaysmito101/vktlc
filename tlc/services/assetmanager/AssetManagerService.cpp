@@ -9,6 +9,7 @@ namespace tlc {
     void AssetManager::OnStart() {
         utils::EnsureDirectory(m_BundlesPath);
         ReloadAssetMetadata();
+        LoadAllBundles();
     }
 
     void AssetManager::OnEnd() {

@@ -1,4 +1,5 @@
 #include "services/renderer/PresentationRenderer.hpp"
+#include "services/renderer/DebugUIManager.hpp"
 
 #include "services/CacheManager.hpp"
 #include "core/Window.hpp"
@@ -47,7 +48,8 @@ namespace tlc {
         
     }
 
-    Bool PresentationRenderer::RenderCurrentFrame() {
+    Bool PresentationRenderer::RenderCurrentFrame(F32 deltaTime) {
+        auto debugUi = Services::Get<DebugUIManager>();
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
         auto swapchain = vulkan->GetSwapchain();
@@ -133,6 +135,8 @@ namespace tlc {
         m_CurrentCommandBuffer.pushConstants(m_Pipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0, sizeof(PresentationPipelineConfig), &presentationConfig);
         m_CurrentCommandBuffer.draw(6, 1, 0, 0);
 
+
+        debugUi->RenderFrame(m_CurrentCommandBuffer, deltaTime, swaphcainExtent.width, swaphcainExtent.height);
 
         m_CurrentCommandBuffer.endRenderPass();
         VkCall(m_CurrentCommandBuffer.end());

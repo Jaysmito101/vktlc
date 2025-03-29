@@ -73,6 +73,7 @@ namespace tlc
 		Option<List<vk::VertexInputAttributeDescription>> vertexInputAttributeDescriptions;
 		U32 vertexInputBindingDescriptionStride = 0;
 		List<vk::PushConstantRange> pushConstantRanges;
+		List<vk::DescriptorSetLayout> descriptorSetLayouts;
 		std::optional<vk::PipelineColorBlendAttachmentState> blendAttachmentState;
 
 
@@ -90,7 +91,13 @@ namespace tlc
 
 		inline VulkanGraphicsPipelineSettings& AddPushConstantRange(vk::ShaderStageFlags stageFlags, U32 offset, U32 size) { this->pushConstantRanges.push_back(vk::PushConstantRange().setStageFlags(stageFlags).setOffset(offset).setSize(size)); return *this; }
 		inline VulkanGraphicsPipelineSettings& ClearPushConstantRanges() { this->pushConstantRanges.clear(); return *this; }
+		
+		inline VulkanGraphicsPipelineSettings& AddDescriptorSetLayout(vk::DescriptorSetLayout l) { this->descriptorSetLayouts.push_back(l); return *this; }
+		inline VulkanGraphicsPipelineSettings& ClearDescriptorSetLayouts() { this->descriptorSetLayouts.clear(); return *this; }
+		
 		inline VulkanGraphicsPipelineSettings& SetPipelineColorBlendAttachmentState(vk::PipelineColorBlendAttachmentState b) { this->blendAttachmentState = b; return *this; }
+
+
 
 	};
 

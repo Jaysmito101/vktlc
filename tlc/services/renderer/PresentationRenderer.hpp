@@ -17,10 +17,11 @@ namespace tlc {
         virtual void OnSceneChange() override;
         virtual void OnEvent(const String& event, const String& eventParams) override;
 
-        Bool RenderCurrentFrame();
-
+        Bool RenderCurrentFrame(F32 deltaTime);
+        
         inline Size GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
         inline Size GetNumInflightFrames() const { return m_NumInflightFrames; }
+        inline vk::RenderPass GetRenderPass() const { return m_RenderPass; }
 
     private:
 		void CreateRenderPass();

@@ -223,9 +223,9 @@ namespace tlc
 	vk::PipelineLayout VulkanGraphicsPipeline::CreatePipelineLayout() const
 	{
 		auto pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
-			.setSetLayoutCount(0)
-			.setPSetLayouts(nullptr)
-			.setPushConstantRangeCount(static_cast<uint32_t>(m_Settings.pushConstantRanges.size()))
+			.setSetLayoutCount(static_cast<U32>(m_Settings.descriptorSetLayouts.size()))
+			.setPSetLayouts(m_Settings.descriptorSetLayouts.data())
+			.setPushConstantRangeCount(static_cast<U32>(m_Settings.pushConstantRanges.size()))
 			.setPPushConstantRanges(m_Settings.pushConstantRanges.data());
 
 		auto [result, pipelineLayout] = m_Device->GetDevice().createPipelineLayout(pipelineLayoutCreateInfo);

@@ -7,6 +7,7 @@
 #include "engine/ecs/ECS.hpp"
 #include "services/renderer/VulkanManager.hpp"
 #include "services/renderer/PresentationRenderer.hpp"
+#include "services/renderer/DebugUIManager.hpp"
 
 namespace tlc
 {
@@ -46,6 +47,17 @@ namespace tlc
         // also any sort of update to be done in the debug ui layer
         // (imgui side building of command buffers) should be done here
 
+        // TODO: Move this to a proper system!
+        auto vulkan = Services::Get<VulkanManager>();
+        auto swapchain = vulkan->GetSwapchain();
+        auto debugUi = Services::Get<DebugUIManager>();
+        const auto& swapchainExtent = swapchain->GetExtent();
+        debugUi->NewFrame(swapchainExtent.width, swapchainExtent.height, GetDeltaTime());
+        ImGui::ShowDemoWindow();
+
+
+        debugUi->EndFrame();
+
         // update the vulkan manager that acquires
         // a new image from the swapchain
         // and draws the scene and also
@@ -60,7 +72,7 @@ namespace tlc
     void GameApplication::RenderEngineFrame()
     {
         auto presentationRenderer = Services::Get<PresentationRenderer>();
-        if(!presentationRenderer->RenderCurrentFrame()) {
+        if(!presentationRenderer->RenderCurrentFrame(GetDeltaTime())) {
             log::Warn("Engine frame skipped...");
         }
     }

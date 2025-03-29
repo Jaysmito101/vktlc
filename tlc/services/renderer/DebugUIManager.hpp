@@ -24,19 +24,31 @@ namespace tlc {
             }
             return nullptr;
         }
+        
+        void NewFrame(U32 displayWidth, U32 displayHeight, F32 deltaTime);
+        void EndFrame();
 
     private:
-        void NewFrame();
-        void EndFrame();
-        void RenderFrame();
+        void RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight);
 
         void PrepareFontTexture();
         void CreateFontTextureDescriptors();
         void CreateGraphicsPipeline();
+        void CreateBuffers();
+
+        friend class PresentationRenderer;
 
     private:
         Scope<VulkanImage> m_FontImage;
+
+        vk::DescriptorSet m_FontDescriptorSet;
+        vk::DescriptorSetLayout m_FontDescriptorSetLayout;
+
         UnorderedMap<String, Raw<ImFont>> m_Fonts;
         Ref<VulkanGraphicsPipeline> m_Pipeline;
+        Ref<VulkanBuffer> m_VertexBuffer;
+        Ref<VulkanBuffer> m_IndexBuffer;
+        Ref<VulkanBuffer> m_VertexStagingBuffer;
+        Ref<VulkanBuffer> m_IndexStagingBuffer;
     };
 }

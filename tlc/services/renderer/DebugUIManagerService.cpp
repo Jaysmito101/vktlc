@@ -1,4 +1,5 @@
 #include "services/renderer/DebugUIManager.hpp"
+#include "services/renderer/PresentationRenderer.hpp"
 #include "services/renderer/VulkanManager.hpp"
 #include "services/assetmanager/AssetManager.hpp"
 #include "services/CacheManager.hpp"
@@ -13,9 +14,7 @@
 namespace tlc {
 
     struct ImGuiVertex {
-        ImVec2 pos = ImVec2(0.0, 0.0);
-        ImVec2 uv = ImVec2(0.0, 0.0);
-        ImColor color = ImColor(0);
+        ImDrawVert data = {};
 
         inline static List<vk::VertexInputAttributeDescription> GetAttributeDescriptions()
 		{
@@ -25,20 +24,25 @@ namespace tlc {
 			attributeDescriptions[0].binding = 0;
 			attributeDescriptions[0].location = 0;
 			attributeDescriptions[0].format = vk::Format::eR32G32Sfloat;
-			attributeDescriptions[0].offset = offsetof(ImGuiVertex, pos);
+			attributeDescriptions[0].offset = offsetof(ImDrawVert, pos);
 
 			attributeDescriptions[1].binding = 0;
 			attributeDescriptions[1].location = 1;
 			attributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
-			attributeDescriptions[1].offset = offsetof(ImGuiVertex, uv);
+			attributeDescriptions[1].offset = offsetof(ImDrawVert, uv);
 
 			attributeDescriptions[2].binding = 0;
 			attributeDescriptions[2].location = 2;
 			attributeDescriptions[2].format = vk::Format::eR8G8B8A8Unorm;
-			attributeDescriptions[2].offset = offsetof(ImGuiVertex, color);
+			attributeDescriptions[2].offset = offsetof(ImDrawVert, col);
 
 			return attributeDescriptions;
 		}
+    };
+    
+    struct ImGuiPushConstants {
+        glm::vec2 scale;
+        glm::vec2 translate;
     };
 
     void DebugUIManager::Setup() {
@@ -52,6 +56,8 @@ namespace tlc {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+
 
         ImGui::StyleColorsDark();
 
@@ -59,6 +65,8 @@ namespace tlc {
 
         PrepareFontTexture();
         CreateFontTextureDescriptors();
+        CreateGraphicsPipeline();
+        CreateBuffers();
     }
 
     void DebugUIManager::PrepareFontTexture() {
@@ -83,7 +91,10 @@ namespace tlc {
                 if (std::regex_search(font, match, regex)) {
                     fontSize = std::stof(match.str(0));
                 }
-                auto fontPtr = io.Fonts->AddFontFromMemoryTTF(fontAsset, static_cast<I32>(fontDataSize), fontSize);
+                auto dataCloned = (U8*)IM_ALLOC(fontDataSize);
+                memcpy(dataCloned, fontAsset, fontDataSize);
+                // Transfers the ownership of the font data
+                auto fontPtr = io.Fonts->AddFontFromMemoryTTF(dataCloned, static_cast<I32>(fontDataSize), fontSize);
                 m_Fonts.insert_or_assign(font, fontPtr);
             }
         }
@@ -159,9 +170,13 @@ namespace tlc {
         device->GetDevice().updateDescriptorSets(writeDescriptorSets, {});
 
         io.Fonts->SetTexID((ImTextureID)(void*)descriptorSet);
+
+        m_FontDescriptorSet = descriptorSet;
+        m_FontDescriptorSetLayout = descriptorSetLayout;
     }
 
     void DebugUIManager::CreateGraphicsPipeline() {
+        auto presentationRenderer = Services::Get<PresentationRenderer>();
         auto cacheManager = Services::Get<CacheManager>();
         auto vulkan = Services::Get<VulkanManager>();
         auto device = vulkan->GetDevice();
@@ -175,14 +190,28 @@ namespace tlc {
         );
 
         auto pipelineSettings = VulkanGraphicsPipelineSettings()
+            .SetRenderPass(presentationRenderer->GetRenderPass())
             .SetExtent(vk::Extent2D()
                 .setHeight(100)
                 .setWidth(100))
             .SetVertexInputAttributeDescriptions<ImGuiVertex>()
+            .AddPushConstantRange(vk::ShaderStageFlagBits::eVertex, 0, sizeof(ImGuiPushConstants))
+            .AddDescriptorSetLayout(m_FontDescriptorSetLayout)
             .SetVertexShaderModule(vertShaderModule)
             .SetFragmentShaderModule(fragShaderModule);
 
         m_Pipeline = CreateRef<VulkanGraphicsPipeline>(device, pipelineSettings);
+    }
+
+    void DebugUIManager::CreateBuffers() {
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+
+        m_VertexBuffer = VulkanBuffer::CreateVertexBuffer(device, 1024);
+        m_IndexBuffer = VulkanBuffer::CreateIndexBuffer(device, 1024);
+
+        m_VertexStagingBuffer = VulkanBuffer::CreateStagingBuffer(device, 1024);
+        m_IndexStagingBuffer = VulkanBuffer::CreateStagingBuffer(device, 1024);
     }
 
     void DebugUIManager::OnEnd() {
@@ -191,6 +220,12 @@ namespace tlc {
         ImGui::DestroyContext();
         
         m_FontImage.reset();
+
+        m_VertexBuffer.reset();
+        m_IndexBuffer.reset();
+        m_VertexStagingBuffer.reset();
+        m_IndexStagingBuffer.reset();
+        m_Pipeline.reset();
     }
 
     void DebugUIManager::OnSceneChange() {
@@ -201,7 +236,8 @@ namespace tlc {
         
     }
 
-    void DebugUIManager::NewFrame() {
+    void DebugUIManager::NewFrame(U32 displayWidth, U32 displayHeight, F32 deltaTime) {
+        auto& io = ImGui::GetIO();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
     }
@@ -211,7 +247,98 @@ namespace tlc {
         ImGui::Render();
     }
     
-    void DebugUIManager::RenderFrame() {
+    void DebugUIManager::RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight) {
+        (void)deltaTime;
+
+        auto imDrawData = ImGui::GetDrawData();
+        auto& io = ImGui::GetIO();
+
+        auto vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
+        auto indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
+
+        if (vertexBufferSize > 0 && indexBufferSize > 0) {
+            m_VertexBuffer->ResizeToAtleast(vertexBufferSize);
+            m_VertexStagingBuffer->ResizeToAtleast(vertexBufferSize);
+
+            m_IndexBuffer->ResizeToAtleast(indexBufferSize);
+            m_IndexStagingBuffer->ResizeToAtleast(indexBufferSize);
+
+            static ImDrawVert s_vtxDst[1024 * 1024];
+            static ImDrawIdx s_idxDst[1024 * 1024];
+
+            auto vtxDst = s_vtxDst;
+            auto idxDst = s_idxDst;
+
+            for (auto i = 0 ; i < imDrawData->CmdListsCount ; i++) {
+                const ImDrawList* lst = imDrawData->CmdLists[i];
+                
+                memcpy(vtxDst, lst->VtxBuffer.Data, lst->VtxBuffer.Size * sizeof(ImDrawVert));
+                memcpy(idxDst, lst->IdxBuffer.Data, lst->IdxBuffer.Size * sizeof(ImDrawIdx));
+
+                vtxDst += lst->VtxBuffer.Size;
+                idxDst += lst->IdxBuffer.Size;
+            }
+
+            auto vertexBufferUploadSettings = VulkanBufferUploadSettings(s_vtxDst, vertexBufferSize)
+                .SetStagingBuffer(m_VertexStagingBuffer);
+            m_VertexBuffer->UploadSync(vertexBufferUploadSettings);
+
+            auto indexBufferUploadSettings = VulkanBufferUploadSettings(s_idxDst, indexBufferSize)
+                .SetStagingBuffer(m_IndexStagingBuffer);
+            m_IndexBuffer->UploadSync(indexBufferUploadSettings);
+        }
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
+
+        auto pushConstants = ImGuiPushConstants {
+            .scale = glm::vec2(2.0f / static_cast<F32>(io.DisplaySize.x), 2.0f / static_cast<F32>(io.DisplaySize.y)),
+            .translate = glm::vec2(-1.0)
+        };
+        commandBuffer.pushConstants(m_Pipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0, sizeof(ImGuiPushConstants), &pushConstants);
+
+        auto viewport = vk::Viewport()
+            .setWidth(io.DisplaySize.x)
+            .setHeight(io.DisplaySize.y);
+        commandBuffer.setViewport(0, { viewport });
+
+
+        auto vertexOffset = 0;
+		auto indexOffset = 0;
+
+		if (imDrawData->CmdListsCount > 0) {
+            commandBuffer.bindVertexBuffers(0, {m_VertexBuffer->GetBuffer()}, { 0 });
+            commandBuffer.bindIndexBuffer(m_IndexBuffer->GetBuffer(), 0, vk::IndexType::eUint16);
+
+			for (auto i = 0; i < imDrawData->CmdListsCount; i++)
+			{
+				const auto lst = imDrawData->CmdLists[i];
+				for (auto j = 0; j < lst->CmdBuffer.Size; j++)
+				{
+					auto pcmd = &lst->CmdBuffer[j];
+
+                    auto scissorRect = vk::Rect2D()
+                        .setOffset(
+                            vk::Offset2D()
+                                .setX(std::max((I32)(pcmd->ClipRect.x), 0))
+                                .setY(std::max((I32)(pcmd->ClipRect.y), 0)))
+                        .setExtent(
+                            vk::Extent2D()
+                                .setWidth((U32)(pcmd->ClipRect.z - pcmd->ClipRect.x))
+                                .setHeight((U32)(pcmd->ClipRect.w - pcmd->ClipRect.y)));
+                    
+                    auto descriptorSet = (VkDescriptorSet)pcmd->GetTexID();                                            
+                    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipelineLayout(), 0, {descriptorSet}, {});
+
+                    commandBuffer.setScissor(0, {scissorRect});
+                    commandBuffer.drawIndexed(pcmd->ElemCount, 1, indexOffset, vertexOffset, 0);
+
+					indexOffset += pcmd->ElemCount;
+				}
+				vertexOffset += lst->VtxBuffer.Size;
+			}
+		}
+
+
     }
 
 }

@@ -36,6 +36,7 @@ namespace tlc
 		}
 		memcpy(m_MappedData, data, size);
 		UnmapMemory();
+
 		return true;
 	}
 
@@ -214,6 +215,16 @@ namespace tlc
 			}
 			return true;
 		}
+	}
+
+	Bool VulkanBuffer::ResizeToAtleast(Size size) {
+		if (size <= m_Size) {
+			return true; // No resize needed
+		}
+		
+		m_Settings.size = size;
+		Cleanup();
+		return Recreate();
 	}
 
     VulkanBufferAsyncUploadResult VulkanBuffer::UploadAsync(

@@ -40,6 +40,7 @@ namespace tlc
         
         inline VulkanBufferUploadSettings& SetOffset(Size o) { offset = o; return *this; }
         inline VulkanBufferUploadSettings& SetQueueType(VulkanQueueType type) { queueType = type; return *this; }
+        inline VulkanBufferUploadSettings& SetStagingBuffer(Ref<VulkanBuffer> buff) { stagingBuffer = buff; return *this; }
     };
 
     struct VulkanBufferAsyncUploadResult {
@@ -48,7 +49,7 @@ namespace tlc
 
         static inline VulkanBufferAsyncUploadResult Faliure(const String& message = "") {
             if (!message.empty()) {
-                log::Error("Failed to upload buffer: {}", message);
+			log::Error("Failed to upload buffer: {}", message);
             }
             VulkanBufferAsyncUploadResult result;
             result.success = false;
@@ -68,6 +69,8 @@ namespace tlc
 		void UnmapMemory();
 		Bool Flush(Size size, Size offset = 0);
 		Bool Invalidate(Size size, Size offset = 0);
+
+		Bool ResizeToAtleast(Size size);
 
         VulkanBufferAsyncUploadResult UploadAsync(const VulkanBufferUploadSettings& uploadSettings, vk::CommandBuffer commandBuffer);
         Bool UploadSync(const VulkanBufferUploadSettings& uploadSettings);
@@ -92,6 +95,24 @@ namespace tlc
 				.SetSize(size)
 				.SetUsage(vk::BufferUsageFlagBits::eTransferSrc)
 				.SetMemoryPropertyFlags(vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+			auto buffer = CreateRef<VulkanBuffer>(device, bufferSettings);
+			return buffer;				
+		}
+
+		inline static Ref<VulkanBuffer> CreateVertexBuffer(Raw<VulkanDevice> device, Size size) {
+			auto bufferSettings = VulkanBufferSettings()
+				.SetSize(size)
+				.SetUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
+				.SetMemoryPropertyFlags(vk::MemoryPropertyFlagBits::eDeviceLocal);
+			auto buffer = CreateRef<VulkanBuffer>(device, bufferSettings);
+			return buffer;				
+		}
+
+		inline static Ref<VulkanBuffer> CreateIndexBuffer(Raw<VulkanDevice> device, Size size) {
+			auto bufferSettings = VulkanBufferSettings()
+				.SetSize(size)
+				.SetUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst)
+				.SetMemoryPropertyFlags(vk::MemoryPropertyFlagBits::eDeviceLocal);
 			auto buffer = CreateRef<VulkanBuffer>(device, bufferSettings);
 			return buffer;				
 		}
