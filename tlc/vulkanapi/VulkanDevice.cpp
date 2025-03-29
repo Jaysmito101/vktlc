@@ -79,16 +79,6 @@ namespace tlc
 		m_Device.destroyFence(fence);
 	}
 
-	Ref<VulkanBuffer> VulkanDevice::CreateBuffer()
-	{
-		if (!m_IsReady)
-		{
-			log::Error("Device is not ready");
-			return nullptr;
-		}
-		return CreateRef<VulkanBuffer>(this);
-	}
-
 	U32 VulkanDevice::FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const
 	{
 		auto memoryProperties = m_PhysicalDevice.getMemoryProperties();

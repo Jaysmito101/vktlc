@@ -56,14 +56,12 @@ namespace tlc
 		~VulkanDevice();
 
 		Ref<VulkanShaderModule> CreateShaderModule(const List<U32>& shaderCode);
-		Ref<VulkanBuffer> CreateBuffer();
 
 		vk::Semaphore CreateVkSemaphore(vk::SemaphoreCreateFlags flags = vk::SemaphoreCreateFlags()) const;
 		void DestroyVkSemaphore(vk::Semaphore semaphore) const;
 
 		vk::Fence CreateVkFence(vk::FenceCreateFlags flags = vk::FenceCreateFlags()) const;
 		void DestroyVkFence(vk::Fence fence) const;
-
 
 		U32 FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
