@@ -78,7 +78,7 @@ namespace tlc {
                 continue;
             }
 
-            log::Trace("Loading bundle: {}", path.string());
+            log::Info("Loading bundle: {}", path.string());
             auto bundleName = path.stem().string();
             LoadBundleMetadata(bundleName);
         }
@@ -119,9 +119,9 @@ namespace tlc {
         std::lock_guard<std::mutex> lock(m_Mutex);
 
         for (const auto& [bundleName, bundle] : m_Assets) {
-            log::Info("Bundle: {}", bundleName);
+            log::Trace("Bundle: {}", bundleName);
             for (const auto& asset : bundle.second) {
-                log::Info("Asset: {} | Address: {} | Tags: {} | Offset: {}",
+                log::Trace("Asset: {} | Address: {} | Tags: {} | Offset: {}",
                     asset.Path, asset.Address, asset.Tags, asset.Offset
                 );
             }

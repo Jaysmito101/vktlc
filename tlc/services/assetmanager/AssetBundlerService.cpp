@@ -69,9 +69,9 @@ namespace tlc {
         std::lock_guard<std::mutex> lock(m_Mutex);
 
         for (const auto& [bundleName, bundle] : m_Assets) {
-            log::Info("Bundle: {}", bundleName);
+            log::Trace("Bundle: {}", bundleName);
             for (const auto& asset : bundle) {
-                log::Info("Asset: {} | Address: {} | Tags: {}",
+                log::Trace("Asset: {} | Address: {} | Tags: {}",
                     asset.Path, asset.Address, asset.Tags
                 );
             }
