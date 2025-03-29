@@ -18,7 +18,7 @@ namespace tlc
             assetsPath = "../assets";
             if (!utils::PathExists(assetsPath))
             {
-                assetsPath = "../assets";
+                assetsPath = "../../assets";
                 if (!utils::PathExists(assetsPath))
                 {
                     log::Warn("Game::RegisterAssets: Raw assets path does not exists! skipping manual asset registration!");
@@ -27,15 +27,11 @@ namespace tlc
             }
         }
 
-        auto id = UUID::Zero();
-        log::Info("Zero UUID: {}", id);
-        auto id2 = UUID::New();
-        log::Info("New UUID: {}", id2);
-
 
 
         auto bundler = Services::Get<AssetBundler>();
-        bundler->RegisterFromDirectory(assetsPath, "standard");
+        bundler->RegisterFromDirectory(assetsPath + "/standard", "standard");
+        bundler->RegisterFromDirectory(assetsPath + "/debug", "debug");
         bundler->LogAssets();
         bundler->Pack();
 

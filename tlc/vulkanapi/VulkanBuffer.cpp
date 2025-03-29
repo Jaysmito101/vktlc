@@ -100,7 +100,7 @@ namespace tlc
 			Cleanup();
 		}
 
-		if (m_Size == 0)
+		if (m_Settings.size == 0)
 		{
 			log::Error("VulkanBuffer::Recreate: size is 0");
 			return false;

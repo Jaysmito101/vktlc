@@ -30,6 +30,7 @@ namespace tlc {
 
         
         auto fonts = assetManager->GetAssetsWithTagsInBundle(AssetTags::Font, "debug");
+        m_Fonts.insert_or_assign("default", io.Fonts->AddFontDefault());
         for (const auto& font : fonts) {
             Size fontDataSize = 0;
             auto fontAsset = assetManager->GetAssetDataRaw(font, fontDataSize);
@@ -45,6 +46,9 @@ namespace tlc {
                 auto fontPtr = io.Fonts->AddFontFromMemoryTTF(fontAsset, static_cast<I32>(fontDataSize), fontSize);
                 m_Fonts.insert_or_assign(font, fontPtr);
             }
+        }
+        if(!io.Fonts->Build()) {
+            log::Error("Failed to build font atlas");
         }
 
         
@@ -71,6 +75,13 @@ namespace tlc {
             .SetBorderColor(vk::BorderColor::eFloatOpaqueWhite)
             .SetMipmapMode(vk::SamplerMipmapMode::eLinear);
         m_FontImage->CreateSampler("FontImageSampler", samplerSettings);
+
+        log::Info("Font image size: {}x{}", fontAtlasWidth, fontAtlasHeight);
+
+        auto imageUploadSettings = VulkanImageUploadSettings(fontAtlasData, fontAtlasWidth, fontAtlasHeight, 4);
+        if(!m_FontImage->UploadSync(imageUploadSettings)) {
+            log::Error("Failed to upload font image data to Vulkan image");
+        }
     }
 
     void DebugUIManager::OnEnd() {

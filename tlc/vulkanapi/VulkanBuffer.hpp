@@ -57,10 +57,6 @@ namespace tlc
 				.SetUsage(vk::BufferUsageFlagBits::eTransferSrc)
 				.SetMemoryPropertyFlags(vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			auto buffer = CreateRef<VulkanBuffer>(device, bufferSettings);
-			if (!buffer->IsReady()) {
-				log::Error("Failed to create staging buffer");
-				return nullptr;
-			}
 			return buffer;				
 		}
 
