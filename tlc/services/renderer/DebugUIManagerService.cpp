@@ -28,6 +28,7 @@ namespace tlc {
         ImGui_ImplGlfw_InitForVulkan(Window::Get()->GetHandle(), true);
 
         PrepareFontTexture();
+        CreateFontTextureDescriptors();
     }
 
     void DebugUIManager::PrepareFontTexture() {
@@ -88,6 +89,13 @@ namespace tlc {
         if(!m_FontImage->UploadSync(imageUploadSettings)) {
             log::Error("Failed to upload font image data to Vulkan image");
         }
+    }
+
+    void DebugUIManager::CreateFontTextureDescriptors() {
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+        
+        auto& io = ImGui::GetIO(); (void)io;
 
 
         auto descriptorSetLayoutBindings = {
@@ -101,6 +109,26 @@ namespace tlc {
             .setBindingCount(1)
             .setBindings(descriptorSetLayoutBindings);
         auto descriptorSetLayout = device->CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
+        auto descriptorSet = device->AllocateDescriptorSets("debug/imgui", vk::DescriptorType::eCombinedImageSampler, {descriptorSetLayout})[0];
+
+        
+
+        auto descriptorImageInfo = vk::DescriptorImageInfo()
+            .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+            .setImageView(m_FontImage->GetImageView("FontImageView"))
+            .setSampler(m_FontImage->GetSampler("FontImageSampler"));
+        
+        auto writeDescriptorSets = {
+            vk::WriteDescriptorSet()
+                .setDescriptorCount(1)
+                .setDstSet(descriptorSet)
+                .setDstBinding(0)
+                .setImageInfo(descriptorImageInfo)
+                .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+        };
+        device->GetDevice().updateDescriptorSets(writeDescriptorSets, {});
+
+        io.Fonts->SetTexID((ImTextureID)(void*)descriptorSet);
     }
 
     void DebugUIManager::OnEnd() {

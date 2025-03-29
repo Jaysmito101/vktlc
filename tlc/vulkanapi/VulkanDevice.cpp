@@ -289,7 +289,7 @@ namespace tlc
 			return pool;
 		}
 
-		static const U32 descriptorPoolSize = 1000;
+		static const U32 descriptorPoolSize = 100;
 
 		auto poolSizes = vk::DescriptorPoolSize()
 			.setType(type)

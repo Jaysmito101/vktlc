@@ -31,6 +31,7 @@ namespace tlc {
         void RenderFrame();
 
         void PrepareFontTexture();
+        void CreateFontTextureDescriptors();
 
     private:
         Scope<VulkanImage> m_FontImage;
