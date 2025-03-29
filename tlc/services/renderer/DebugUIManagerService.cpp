@@ -1,6 +1,7 @@
 #include "services/renderer/DebugUIManager.hpp"
 #include "services/renderer/VulkanManager.hpp"
 #include "services/assetmanager/AssetManager.hpp"
+#include "services/CacheManager.hpp"
 #include "core/Window.hpp"
 
 #include <regex>
@@ -10,6 +11,35 @@
 
 
 namespace tlc {
+
+    struct ImGuiVertex {
+        ImVec2 pos = ImVec2(0.0, 0.0);
+        ImVec2 uv = ImVec2(0.0, 0.0);
+        ImColor color = ImColor(0);
+
+        inline static List<vk::VertexInputAttributeDescription> GetAttributeDescriptions()
+		{
+			List<vk::VertexInputAttributeDescription> attributeDescriptions;
+			attributeDescriptions.resize(3);
+
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = vk::Format::eR32G32Sfloat;
+			attributeDescriptions[0].offset = offsetof(ImGuiVertex, pos);
+
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
+			attributeDescriptions[1].offset = offsetof(ImGuiVertex, uv);
+
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = vk::Format::eR8G8B8A8Unorm;
+			attributeDescriptions[2].offset = offsetof(ImGuiVertex, color);
+
+			return attributeDescriptions;
+		}
+    };
 
     void DebugUIManager::Setup() {
 
@@ -129,6 +159,30 @@ namespace tlc {
         device->GetDevice().updateDescriptorSets(writeDescriptorSets, {});
 
         io.Fonts->SetTexID((ImTextureID)(void*)descriptorSet);
+    }
+
+    void DebugUIManager::CreateGraphicsPipeline() {
+        auto cacheManager = Services::Get<CacheManager>();
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
+
+        auto vertShaderModule = device->CreateShaderModule(
+            cacheManager->GetCacheDataTyped<U32>("shaders/imgui/ui.vert.glsl")
+        );
+
+        auto fragShaderModule = device->CreateShaderModule(
+            cacheManager->GetCacheDataTyped<U32>("shaders/imgui/ui.frag.glsl")
+        );
+
+        auto pipelineSettings = VulkanGraphicsPipelineSettings()
+            .SetExtent(vk::Extent2D()
+                .setHeight(100)
+                .setWidth(100))
+            .SetVertexInputAttributeDescriptions<ImGuiVertex>()
+            .SetVertexShaderModule(vertShaderModule)
+            .SetFragmentShaderModule(fragShaderModule);
+
+        m_Pipeline = CreateRef<VulkanGraphicsPipeline>(device, pipelineSettings);
     }
 
     void DebugUIManager::OnEnd() {

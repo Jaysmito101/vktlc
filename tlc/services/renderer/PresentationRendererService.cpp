@@ -343,7 +343,7 @@ namespace tlc {
         );
         auto fragShaderModule = device->CreateShaderModule(
             cacheManager->GetCacheDataTyped<U32>("shaders/presentation/frag.glsl")
-        );  
+        );
 
         auto pipelineSettings = VulkanGraphicsPipelineSettings()
             .SetRenderPass(m_RenderPass)

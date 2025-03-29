@@ -58,6 +58,12 @@ namespace tlc
 		}
 	};
 
+	
+	template <typename T>
+	concept HasGetAttributeDescriptions = requires {
+	    { T::GetAttributeDescriptions() } -> std::same_as<List<vk::VertexInputAttributeDescription>>;
+	};
+
 	struct VulkanGraphicsPipelineSettings
 	{
 		vk::Extent2D extent = vk::Extent2D(0, 0);
@@ -67,6 +73,7 @@ namespace tlc
 		Option<List<vk::VertexInputAttributeDescription>> vertexInputAttributeDescriptions;
 		U32 vertexInputBindingDescriptionStride = 0;
 		List<vk::PushConstantRange> pushConstantRanges;
+		std::optional<vk::PipelineColorBlendAttachmentState> blendAttachmentState;
 
 
 		VulkanGraphicsPipelineSettings() = default;
@@ -77,12 +84,14 @@ namespace tlc
 		inline VulkanGraphicsPipelineSettings& SetFragmentShaderModule(Ref<VulkanShaderModule> shModule) { this->fragmentShaderModule = std::move(shModule); return *this; }
 		inline VulkanGraphicsPipelineSettings& SetRenderPass(vk::RenderPass r) { this->renderPass = r; return *this; }
 		inline VulkanGraphicsPipelineSettings& ClearVertexInputAttributeDescriptions() { this->vertexInputAttributeDescriptions = {}; this->vertexInputBindingDescriptionStride = 0; return *this; }
-		template<typename T>
-		requires(T::GetAttributeDescriptions())
-		inline VulkanGraphicsPipelineSettings& SetVertexInputAttributeDescriptions(const T& vertex) { this->vertexInputAttributeDescriptions = vertex.GetAttributeDescriptions(); vertexInputBindingDescriptionStride = sizeof(T); return *this; }
+
+		template<typename T> requires(HasGetAttributeDescriptions<T>)
+		inline VulkanGraphicsPipelineSettings& SetVertexInputAttributeDescriptions() { this->vertexInputAttributeDescriptions = T::GetAttributeDescriptions(); vertexInputBindingDescriptionStride = sizeof(T); return *this; }
 
 		inline VulkanGraphicsPipelineSettings& AddPushConstantRange(vk::ShaderStageFlags stageFlags, U32 offset, U32 size) { this->pushConstantRanges.push_back(vk::PushConstantRange().setStageFlags(stageFlags).setOffset(offset).setSize(size)); return *this; }
 		inline VulkanGraphicsPipelineSettings& ClearPushConstantRanges() { this->pushConstantRanges.clear(); return *this; }
+		inline VulkanGraphicsPipelineSettings& SetPipelineColorBlendAttachmentState(vk::PipelineColorBlendAttachmentState b) { this->blendAttachmentState = b; return *this; }
+
 	};
 
 	struct VulkanGraphicsPipelineProperties

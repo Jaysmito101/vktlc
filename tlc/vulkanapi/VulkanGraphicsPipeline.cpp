@@ -184,6 +184,10 @@ namespace tlc
 
 	vk::PipelineColorBlendAttachmentState VulkanGraphicsPipeline::GetColorBlendAttachmentState() const
 	{
+		if (m_Settings.blendAttachmentState.has_value()) {
+			return m_Settings.blendAttachmentState.value();
+		}
+
 		auto colorBlendAttachmentState = vk::PipelineColorBlendAttachmentState()
 			.setColorWriteMask(
 				vk::ColorComponentFlagBits::eR |
@@ -194,11 +198,9 @@ namespace tlc
 			.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
 			.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
 			.setColorBlendOp(vk::BlendOp::eAdd)
-			.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+			.setSrcAlphaBlendFactor(vk::BlendFactor::eOneMinusSrcColor)
 			.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
 			.setAlphaBlendOp(vk::BlendOp::eAdd);
-
-
 		return colorBlendAttachmentState;
 	}
 

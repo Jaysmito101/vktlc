@@ -32,9 +32,11 @@ namespace tlc {
 
         void PrepareFontTexture();
         void CreateFontTextureDescriptors();
+        void CreateGraphicsPipeline();
 
     private:
         Scope<VulkanImage> m_FontImage;
         UnorderedMap<String, Raw<ImFont>> m_Fonts;
+        Ref<VulkanGraphicsPipeline> m_Pipeline;
     };
 }
