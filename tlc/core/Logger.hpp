@@ -11,15 +11,22 @@ namespace tlc
 {
 	enum class LogLevel : U8
 	{
-		Trace = 0b00000001,
-		Debug = 0b00000010,
-		Info = 0b00000100,
-		Warning = 0b00001000,
-		Error = 0b00010000,
-		Fatal = 0b00100000,
-		Raw = 0b01000000,
-		All = 0b11111111,
-		None = 0b00000000
+		Trace 		= 0b00000001,
+		Debug 		= 0b00000010,
+		Info 		= 0b00000100,
+		Warning 	= 0b00001000,
+		Error 		= 0b00010000,
+		Fatal 		= 0b00100000,
+		Raw 		= 0b01000000,
+		All 		= 0b11111111,
+		None 		= 0b00000000,
+		// ------------------
+		DebugP 		= 0b11111110,
+		InfoP 		= 0b11111100,
+		WarningP 	= 0b11111000,
+		ErrorP 		= 0b11110000,
+		FatalP 		= 0b11100000,
+		RawP	 	= 0b11000000
 	};
 
 	inline constexpr LogLevel operator|(LogLevel lhs, LogLevel rhs)
