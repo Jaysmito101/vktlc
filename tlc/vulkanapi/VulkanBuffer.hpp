@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vulkanapi/VulkanDevice.hpp"
 #include "vulkanapi/VulkanBase.hpp"
 
 namespace tlc
@@ -23,6 +24,38 @@ namespace tlc
 		// inline VulkanBufferSettings& SetDeviceMemoryPool(Raw<VulkanDeviceMemoryPool> p) { deviceMemoryPool = p; return *this; }
 	};
 
+    struct VulkanBufferUploadSettings {
+        const void* data = nullptr;
+        Size size = 0;
+        Size offset = 0;
+        VulkanQueueType queueType = VulkanQueueType::Graphics;
+
+        // We can optionally provide a staging buffer for it to use,
+        // if the buffer is null or smaller than required it will create 
+        // its own staging buffer
+        Ref<VulkanBuffer> stagingBuffer = nullptr;
+
+        VulkanBufferUploadSettings(const void* data, Size size)
+            : data(data), size(size) {}
+        
+        inline VulkanBufferUploadSettings& SetOffset(Size o) { offset = o; return *this; }
+        inline VulkanBufferUploadSettings& SetQueueType(VulkanQueueType type) { queueType = type; return *this; }
+    };
+
+    struct VulkanBufferAsyncUploadResult {
+        Bool success = false;
+        Ref<VulkanBuffer> stagingBuffer = nullptr;
+
+        static inline VulkanBufferAsyncUploadResult Faliure(const String& message = "") {
+            if (!message.empty()) {
+                log::Error("Failed to upload buffer: {}", message);
+            }
+            VulkanBufferAsyncUploadResult result;
+            result.success = false;
+            return result;
+        }
+    };
+
 	class VulkanBuffer
 	{
 	public:
@@ -35,6 +68,9 @@ namespace tlc
 		void UnmapMemory();
 		Bool Flush(Size size, Size offset = 0);
 		Bool Invalidate(Size size, Size offset = 0);
+
+        VulkanBufferAsyncUploadResult UploadAsync(const VulkanBufferUploadSettings& uploadSettings, vk::CommandBuffer commandBuffer);
+        Bool UploadSync(const VulkanBufferUploadSettings& uploadSettings);
 
 		inline vk::Buffer GetBuffer() const { return m_Buffer; }
 		inline bool IsReady() const { return m_IsReady; }

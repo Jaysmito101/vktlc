@@ -215,4 +215,88 @@ namespace tlc
 			return true;
 		}
 	}
+
+    VulkanBufferAsyncUploadResult VulkanBuffer::UploadAsync(
+        const VulkanBufferUploadSettings& uploadSettings,
+        vk::CommandBuffer commandBuffer
+    ) {
+        // If the buffer is host visible, we can directly map and copy
+        if (m_Settings.memoryPropertyFlags & vk::MemoryPropertyFlagBits::eHostVisible) {
+            if (!SetData(uploadSettings.data, uploadSettings.size, uploadSettings.offset)) {
+                return VulkanBufferAsyncUploadResult::Faliure("Failed to set data for host visible buffer");
+            }
+            return VulkanBufferAsyncUploadResult { .success = true };
+        }
+
+        // For device local buffers, we need to use a staging buffer
+        Ref<VulkanBuffer> stagingBuffer = nullptr;
+        if (uploadSettings.stagingBuffer && uploadSettings.stagingBuffer->IsReady() && uploadSettings.stagingBuffer->GetSize() >= uploadSettings.size) {
+            stagingBuffer = uploadSettings.stagingBuffer;
+        } else {
+            stagingBuffer = CreateStagingBuffer(m_Device, uploadSettings.size);
+        }
+
+        if (!stagingBuffer->IsReady()) {
+            return VulkanBufferAsyncUploadResult::Faliure("Failed to create staging buffer for buffer upload");
+        }
+
+        if (!stagingBuffer->SetData(uploadSettings.data, uploadSettings.size)) {
+            return VulkanBufferAsyncUploadResult::Faliure("Failed to set data for staging buffer");
+        }
+
+        auto bufferCopyRegion = vk::BufferCopy()
+            .setSrcOffset(0)
+            .setDstOffset(uploadSettings.offset)
+            .setSize(uploadSettings.size);
+
+        commandBuffer.copyBuffer(
+            stagingBuffer->GetBuffer(),
+            m_Buffer,
+            { bufferCopyRegion }
+        );
+
+        auto result = VulkanBufferAsyncUploadResult {
+            .success = true,
+            .stagingBuffer = stagingBuffer
+        };
+        
+        return result;
+    }
+
+    Bool VulkanBuffer::UploadSync(const VulkanBufferUploadSettings& uploadSettings) {
+        auto commandBufferAllocateInfo = vk::CommandBufferAllocateInfo()
+            .setCommandPool(m_Device->GetCommandPool(uploadSettings.queueType))
+            .setLevel(vk::CommandBufferLevel::ePrimary)
+            .setCommandBufferCount(1);
+
+        auto [result, commandBuffers] = m_Device->GetDevice().allocateCommandBuffers(commandBufferAllocateInfo);
+        if (result != vk::Result::eSuccess) {
+            VkCall(result);
+            return false;
+        }
+        auto commandBuffer = commandBuffers[0];
+
+        auto commandBufferBeginInfo = vk::CommandBufferBeginInfo()
+            .setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit)
+            .setPInheritanceInfo(nullptr);
+        VkCall(commandBuffer.begin(commandBufferBeginInfo));
+
+        auto uploadResult = UploadAsync(uploadSettings, commandBuffer);
+
+        VkCall(commandBuffer.end());
+
+        auto submitInfo = vk::SubmitInfo()
+            .setCommandBufferCount(1)
+            .setPCommandBuffers(&commandBuffer);
+
+        auto fence = m_Device->CreateVkFence(vk::FenceCreateFlagBits::eSignaled);
+        m_Device->GetDevice().resetFences({fence});
+        VkCall(m_Device->GetQueue(uploadSettings.queueType).submit({ submitInfo }, fence));
+        VkCall(m_Device->GetDevice().waitForFences({ fence }, VK_TRUE, UINT64_MAX));
+
+        m_Device->DestroyVkFence(fence);
+        m_Device->GetDevice().freeCommandBuffers(m_Device->GetCommandPool(uploadSettings.queueType), { commandBuffer });
+
+        return uploadResult.success;
+    }
 }
