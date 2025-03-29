@@ -93,7 +93,7 @@ add_executable(tlc
     ./tlc/services/assetmanager/AssetBundlerService.cpp
     ./tlc/services/renderer/VulkanManagerService.cpp
     ./tlc/services/renderer/PresentationRendererService.cpp
-    ./tlc/services/renderer/DebugUIManager.cpp
+    ./tlc/services/renderer/DebugUIManagerService.cpp
 # engine
     ./tlc/engine/Scene.cpp
     # ./tlc/engine/ecs/Component.cpp

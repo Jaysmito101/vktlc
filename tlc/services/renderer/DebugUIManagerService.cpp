@@ -42,7 +42,8 @@ namespace tlc {
                 if (std::regex_search(font, match, regex)) {
                     fontSize = std::stof(match.str(0));
                 }
-                io.Fonts->AddFontFromMemoryTTF(fontAsset, fontDataSize, fontSize);
+                auto fontPtr = io.Fonts->AddFontFromMemoryTTF(fontAsset, static_cast<I32>(fontDataSize), fontSize);
+                m_Fonts.insert_or_assign(font, fontPtr);
             }
         }
 

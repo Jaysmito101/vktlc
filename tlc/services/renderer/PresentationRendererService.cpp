@@ -329,7 +329,7 @@ namespace tlc {
         CreateFramebuffers();
 
         // raise the event for the swapchain recreate
-        EventManager<EventType::SwapchainRecreate, U32>::Get()->RaiseEvent(m_NumInflightFrames); 
+        EventManager<EventType::SwapchainRecreate, U32>::Get()->RaiseEvent(static_cast<U32>(m_NumInflightFrames)); 
     }
 
 
