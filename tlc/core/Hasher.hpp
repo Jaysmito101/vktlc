@@ -17,6 +17,10 @@ namespace tlc
     {
         U32 hash;
 
+        inline bool operator==(const Hash& other) {
+            return this->hash == other.hash;
+        }
+
         static inline Hash Default()
         {
             return Hash{ 0 };

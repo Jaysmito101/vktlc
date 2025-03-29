@@ -16,11 +16,6 @@ namespace tlc {
     }   
     
     void DebugUIManager::OnStart() {
-        auto assetManager = Services::Get<AssetManager>();
-        auto vulkan = Services::Get<VulkanManager>();
-        auto device = vulkan->GetDevice();
-
-
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -28,7 +23,21 @@ namespace tlc {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
+        ImGui::StyleColorsDark();
+
+        ImGui_ImplGlfw_InitForVulkan(Window::Get()->GetHandle(), true);
+
+        PrepareFontTexture();
+    }
+
+    void DebugUIManager::PrepareFontTexture() {
+        auto assetManager = Services::Get<AssetManager>();
+        auto vulkan = Services::Get<VulkanManager>();
+        auto device = vulkan->GetDevice();
         
+        auto& io = ImGui::GetIO(); (void)io;
+
+            
         auto fonts = assetManager->GetAssetsWithTagsInBundle(AssetTags::Font, "debug");
         m_Fonts.insert_or_assign("default", io.Fonts->AddFontDefault());
         for (const auto& font : fonts) {
@@ -51,15 +60,12 @@ namespace tlc {
             log::Error("Failed to build font atlas");
         }
 
-        
+
         U8* fontAtlasData = nullptr;
         I32 fontAtlasWidth = 0;
         I32 fontAtlasHeight = 0;
         io.Fonts->GetTexDataAsRGBA32(&fontAtlasData, &fontAtlasWidth, &fontAtlasHeight);
-        
-        ImGui::StyleColorsDark();
 
-        ImGui_ImplGlfw_InitForVulkan(Window::Get()->GetHandle(), true);
 
         auto vulkanImageSettings = VulkanImageSettings()
             .SetSize(fontAtlasWidth, fontAtlasHeight)
@@ -82,6 +88,19 @@ namespace tlc {
         if(!m_FontImage->UploadSync(imageUploadSettings)) {
             log::Error("Failed to upload font image data to Vulkan image");
         }
+
+
+        auto descriptorSetLayoutBindings = {
+            vk::DescriptorSetLayoutBinding()
+                .setBinding(0)
+                .setDescriptorCount(1)
+                .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+                .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+        };
+        auto descriptorSetLayoutCreateInfo = vk::DescriptorSetLayoutCreateInfo()
+            .setBindingCount(1)
+            .setBindings(descriptorSetLayoutBindings);
+        auto descriptorSetLayout = device->CreateDescriptorSetLayout(descriptorSetLayoutCreateInfo);
     }
 
     void DebugUIManager::OnEnd() {

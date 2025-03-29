@@ -25,6 +25,17 @@ namespace tlc
 
 	VulkanDevice::~VulkanDevice()
 	{
+		if(m_IsReady) {
+			Cleanup();
+		}
+	}
+
+	void VulkanDevice::Cleanup() {
+		if (!m_IsReady) {
+			log::Trace("Device is not ready! Cannot cleanup.");
+			return;
+		}
+
 		(void)m_Device.waitIdle();
 
 
@@ -33,6 +44,25 @@ namespace tlc
 			if (commandPool == static_cast<vk::CommandPool>(VK_NULL_HANDLE)) continue;
 			m_Device.destroyCommandPool(commandPool);
 		}
+
+		for(const auto& [_, pools] : m_AvailableDescriptorPools) {
+			for (const auto& pool: pools) {
+				m_Device.destroyDescriptorPool(pool);
+			}
+		}
+
+		for(const auto& [_, poolGroups] : m_DescriptorPools) {
+			for(const auto& [_, pools] : poolGroups) {
+				for (const auto& pool: pools) {
+					m_Device.destroyDescriptorPool(pool);
+				}
+			}
+		}
+
+		for (const auto& [_, layout] : m_DescriptorSetLayoutCache) {
+			m_Device.destroyDescriptorSetLayout(layout);
+		}
+		m_DescriptorSetLayoutCache.clear();
 
 		m_Device.destroy();
 	}
@@ -250,4 +280,124 @@ namespace tlc
 			.setPQueuePriorities(queuePriority);
 		return queueCreateInfo;
 	}
+
+	vk::DescriptorPool VulkanDevice::CreateDescriptorPool(vk::DescriptorType type) {
+		auto availablePools = m_AvailableDescriptorPools.find(type);
+		if (availablePools != m_AvailableDescriptorPools.end()) {
+			auto pool = availablePools->second.back();
+			availablePools->second.pop_back();
+			return pool;
+		}
+
+		static const U32 descriptorPoolSize = 1000;
+
+		auto poolSizes = vk::DescriptorPoolSize()
+			.setType(type)
+			.setDescriptorCount(descriptorPoolSize);
+
+		auto descriptorPoolCreateInfo = vk::DescriptorPoolCreateInfo()
+			.setMaxSets(1000)
+			.setPoolSizeCount(1)
+			.setPPoolSizes(&poolSizes);
+			
+		auto [result, pool] = m_Device.createDescriptorPool(descriptorPoolCreateInfo);
+		VkCritCall(result);
+
+		return pool;
+	}
+
+	List<vk::DescriptorPool>& VulkanDevice::GrabDescriptorPools(const String& group, vk::DescriptorType type) {
+		auto typeGroup = m_DescriptorPools.find(group);
+		if (typeGroup == m_DescriptorPools.end()) {
+			m_DescriptorPools.insert_or_assign(group, UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>>());
+			typeGroup =  m_DescriptorPools.find(group);
+		}
+
+		auto poolArray = typeGroup->second.find(type);
+		if (poolArray == typeGroup->second.end()) {
+			typeGroup->second.insert_or_assign(type, List<vk::DescriptorPool>{ CreateDescriptorPool(type)});
+			poolArray =  typeGroup->second.find(type);
+		}
+
+		return poolArray->second;
+	}
+
+	Bool VulkanDevice::ExpandDescriptorPool(const String& group, vk::DescriptorType type) {
+		auto& pools = GrabDescriptorPools(group, type);
+		pools.push_back(CreateDescriptorPool(type));
+		return true;
+	}
+
+	List<vk::DescriptorSet> VulkanDevice::AllocateDescriptorSets(const String& group, vk::DescriptorType type, const List<vk::DescriptorSetLayout>& descriptorSetLayouts) {
+		const auto& pools = GrabDescriptorPools(group, type);
+
+		auto descriptorSetAllocateInfo = vk::DescriptorSetAllocateInfo()
+			.setDescriptorPool(pools.back())
+			.setDescriptorSetCount(static_cast<U32>(descriptorSetLayouts.size()))
+			.setSetLayouts(descriptorSetLayouts);
+		auto [result, descriptorSet] = m_Device.allocateDescriptorSets(descriptorSetAllocateInfo);
+
+		switch (result) {
+			case vk::Result::eSuccess: 
+				return descriptorSet;
+			case vk::Result::eErrorFragmentedPool:
+			case vk::Result::eErrorOutOfPoolMemory:
+				if(!ExpandDescriptorPool(group, type)) {
+					return {};
+				}
+				return AllocateDescriptorSets(group, type, descriptorSetLayouts);
+			default:
+				VkCall(result);
+				return {};
+		}
+	}
+
+	void VulkanDevice::FreeDescriptorGroup(const String& group) {
+		// reset the descriptor pools from the group and push them, in the avialable pools map
+
+		if (!m_DescriptorPools.contains(group)) {
+			log::Trace("Descriptor group: {} doesnt exist!", group);
+			return;
+		}
+
+		auto allPools = m_DescriptorPools.at(group);
+		m_DescriptorPools.erase(group);
+
+		for(const auto& [poolType, pools] : allPools) {
+			auto& availablePools = m_AvailableDescriptorPools[poolType]; // get it or a default empty list
+			for (const auto& pool: pools) {
+				m_Device.resetDescriptorPool(pool);
+				availablePools.push_back(pool);
+			}
+		}
+		allPools.clear();
+	}
+
+	// NOTE: assumption bindings are sorted
+	Size VulkanDevice::CalculateDescriptorLayoutCreateInfoHash(const vk::DescriptorSetLayoutCreateInfo& createInfo) {
+		auto result = std::hash<Size>()(createInfo.bindingCount);
+		for (Size i = 0; i < createInfo.bindingCount; i ++) {
+			auto b = createInfo.pBindings[i];
+			Size bindingHash = (Size)b.binding | (Size)b.descriptorType << 8 | (Size)b.descriptorCount << 16 | (U32)b.stageFlags << 24;
+			result ^= std::hash<Size>()(bindingHash);
+		}
+		return result;
+	}
+
+	vk::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo) {
+		auto hash = CalculateDescriptorLayoutCreateInfoHash(createInfo);
+		auto cacheEntry = m_DescriptorSetLayoutCache.find(hash);
+		if (cacheEntry != m_DescriptorSetLayoutCache.end()) {
+			return cacheEntry->second;
+		}
+
+		auto [result, layout] = m_Device.createDescriptorSetLayout(createInfo);
+		VkCall(result);
+
+		m_DescriptorSetLayoutCache.insert_or_assign(hash, layout);
+
+		return layout;
+	}
+	
+
 }

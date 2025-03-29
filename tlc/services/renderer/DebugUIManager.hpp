@@ -28,8 +28,9 @@ namespace tlc {
     private:
         void NewFrame();
         void EndFrame();
-
         void RenderFrame();
+
+        void PrepareFontTexture();
 
     private:
         Scope<VulkanImage> m_FontImage;

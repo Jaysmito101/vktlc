@@ -63,6 +63,10 @@ namespace tlc
 		vk::Fence CreateVkFence(vk::FenceCreateFlags flags = vk::FenceCreateFlags()) const;
 		void DestroyVkFence(vk::Fence fence) const;
 
+		vk::DescriptorSetLayout CreateDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo);
+		List<vk::DescriptorSet> AllocateDescriptorSets(const String& group, vk::DescriptorType type, const List<vk::DescriptorSetLayout>& descriptorSetLayout);
+		void FreeDescriptorGroup(const String& group);
+
 		U32 FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
 		inline I32 GetGraphicsQueueFamilyIndex() const { return m_QueueFamilyIndices[Graphics]; }
@@ -86,17 +90,25 @@ namespace tlc
 	
 	private:
 		Bool CreateDevice(vk::SurfaceKHR surface = VK_NULL_HANDLE);
+		void Cleanup();
 		Bool CreateCommandPools();
+		vk::DescriptorPool CreateDescriptorPool(vk::DescriptorType type);
+		Bool ExpandDescriptorPool(const String& group, vk::DescriptorType type);
+		List<vk::DescriptorPool>& GrabDescriptorPools(const String& group, vk::DescriptorType type);
 
+		
 		I32 FindAndAddQueueCreateInfo(Bool enable, const vk::QueueFlags& flags, F32* queuePriority, List<vk::DeviceQueueCreateInfo>& queueCreateInfos, vk::SurfaceKHR surface = VK_NULL_HANDLE);
 		static I32 FindQueueFamily(const vk::PhysicalDevice& physicalDevice, const vk::QueueFlags& flags, const vk::SurfaceKHR& surface = VK_NULL_HANDLE);
 		static vk::DeviceQueueCreateInfo CreateQueueCreateInfo(I32 queueFamilyIndex, F32* queuePriority);
 
+		static Size CalculateDescriptorLayoutCreateInfoHash(const vk::DescriptorSetLayoutCreateInfo& createInfo);
+
 	private:
 		Raw<VulkanContext> m_ParentContext;
+		VulkanDeviceSettings m_Settings;
 		vk::PhysicalDevice m_PhysicalDevice;
 		vk::Device m_Device;
-		
+
 		Array<I32, VulkanQueueType::Count> m_QueueFamilyIndices;
 
 		Array<vk::Queue, VulkanQueueType::Count> m_Queues;
@@ -106,7 +118,8 @@ namespace tlc
 		Bool m_IsReady = false;
 		Set<I32> m_UniqeQueueFamiliesIndices;
 
-
-		VulkanDeviceSettings m_Settings;
+		UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>> m_AvailableDescriptorPools;
+		UnorderedMap<String, UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>>> m_DescriptorPools;
+		UnorderedMap<Size, vk::DescriptorSetLayout> m_DescriptorSetLayoutCache;
 	};
 }
