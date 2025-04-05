@@ -21,6 +21,7 @@ _deps
 *.sln
 *.spv
 Makefile
+imgui.ini
 
 
 build

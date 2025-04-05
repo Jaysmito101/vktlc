@@ -22,6 +22,8 @@ namespace tlc
 		inline static Application* Create() { s_Instance = CreateScope<GameApplication>(); return s_Instance.get(); }
 
 	private:
+		void RenderDebugUi();
+
 		void RegisterAssets();
 		void RegisterServices();
 		void RenderEngineFrame();

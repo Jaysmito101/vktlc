@@ -24,9 +24,29 @@ namespace tlc {
             }
             return nullptr;
         }
-        
+
+        inline Bool IsEditorOpen(const String& name) {
+            auto editor = m_IsEditorOpen.find(name);
+            if (editor != m_IsEditorOpen.end()) {
+                return editor->second;
+            }
+            m_IsEditorOpen[name] = false;
+            return false;
+        }
+
+        inline Raw<Bool> EditorOpenPtr(const String& name) {
+            auto [iterator, inserted] = m_IsEditorOpen.try_emplace(name, false);
+            return &iterator->second;
+        }
+
         void NewFrame(U32 displayWidth, U32 displayHeight, F32 deltaTime);
+        void BeginEditorSection();
+        void EndEditorSection();
         void EndFrame();
+
+        inline void ToggleDebugUI() { auto ptr = EditorOpenPtr("Main/DebugUI"); *ptr = !*ptr; }
+        inline Bool IsDebugUIVisible() { return IsEditorOpen("Main/DebugUI"); }
+
 
     private:
         void UpdateBuffersIfNeeded(vk::CommandBuffer& commandBuffer, ImDrawData* imDrawData);
@@ -44,6 +64,8 @@ namespace tlc {
 
         vk::DescriptorSet m_FontDescriptorSet;
         vk::DescriptorSetLayout m_FontDescriptorSetLayout;
+
+        UnorderedMap<String, Bool> m_IsEditorOpen;
 
         UnorderedMap<String, Raw<ImFont>> m_Fonts;
         Ref<VulkanGraphicsPipeline> m_Pipeline;

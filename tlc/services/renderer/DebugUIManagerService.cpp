@@ -247,6 +247,35 @@ namespace tlc {
         ImGui::Render();
     }
 
+    void DebugUIManager::BeginEditorSection() {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        float windowWidth = viewport->Size.x * 0.15f;
+        
+        ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - windowWidth, 0));
+        ImGui::SetNextWindowSize(ImVec2(windowWidth, viewport->Size.y));
+        
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
+                                      ImGuiWindowFlags_NoMove |
+                                      ImGuiWindowFlags_NoResize |
+                                      ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+        ImGui::Begin("Editor", nullptr, window_flags);
+
+        ImGui::Text("Active Elements:");
+        if (ImGui::BeginChild("EditorCheckboxes", ImVec2(0, 200))) {
+            for (auto& [name, isOpen] : m_IsEditorOpen) {
+                ImGui::Checkbox(name.c_str(), &isOpen);
+            }
+            ImGui::EndChild();
+        }
+
+        ImGui::Text("Editor Sections:");
+    }
+
+    void DebugUIManager::EndEditorSection() {
+        ImGui::End();
+    }
+
     void DebugUIManager::UpdateBuffersIfNeeded(vk::CommandBuffer& commandBuffer, ImDrawData* imDrawData) {
         auto vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
         auto indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
@@ -285,6 +314,10 @@ namespace tlc {
     }
     
     void DebugUIManager::RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight) {
+        if (!IsEditorOpen("Main/DebugUI")) {
+            return;
+        }
+        
         (void)deltaTime;
 
         auto imDrawData = ImGui::GetDrawData();
