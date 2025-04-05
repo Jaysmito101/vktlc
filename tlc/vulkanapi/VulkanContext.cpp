@@ -157,7 +157,8 @@ namespace tlc
 
 		for (const auto& device : devices)
 		{
-			if (device.getProperties().deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+			if (device.getProperties().deviceType == vk::PhysicalDeviceType::eDiscreteGpu
+				&& device.getProperties().limits.timestampComputeAndGraphics == VK_TRUE)
 			{
 				return device;
 			}

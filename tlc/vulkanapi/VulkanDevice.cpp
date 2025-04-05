@@ -12,6 +12,7 @@ namespace tlc
 		, m_Settings(settings)
 	{
 		log::Debug("Creating Vulkan Logical Device");
+		CheckExtensionSupport(physicalDevice);
 		if (!CreateDevice(surface))
 		{
 			log::Error("Failed to create device");
@@ -125,6 +126,37 @@ namespace tlc
 		return std::numeric_limits<U32>::max();
 	}
 
+	void VulkanDevice::CheckExtensionSupport(vk::PhysicalDevice physicalDevice) {
+		U32 extensionCount = 0;
+		VkCall(physicalDevice.enumerateDeviceExtensionProperties(nullptr, &extensionCount, nullptr));
+
+		List<vk::ExtensionProperties> availableExtensions(extensionCount);
+		VkCall(physicalDevice.enumerateDeviceExtensionProperties(nullptr, &extensionCount, availableExtensions.data()));
+
+		log::Trace("Available Vulkan device extensions:");
+		for (const auto& extension : availableExtensions)
+		{
+			log::Trace("{}", extension.extensionName.data());
+
+			if (strcmp(extension.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+			{
+				log::Info("Swapchain extension is supported");
+				m_SwapchanSupported = true;
+			}
+			else if (strcmp(extension.extensionName, VK_EXT_MESH_SHADER_EXTENSION_NAME) == 0)
+			{
+				log::Info("Ray tracing extension is supported");
+				m_MeshShadingSupported = true;
+			}
+			else if (strcmp(extension.extensionName, VK_KHR_RAY_QUERY_EXTENSION_NAME) == 0)
+			{
+				log::Info("Ray query extension is supported");
+				m_RayTracingSupported = true;
+			}
+
+		}
+	}
+
 	Bool VulkanDevice::CreateDevice(vk::SurfaceKHR surface)
 	{
 
@@ -147,15 +179,32 @@ namespace tlc
 			log::Warn("Failed to find transfer queue family");
 		}
 
+		if (!m_SwapchanSupported)
+		{
+			log::Fatal("Swapchain extension is not supported");
+		}
+
+
 		deviceCreateInfo.setQueueCreateInfoCount(static_cast<U32>(queueCreateInfos.size()))
 			.setPQueueCreateInfos(queueCreateInfos.data())
 			.setEnabledLayerCount(0);
 
-		// NOTE: I am not checking for extensions support here as the target devices for this engine support must swapchain extension
 		List<CString> extensions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		};
 
+		if (m_MeshShadingSupported)
+		{
+			extensions.push_back(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+		}
+
+		if (m_RayTracingSupported)
+		{
+			extensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+			extensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+			extensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+		}
+		
 		deviceCreateInfo.setEnabledExtensionCount(static_cast<U32>(extensions.size()))
 			.setPpEnabledExtensionNames(extensions.data());
 
@@ -165,6 +214,67 @@ namespace tlc
 			deviceCreateInfo.setEnabledLayerCount(static_cast<U32>(layers.size()))
 				.setPpEnabledLayerNames(layers.data());
 		}
+
+		auto featuresAccelerationStructure = vk::PhysicalDeviceAccelerationStructureFeaturesKHR()
+			.setAccelerationStructure(true)
+			.setPNext(nullptr);
+
+		auto featuresRayQueries = vk::PhysicalDeviceRayQueryFeaturesKHR()
+			.setRayQuery(true)
+			.setPNext(&featuresAccelerationStructure);
+
+		auto featureMeshShading = vk::PhysicalDeviceMeshShaderFeaturesEXT()
+			.setTaskShader(true)
+			.setMeshShader(true)
+			.setPNext(m_RayTracingSupported ? &featuresRayQueries : nullptr);
+
+		auto features14 = vk::PhysicalDeviceVulkan14Features()
+			.setMaintenance5(true)
+			.setMaintenance6(true)
+			.setPNext(m_MeshShadingSupported ? (void*)&featureMeshShading : m_RayTracingSupported ? (void*)&featuresRayQueries : nullptr);
+
+		auto features13 = vk::PhysicalDeviceVulkan13Features()
+			.setSynchronization2(true)
+			.setDynamicRendering(true)
+			//.setMaintenance4(true)
+			.setPNext(&features14);
+
+		auto features12 = vk::PhysicalDeviceVulkan12Features()
+			.setDrawIndirectCount(true)
+			.setStorageBuffer8BitAccess(true)
+			.setUniformAndStorageBuffer8BitAccess(true)
+			.setShaderFloat16(true)
+			.setShaderInt8(true)
+			.setSamplerFilterMinmax(true)
+			.setScalarBlockLayout(true)
+			.setBufferDeviceAddress(m_RayTracingSupported)
+			.setDescriptorIndexing(true)
+			.setShaderSampledImageArrayNonUniformIndexing(true)
+			.setDescriptorBindingSampledImageUpdateAfterBind(true)
+			.setDescriptorBindingUpdateUnusedWhilePending(true)
+			.setDescriptorBindingPartiallyBound(true)
+			.setDescriptorBindingVariableDescriptorCount(true)
+			.setRuntimeDescriptorArray(true)
+			.setPNext(&features13);
+
+		auto features11 = vk::PhysicalDeviceVulkan11Features()
+			.setStorageBuffer16BitAccess(true)
+			.setShaderDrawParameters(true)
+			.setPNext(&features12);
+
+		auto features = vk::PhysicalDeviceFeatures()
+			.setMultiDrawIndirect(true)
+			.setPipelineStatisticsQuery(true)
+			.setSamplerAnisotropy(true)
+			.setShaderFloat64(true)
+			.setShaderInt64(true)
+			.setShaderInt16(true);
+
+		auto features2 = vk::PhysicalDeviceFeatures2()
+			.setFeatures(features)
+			.setPNext(&features11);
+		
+		deviceCreateInfo.setPNext(&features2);
 
 		auto [result, device] = m_PhysicalDevice.createDevice(deviceCreateInfo);
 		VkCritCall(result);

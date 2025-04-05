@@ -89,6 +89,7 @@ namespace tlc
 		friend class VulkanCommandBuffer;
 	
 	private:
+		void CheckExtensionSupport(vk::PhysicalDevice physicalDevice);
 		Bool CreateDevice(vk::SurfaceKHR surface = VK_NULL_HANDLE);
 		void Cleanup();
 		Bool CreateCommandPools();
@@ -109,6 +110,10 @@ namespace tlc
 		vk::PhysicalDevice m_PhysicalDevice;
 		vk::Device m_Device;
 
+		Bool m_SwapchanSupported = false;
+		Bool m_MeshShadingSupported = false;
+		Bool m_RayTracingSupported = false;
+
 		Array<I32, VulkanQueueType::Count> m_QueueFamilyIndices;
 
 		Array<vk::Queue, VulkanQueueType::Count> m_Queues;
@@ -121,5 +126,7 @@ namespace tlc
 		UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>> m_AvailableDescriptorPools;
 		UnorderedMap<String, UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>>> m_DescriptorPools;
 		UnorderedMap<Size, vk::DescriptorSetLayout> m_DescriptorSetLayoutCache;
+
+		UnorderedMap<String, vk::QueryPool> m_QueryPools;
 	};
 }

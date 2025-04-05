@@ -3,6 +3,7 @@
 #include "core/Core.hpp"
 
 // vulkan
+#define API_VERSION VK_API_VERSION_1_4 
 #define VULKAN_HPP_NO_EXCEPTIONS
 #define VULKAN_HPP_ASSERT_ON_RESULT
 #include "vulkan/vulkan.hpp"
