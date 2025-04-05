@@ -68,9 +68,15 @@ include_directories(
     ${Vulkan_INCLUDE_DIRS}
 )
 
+# glob all the headers(hpp) inside the tlc directory
+file(GLOB_RECURSE tlc_headers
+    ./tlc/*.hpp
+)
 
 
 add_executable(tlc
+# include headers (we have to do this so that Visual Studio can see them)
+    ${tlc_headers}
 # core
     ./tlc/core/Uuid.cpp
     ./tlc/core/Logger.cpp
@@ -80,8 +86,8 @@ add_executable(tlc
 # vulkan
     ./tlc/vulkanapi/VulkanContext.cpp
     ./tlc/vulkanapi/VulkanDevice.cpp
-    ./tlc/vulkanapi/VulkanSwapchain.cpp
     ./tlc/vulkanapi/VulkanBuffer.cpp
+    ./tlc/vulkanapi/VulkanSwapchain.cpp
     ./tlc/vulkanapi/VulkanShader.cpp
     ./tlc/vulkanapi/VulkanImage.cpp
     ./tlc/vulkanapi/VulkanGraphicsPipeline.cpp
