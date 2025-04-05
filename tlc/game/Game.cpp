@@ -8,6 +8,7 @@
 #include "services/renderer/VulkanManager.hpp"
 #include "services/renderer/PresentationRenderer.hpp"
 #include "services/renderer/DebugUIManager.hpp"
+#include "services/StatisticsManager.hpp"
 
 // TODO: use a proper input manager service here rather than using glfw directly
 #include "glfw/glfw3.h"
@@ -43,6 +44,9 @@ namespace tlc
 
     void GameApplication::OnUpdate()
     {
+#ifdef TLC_ENABLE_STATISTICS
+        Services::Get<StatisticsManager>()->NewFrame();
+#endif
         if (GetCurrentFrameTime() - m_LastFrameTime > 1.0f)
         {
             m_LastFrameTime = GetCurrentFrameTime();
@@ -59,9 +63,13 @@ namespace tlc
         // (imgui side building of command buffers) should be done here
         
         if (!IsMinimized()) {
-            if (Services::Get<DebugUIManager>()->IsDebugUIVisible()) RenderDebugUi();   
-            RenderEngineFrame();
+            TLC_STATISTICS_PER_FRAME_TIME_SCOPE("GameApplication/OnUpdate/Time");
+            TLC_STATISTICS_PER_FRAME("DebugUI/PrepareCPU/Time", if (Services::Get<DebugUIManager>()->IsDebugUIVisible()) RenderDebugUi();)
+            TLC_STATISTICS_PER_FRAME("Render/Time", RenderEngineFrame();)
         }
+#ifdef TLC_ENABLE_STATISTICS
+        Services::Get<StatisticsManager>()->EndFrame();
+#endif
     }
 
     void GameApplication::OnEnd()
@@ -87,6 +95,12 @@ namespace tlc
         if (debugUi->IsEditorOpen("ImGui/DemoWindow")) {
             ImGui::ShowDemoWindow(debugUi->EditorOpenPtr("ImGui/DemoWindow"));
         }
+
+#ifdef TLC_ENABLE_STATISTICS
+        if (debugUi->IsEditorOpen("Core/StatisticsManager")) {
+            Services::Get<StatisticsManager>()->ShowDebugUI(debugUi->EditorOpenPtr("Core/StatisticsManager"));
+        }
+#endif
 
         debugUi->BeginEditorSection();
         ImGui::Text("Hello from the editor section!");

@@ -94,6 +94,9 @@ add_executable(tlc
     ./tlc/services/renderer/VulkanManagerService.cpp
     ./tlc/services/renderer/PresentationRendererService.cpp
     ./tlc/services/renderer/DebugUIManagerService.cpp
+    ./tlc/services/StatisticsManagerService.cpp
+# utils
+    ./tlc/utils/StringUtils.cpp
 # engine
     ./tlc/engine/Scene.cpp
     # ./tlc/engine/ecs/Component.cpp

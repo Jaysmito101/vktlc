@@ -83,7 +83,6 @@
 #include "core/Types.hpp"
 #include "core/Logger.hpp"
 #include "core/Utils.hpp"
-#include "core/Hasher.hpp"
 #include "core/EventManager.hpp"
 
 // glm

@@ -7,6 +7,7 @@
 #include "services/renderer/VulkanManager.hpp"
 #include "services/renderer/PresentationRenderer.hpp"
 #include "services/renderer/DebugUIManager.hpp"
+#include "services/StatisticsManager.hpp"
 
 
 
@@ -24,5 +25,8 @@ namespace tlc
         Services::RegisterService<VulkanManager>();  
         Services::RegisterService<PresentationRenderer>();      
         Services::RegisterService<DebugUIManager>();
+#ifdef TLC_ENABLE_STATISTICS
+        Services::RegisterService<StatisticsManager>();
+#endif
     }
 }
