@@ -26,7 +26,7 @@ namespace tlc
 
 	VulkanDevice::~VulkanDevice()
 	{
-		if(m_IsReady) {
+		if (m_IsReady) {
 			Cleanup();
 		}
 	}
@@ -39,6 +39,10 @@ namespace tlc
 
 		(void)m_Device.waitIdle();
 
+		for (auto queryPool : m_QueryPools) {
+			if (queryPool == static_cast<vk::QueryPool>(VK_NULL_HANDLE)) continue;
+			m_Device.destroyQueryPool(queryPool);
+		}
 
 		for (auto& commandPool : m_CommandPools)
 		{
@@ -46,15 +50,15 @@ namespace tlc
 			m_Device.destroyCommandPool(commandPool);
 		}
 
-		for(const auto& [_, pools] : m_AvailableDescriptorPools) {
-			for (const auto& pool: pools) {
+		for (const auto& [_, pools] : m_AvailableDescriptorPools) {
+			for (const auto& pool : pools) {
 				m_Device.destroyDescriptorPool(pool);
 			}
 		}
 
-		for(const auto& [_, poolGroups] : m_DescriptorPools) {
-			for(const auto& [_, pools] : poolGroups) {
-				for (const auto& pool: pools) {
+		for (const auto& [_, poolGroups] : m_DescriptorPools) {
+			for (const auto& [_, pools] : poolGroups) {
+				for (const auto& pool : pools) {
 					m_Device.destroyDescriptorPool(pool);
 				}
 			}
@@ -108,6 +112,26 @@ namespace tlc
 	{
 		WaitIdle();
 		m_Device.destroyFence(fence);
+	}
+
+	vk::QueryPool VulkanDevice::CreateQueryPool(vk::QueryType type, U32 count) {
+		auto pipelineStatisticsFlags = vk::QueryPipelineStatisticFlagBits::eClippingInvocations
+			| vk::QueryPipelineStatisticFlagBits::eComputeShaderInvocations
+			| vk::QueryPipelineStatisticFlagBits::eMeshShaderInvocationsEXT
+			| vk::QueryPipelineStatisticFlagBits::eTaskShaderInvocationsEXT
+			| vk::QueryPipelineStatisticFlagBits::eVertexShaderInvocations;
+
+		auto queryPoolCreateInfo = vk::QueryPoolCreateInfo()
+			.setQueryType(type)
+			.setQueryCount(count)
+			.setPipelineStatistics(type == vk::QueryType::ePipelineStatistics ? pipelineStatisticsFlags : vk::QueryPipelineStatisticFlagBits(0));
+
+		auto [result, queryPool] = m_Device.createQueryPool(queryPoolCreateInfo);
+		VkCall(result);
+			
+		m_QueryPools.push_back(queryPool);
+
+		return queryPool;
 	}
 
 	U32 VulkanDevice::FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const
@@ -184,6 +208,10 @@ namespace tlc
 			log::Fatal("Swapchain extension is not supported");
 		}
 
+		if (!m_MeshShadingSupported) {
+			log::Fatal("Mesh shading extension is not supported");
+		}
+
 
 		deviceCreateInfo.setQueueCreateInfoCount(static_cast<U32>(queueCreateInfos.size()))
 			.setPQueueCreateInfos(queueCreateInfos.data())
@@ -204,7 +232,7 @@ namespace tlc
 			extensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
 			extensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
 		}
-		
+
 		deviceCreateInfo.setEnabledExtensionCount(static_cast<U32>(extensions.size()))
 			.setPpEnabledExtensionNames(extensions.data());
 
@@ -273,7 +301,7 @@ namespace tlc
 		auto features2 = vk::PhysicalDeviceFeatures2()
 			.setFeatures(features)
 			.setPNext(&features11);
-		
+
 		deviceCreateInfo.setPNext(&features2);
 
 		auto [result, device] = m_PhysicalDevice.createDevice(deviceCreateInfo);
@@ -320,7 +348,7 @@ namespace tlc
 				continue;
 			}
 			poolCreateInfo.setQueueFamilyIndex(m_QueueFamilyIndices[i]);
-			
+
 			auto [result, commandPool] = m_Device.createCommandPool(poolCreateInfo);
 			VkCritCall(result);
 			m_CommandPools[i] = commandPool;
@@ -409,7 +437,7 @@ namespace tlc
 			.setMaxSets(1000)
 			.setPoolSizeCount(1)
 			.setPPoolSizes(&poolSizes);
-			
+
 		auto [result, pool] = m_Device.createDescriptorPool(descriptorPoolCreateInfo);
 		VkCritCall(result);
 
@@ -420,13 +448,13 @@ namespace tlc
 		auto typeGroup = m_DescriptorPools.find(group);
 		if (typeGroup == m_DescriptorPools.end()) {
 			m_DescriptorPools.insert_or_assign(group, UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>>());
-			typeGroup =  m_DescriptorPools.find(group);
+			typeGroup = m_DescriptorPools.find(group);
 		}
 
 		auto poolArray = typeGroup->second.find(type);
 		if (poolArray == typeGroup->second.end()) {
 			typeGroup->second.insert_or_assign(type, List<vk::DescriptorPool>{ CreateDescriptorPool(type)});
-			poolArray =  typeGroup->second.find(type);
+			poolArray = typeGroup->second.find(type);
 		}
 
 		return poolArray->second;
@@ -448,17 +476,17 @@ namespace tlc
 		auto [result, descriptorSet] = m_Device.allocateDescriptorSets(descriptorSetAllocateInfo);
 
 		switch (result) {
-			case vk::Result::eSuccess: 
-				return descriptorSet;
-			case vk::Result::eErrorFragmentedPool:
-			case vk::Result::eErrorOutOfPoolMemory:
-				if(!ExpandDescriptorPool(group, type)) {
-					return {};
-				}
-				return AllocateDescriptorSets(group, type, descriptorSetLayouts);
-			default:
-				VkCall(result);
+		case vk::Result::eSuccess:
+			return descriptorSet;
+		case vk::Result::eErrorFragmentedPool:
+		case vk::Result::eErrorOutOfPoolMemory:
+			if (!ExpandDescriptorPool(group, type)) {
 				return {};
+			}
+			return AllocateDescriptorSets(group, type, descriptorSetLayouts);
+		default:
+			VkCall(result);
+			return {};
 		}
 	}
 
@@ -473,9 +501,9 @@ namespace tlc
 		auto allPools = m_DescriptorPools.at(group);
 		m_DescriptorPools.erase(group);
 
-		for(const auto& [poolType, pools] : allPools) {
+		for (const auto& [poolType, pools] : allPools) {
 			auto& availablePools = m_AvailableDescriptorPools[poolType]; // get it or a default empty list
-			for (const auto& pool: pools) {
+			for (const auto& pool : pools) {
 				m_Device.resetDescriptorPool(pool);
 				availablePools.push_back(pool);
 			}
@@ -486,7 +514,7 @@ namespace tlc
 	// NOTE: assumption bindings are sorted
 	Size VulkanDevice::CalculateDescriptorLayoutCreateInfoHash(const vk::DescriptorSetLayoutCreateInfo& createInfo) {
 		auto result = std::hash<Size>()(createInfo.bindingCount);
-		for (Size i = 0; i < createInfo.bindingCount; i ++) {
+		for (Size i = 0; i < createInfo.bindingCount; i++) {
 			auto b = createInfo.pBindings[i];
 			Size bindingHash = (Size)b.binding | (Size)b.descriptorType << 8 | (Size)b.descriptorCount << 16 | (U32)b.stageFlags << 24;
 			result ^= std::hash<Size>()(bindingHash);
@@ -508,6 +536,6 @@ namespace tlc
 
 		return layout;
 	}
-	
+
 
 }

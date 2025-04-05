@@ -69,6 +69,8 @@ namespace tlc
 
 		U32 FindMemoryType(U32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
+		vk::QueryPool CreateQueryPool(vk::QueryType type, U32 count);
+
 		inline I32 GetGraphicsQueueFamilyIndex() const { return m_QueueFamilyIndices[Graphics]; }
 		inline I32 GetComputeQueueFamilyIndex() const { return m_QueueFamilyIndices[Compute]; }
 		inline I32 GetTransferQueueFamilyIndex() const { return m_QueueFamilyIndices[Transfer]; }
@@ -127,6 +129,6 @@ namespace tlc
 		UnorderedMap<String, UnorderedMap<vk::DescriptorType, List<vk::DescriptorPool>>> m_DescriptorPools;
 		UnorderedMap<Size, vk::DescriptorSetLayout> m_DescriptorSetLayoutCache;
 
-		UnorderedMap<String, vk::QueryPool> m_QueryPools;
+		List<vk::QueryPool> m_QueryPools;
 	};
 }
