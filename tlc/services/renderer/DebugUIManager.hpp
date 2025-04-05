@@ -29,6 +29,7 @@ namespace tlc {
         void EndFrame();
 
     private:
+        void UpdateBuffersIfNeeded(vk::CommandBuffer& commandBuffer, ImDrawData* imDrawData);
         void RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight);
 
         void PrepareFontTexture();

@@ -246,13 +246,8 @@ namespace tlc {
         ImGui::EndFrame();
         ImGui::Render();
     }
-    
-    void DebugUIManager::RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight) {
-        (void)deltaTime;
 
-        auto imDrawData = ImGui::GetDrawData();
-        auto& io = ImGui::GetIO();
-
+    void DebugUIManager::UpdateBuffersIfNeeded(vk::CommandBuffer& commandBuffer, ImDrawData* imDrawData) {
         auto vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
         auto indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
 
@@ -287,6 +282,15 @@ namespace tlc {
                 .SetStagingBuffer(m_IndexStagingBuffer);
             m_IndexBuffer->UploadSync(indexBufferUploadSettings);
         }
+    }
+    
+    void DebugUIManager::RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight) {
+        (void)deltaTime;
+
+        auto imDrawData = ImGui::GetDrawData();
+        auto& io = ImGui::GetIO();
+
+        UpdateBuffersIfNeeded(commandBuffer, imDrawData);
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline->GetPipeline());
 
