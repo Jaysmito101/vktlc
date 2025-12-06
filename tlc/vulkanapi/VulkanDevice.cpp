@@ -196,8 +196,7 @@ namespace tlc
         }
 
         deviceCreateInfo.setQueueCreateInfoCount(static_cast<U32>(queueCreateInfos.size()))
-            .setPQueueCreateInfos(queueCreateInfos.data())
-            .setEnabledLayerCount(0);
+            .setPQueueCreateInfos(queueCreateInfos.data());
 
         List<CString> extensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
