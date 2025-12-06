@@ -5,38 +5,33 @@
 
 namespace tlc
 {
-
-    static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    static VKAPI_ATTR vk::Bool32 VKAPI_CALL VulkanDebugCallback(
+        vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        vk::DebugUtilsMessageTypeFlagsEXT messageType,
+        const vk::DebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData)
     {
-        (void)messageType;
         (void)pUserData;
 
         LogLevel level = LogLevel::Trace;
         switch (messageSeverity) {
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
                 level = LogLevel::Trace;
                 break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
                 level = LogLevel::Info;
                 break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
                 level = LogLevel::Warning;
                 break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:
                 level = LogLevel::Error;
-                break;
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
-                level = LogLevel::Fatal;
                 break;
             default:
                 level = LogLevel::Trace;
         }
 
-        log::Log(level, "Validation Layer: {}", pCallbackData->pMessage);
+        log::Log(level, "Validation Layer: [{}] {}", vk::to_string(messageSeverity), pCallbackData->pMessage);
 
         return VK_FALSE;
     }
