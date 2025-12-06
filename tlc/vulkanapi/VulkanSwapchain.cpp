@@ -1,6 +1,6 @@
 #include "vulkanapi/VulkanSwapchain.hpp"
 #include "core/Window.hpp"
-#include "vulkanapi/vulkanContext.hpp"
+#include "vulkanapi/VulkanContext.hpp"
 
 namespace tlc
 {
