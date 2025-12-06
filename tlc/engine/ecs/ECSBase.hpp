@@ -92,14 +92,14 @@ namespace tlc {
 			inline const T& GetComponent(const UUID& component) const {
 				TLC_ASSERT(sizeof(T) == TypeSize, "ComponentPool::GetComponent: Component size mismatch!");
 				TLC_ASSERT(typeid(T).hash_code() == TypeID, "ComponentPool::GetComponent: Component type mismatch!");
-				return *reinterpret_cast<const T*>(GetComponentRaw(component));
+				return *static_cast<const T*>(GetComponentRaw(component));
 			}
 
 			template<typename T>
 			inline T& GetComponent(const UUID& component) {
 				TLC_ASSERT(sizeof(T) == TypeSize, "ComponentPool::GetComponent: Component size mismatch!");
 				TLC_ASSERT(typeid(T).hash_code() == TypeID, "ComponentPool::GetComponent: Component type mismatch!");
-				return *reinterpret_cast<T*>(GetComponentRaw(component));
+				return *static_cast<T*>(GetComponentRaw(component));
 			}
 
 			inline void* GetComponentRaw(const UUID& component) {
