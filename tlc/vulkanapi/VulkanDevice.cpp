@@ -216,12 +216,6 @@ namespace tlc
         deviceCreateInfo.setEnabledExtensionCount(static_cast<U32>(extensions.size()))
             .setPpEnabledExtensionNames(extensions.data());
 
-        if (m_Settings.enableValidationLayers) {
-            const auto &layers = m_ParentContext->GetLayers();
-            deviceCreateInfo.setEnabledLayerCount(static_cast<U32>(layers.size()))
-                .setPpEnabledLayerNames(layers.data());
-        }
-
         auto featuresAccelerationStructure = vk::PhysicalDeviceAccelerationStructureFeaturesKHR()
                                                  .setAccelerationStructure(true)
                                                  .setPNext(nullptr);

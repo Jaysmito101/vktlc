@@ -22,11 +22,6 @@ namespace tlc
 
     struct VulkanDeviceSettings {
     public:
-#if defined(NDEBUG)
-        Bool enableValidationLayers = false;
-#else
-        Bool enableValidationLayers = true;
-#endif
         Bool requireGraphicsQueue = true;
         Bool requireComputeQueue  = false;
         Bool requireTransferQueue = false;
@@ -38,11 +33,6 @@ namespace tlc
     public:
         VulkanDeviceSettings() = default;
 
-        inline VulkanDeviceSettings &SetEnableValidationLayers(Bool enable)
-        {
-            enableValidationLayers = enable;
-            return *this;
-        }
         inline VulkanDeviceSettings &SetRequireGraphicsQueue(Bool require)
         {
             requireGraphicsQueue = require;
