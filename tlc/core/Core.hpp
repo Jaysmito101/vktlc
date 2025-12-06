@@ -23,13 +23,13 @@
 
 #elif defined(PLATFORM_LINUX)
 // linux includes
-#include <unistd.h>
-#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/resource.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/ioctl.h>
+#include <unistd.h>
 #endif
 
 // define TLC_DEBUG
@@ -39,51 +39,49 @@
 #define TLC_DEBUG
 #endif
 
-
-
 // std includes
-#include <string>
-#include <vector>
-#include <map>
-#include <unordered_map>
-#include <memory>
-#include <functional>
 #include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <chrono>
-#include <thread>
-#include <mutex>
 #include <atomic>
-#include <condition_variable>
-#include <future>
-#include <type_traits>
-#include <typeinfo>
-#include <utility>
 #include <cassert>
+#include <cctype>
+#include <chrono>
 #include <cmath>
+#include <condition_variable>
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
-#include <cctype>
-#include <cstring>
-#include <ctime>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <limits>
+#include <cstring>
+#include <ctime>
 #include <filesystem>
-#include <ranges>
-#include <stack>
+#include <fstream>
+#include <functional>
+#include <future>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <memory>
+#include <mutex>
 #include <queue>
+#include <ranges>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <thread>
+#include <type_traits>
+#include <typeinfo>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 // core includes
-#include "core/UUID.hpp"
-#include "core/Types.hpp"
-#include "core/Logger.hpp"
-#include "core/Utils.hpp"
 #include "core/EventManager.hpp"
+#include "core/Logger.hpp"
+#include "core/Types.hpp"
+#include "core/UUID.hpp"
+#include "core/Utils.hpp"
 
 // glm
 #pragma warning(disable : 4201)
@@ -94,14 +92,13 @@
 // assert
 
 #ifdef TLC_DEBUG
-#define TLC_ASSERT(condition, message) { \
-	if (!(condition)) { \
-		log::Error("Assertion failed: {0} in {1} at {2}:{3}", message, __FUNCTION__, __FILE__, __LINE__); \
-		__debugbreak(); \
-	} \
-}
+#define TLC_ASSERT(condition, message)                                                                        \
+    {                                                                                                         \
+        if (!(condition)) {                                                                                   \
+            log::Error("Assertion failed: {0} in {1} at {2}:{3}", message, __FUNCTION__, __FILE__, __LINE__); \
+            __debugbreak();                                                                                   \
+        }                                                                                                     \
+    }
 #else
 #define TLC_ASSERT(condition, message)
 #endif
-
-

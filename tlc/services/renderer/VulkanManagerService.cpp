@@ -1,5 +1,5 @@
-#include "services/renderer/VulkanManager.hpp"
 #include "core/Window.hpp"
+#include "services/renderer/VulkanManager.hpp"
 
 namespace tlc
 {
@@ -22,7 +22,7 @@ namespace tlc
     {
     }
 
-    void VulkanManager::OnEvent(const String& event, const String& eventParams)
+    void VulkanManager::OnEvent(const String &event, const String &eventParams)
     {
     }
 
@@ -33,17 +33,16 @@ namespace tlc
         m_VulkanContext = VulkanContext::Get();
 
         log::Trace("Creating surface");
-        auto surfaceKHR =  m_VulkanContext->CreateSurface(Window::Get());
+        auto surfaceKHR = m_VulkanContext->CreateSurface(Window::Get());
 
         m_PhysicalDevice = m_VulkanContext->PickPhysicalDevice();
-        m_VulkanDevice = m_VulkanContext->CreateDevice(m_PhysicalDevice, surfaceKHR);
+        m_VulkanDevice   = m_VulkanContext->CreateDevice(m_PhysicalDevice, surfaceKHR);
         log::Trace("Creating swapchain");
         m_VulkanSwapchain = m_VulkanContext->CreateSwapchain(Window::Get(), m_VulkanDevice, surfaceKHR);
-        if (m_VulkanSwapchain == nullptr)
-        {
+        if (m_VulkanSwapchain == nullptr) {
             log::Fatal("Failed to create swapchain");
         }
 
         log::Info("Vulkan setup complete");
     }
-}
+} // namespace tlc

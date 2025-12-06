@@ -4,39 +4,37 @@
 #include "services/Services.hpp"
 #include "services/assetmanager/Asset.hpp"
 
-namespace tlc 
+namespace tlc
 {
-    class AssetBundler : public IService {
-        public:
+    class AssetBundler : public IService
+    {
+    public:
+        void Setup(const String &bundlesPath);
 
-            void Setup(const String& bundlesPath);
+        Bool RegisterAsset(
+            const String &path,
+            AssetTags tags,
+            const String &bundleName,
+            const String &address);
+        Bool RegisterFromDirectory(const String &path, const String &bundleName, const String &addressPrefix = "");
+        Bool AssetExists(const String &address);
+        void Pack();
 
-            Bool RegisterAsset(
-                const String& path,
-                AssetTags tags,
-                const String& bundleName,
-                const String& address 
-            );
-            Bool RegisterFromDirectory(const String& path, const String& bundleName, const String& addressPrefix = "");
-            Bool AssetExists(const String& address); 
-            void Pack();
+        void OnStart() override;
+        void OnEnd() override;
 
-            
-            void OnStart() override;
-            void OnEnd() override;
+        void LogAssets();
 
-            void LogAssets();
+    private:
+        AssetTags DetectAssetTags(const String &path);
+        void PackBundle(const String &bundleName);
+        void LoadAssets(const String &bundleName);
+        void UnloadAssets(const String &bundleName);
+        void WriteAssetMetadata(std::ofstream &bundleFile, const Asset &asset);
 
-        private:
-            AssetTags DetectAssetTags(const String& path);
-            void PackBundle(const String& bundleName);
-            void LoadAssets(const String& bundleName);
-            void UnloadAssets(const String& bundleName);
-            void WriteAssetMetadata(std::ofstream& bundleFile, const Asset& asset);
-
-        private:
-            std::mutex m_Mutex;
-            UnorderedMap<String, List<Asset>> m_Assets;
-            String m_BundlesPath = "";
+    private:
+        std::mutex m_Mutex;
+        UnorderedMap<String, List<Asset>> m_Assets;
+        String m_BundlesPath = "";
     };
-}
+} // namespace tlc

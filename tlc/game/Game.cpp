@@ -1,14 +1,11 @@
 #pragma once
 
 #include "game/Game.hpp"
-#include "game/scenes/TestScene.hpp"
-#include "game/scenes/MainScene.hpp"
 
-#include "engine/ecs/ECS.hpp"
-#include "services/renderer/VulkanManager.hpp"
-#include "services/renderer/PresentationRenderer.hpp"
-#include "services/renderer/DebugUIManager.hpp"
 #include "services/StatisticsManager.hpp"
+#include "services/renderer/DebugUIManager.hpp"
+#include "services/renderer/PresentationRenderer.hpp"
+#include "services/renderer/VulkanManager.hpp"
 
 // TODO: use a proper input manager service here rather than using glfw directly
 #include "glfw/glfw3.h"
@@ -47,8 +44,7 @@ namespace tlc
 #ifdef TLC_ENABLE_STATISTICS
         Services::Get<StatisticsManager>()->NewFrame();
 #endif
-        if (GetCurrentFrameTime() - m_LastFrameTime > 1.0f)
-        {
+        if (GetCurrentFrameTime() - m_LastFrameTime > 1.0f) {
             m_LastFrameTime = GetCurrentFrameTime();
             Window::Get()->SetTitle("TLC - " + std::to_string(GetCurrentFramerate()) + " FPS");
         }
@@ -61,7 +57,7 @@ namespace tlc
         // screen fromt he active camera
         // also any sort of update to be done in the debug ui layer
         // (imgui side building of command buffers) should be done here
-        
+
         if (!IsMinimized()) {
             TLC_STATISTICS_PER_FRAME_TIME_SCOPE("GameApplication/OnUpdate/Time");
             TLC_STATISTICS_PER_FRAME("DebugUI/PrepareCPU/Time", if (Services::Get<DebugUIManager>()->IsDebugUIVisible()) RenderDebugUi();)
@@ -79,19 +75,20 @@ namespace tlc
     void GameApplication::RenderEngineFrame()
     {
         auto presentationRenderer = Services::Get<PresentationRenderer>();
-        if(!presentationRenderer->RenderCurrentFrame(GetDeltaTime())) {
+        if (!presentationRenderer->RenderCurrentFrame(GetDeltaTime())) {
             log::Warn("Engine frame skipped...");
         }
     }
 
-    void GameApplication::RenderDebugUi() {
-        auto vulkan = Services::Get<VulkanManager>();
+    void GameApplication::RenderDebugUi()
+    {
+        auto vulkan    = Services::Get<VulkanManager>();
         auto swapchain = vulkan->GetSwapchain();
-        auto debugUi = Services::Get<DebugUIManager>();
+        auto debugUi   = Services::Get<DebugUIManager>();
 
-        const auto& swapchainExtent = swapchain->GetExtent();
+        const auto &swapchainExtent = swapchain->GetExtent();
         debugUi->NewFrame(swapchainExtent.width, swapchainExtent.height, GetDeltaTime());
-        
+
         if (debugUi->IsEditorOpen("ImGui/DemoWindow")) {
             ImGui::ShowDemoWindow(debugUi->EditorOpenPtr("ImGui/DemoWindow"));
         }
@@ -109,4 +106,4 @@ namespace tlc
         debugUi->EndFrame();
     }
 
-}
+} // namespace tlc

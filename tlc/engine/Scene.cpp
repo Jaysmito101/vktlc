@@ -3,58 +3,58 @@
 namespace tlc
 {
 
-	Scene::Scene()
-	{
-		m_UUID = UUID::New();
-		m_ECS = CreateScope<ECS>();
-	}
+    Scene::Scene()
+    {
+        m_UUID = UUID::New();
+        m_ECS  = CreateScope<ECS>();
+    }
 
-	Scene::~Scene()
-	{
-	}
+    Scene::~Scene()
+    {
+    }
 
-	void Scene::Load(Bool isAsync)
-	{
-		OnLoad(isAsync);
-		m_HasLoaded = true;
-	}
+    void Scene::Load(Bool isAsync)
+    {
+        OnLoad(isAsync);
+        m_HasLoaded = true;
+    }
 
-	void Scene::Unload()
-	{
-		OnUnload();
-		m_HasLoaded = false;
-	}
+    void Scene::Unload()
+    {
+        OnUnload();
+        m_HasLoaded = false;
+    }
 
-	void Scene::Start()
-	{
-		OnStart();
-	}
+    void Scene::Start()
+    {
+        OnStart();
+    }
 
-	void Scene::Update()
-	{
-		OnUpdate();
-	}
+    void Scene::Update()
+    {
+        OnUpdate();
+    }
 
-	void Scene::End()
-	{
-		OnEnd();
-	}
+    void Scene::End()
+    {
+        OnEnd();
+    }
 
-	void Scene::Pause()
-	{
-		OnPause();
-		m_IsPaused = true;
-	}
+    void Scene::Pause()
+    {
+        OnPause();
+        m_IsPaused = true;
+    }
 
-	void Scene::Resume()
-	{
-		OnResume();
-		m_IsPaused = false;
-	}
+    void Scene::Resume()
+    {
+        OnResume();
+        m_IsPaused = false;
+    }
 
-	void Scene::Resize(U32 width, U32 height)
-	{
-		OnResize(width, height);
-	}
+    void Scene::Resize(U32 width, U32 height)
+    {
+        OnResize(width, height);
+    }
 
-}
+} // namespace tlc

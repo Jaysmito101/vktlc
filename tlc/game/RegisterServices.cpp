@@ -1,16 +1,13 @@
 #include "game/Game.hpp"
 
-#include "services/ShaderCompiler.hpp"
 #include "services/CacheManager.hpp"
-#include "services/assetmanager/AssetManager.hpp"
-#include "services/assetmanager/AssetBundler.hpp"
-#include "services/renderer/VulkanManager.hpp"
-#include "services/renderer/PresentationRenderer.hpp"
-#include "services/renderer/DebugUIManager.hpp"
+#include "services/ShaderCompiler.hpp"
 #include "services/StatisticsManager.hpp"
-
-
-
+#include "services/assetmanager/AssetBundler.hpp"
+#include "services/assetmanager/AssetManager.hpp"
+#include "services/renderer/DebugUIManager.hpp"
+#include "services/renderer/PresentationRenderer.hpp"
+#include "services/renderer/VulkanManager.hpp"
 
 namespace tlc
 {
@@ -22,11 +19,11 @@ namespace tlc
         Services::RegisterService<CacheManager>(utils::GetExecutableDirectory() + "/cache");
         Services::RegisterService<AssetBundler>(utils::GetExecutableDirectory() + "/asset_bundles");
         Services::RegisterService<AssetManager>(utils::GetExecutableDirectory() + "/asset_bundles");
-        Services::RegisterService<VulkanManager>();  
-        Services::RegisterService<PresentationRenderer>();      
+        Services::RegisterService<VulkanManager>();
+        Services::RegisterService<PresentationRenderer>();
         Services::RegisterService<DebugUIManager>();
 #ifdef TLC_ENABLE_STATISTICS
         Services::RegisterService<StatisticsManager>();
 #endif
     }
-}
+} // namespace tlc

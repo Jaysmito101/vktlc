@@ -7,153 +7,142 @@
 namespace tlc
 {
 
-	Scope<Application> Application::s_Instance = nullptr;
+    Scope<Application> Application::s_Instance = nullptr;
 
-	Application::Application()
-	{
-		if (s_Instance != nullptr)
-		{
-			log::Fatal("Application already exists!");
-		}
+    Application::Application()
+    {
+        if (s_Instance != nullptr) {
+            log::Fatal("Application already exists!");
+        }
 
-		log::Info("Application started");
+        log::Info("Application started");
 
-		Window::Get();				  // Setup window
-		(void *)VulkanContext::Get(); // Setup vulkan context
-		Services::Setup();
+        Window::Get();              // Setup window
+        (void)VulkanContext::Get(); // Setup vulkan context
+        Services::Setup();
 
-		EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void
-															   { m_Running = false; });
+        EventManager<EventType::WindowClose>::Get()->Subscribe([this]() -> void { m_Running = false; });
 
-		EventManager<EventType::WindowSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void
-															 { m_Minimized = (width == 0 || height == 0); });
-	}
+        EventManager<EventType::WindowSize, I32, I32>::Get()->Subscribe([this](I32 width, I32 height) -> void { m_Minimized = (width == 0 || height == 0); });
+    }
 
-	Application::~Application()
-	{
-		m_Scenes.clear();
+    Application::~Application()
+    {
+        m_Scenes.clear();
 
-		log::Debug("Shutting down application");
+        log::Debug("Shutting down application");
 
-		Services::Shutdown();
-		VulkanContext::Shutdown();
-		Window::Shutdown();
-		log::Info("Application shutdown");
-	}
+        Services::Shutdown();
+        VulkanContext::Shutdown();
+        Window::Shutdown();
+        log::Info("Application shutdown");
+    }
 
-	void Application::Run()
-	{
-		OnLoad();
-		m_HasLoaded = true;
-		m_LastFrameTime = static_cast<F32>(glfwGetTime());
-		OnStart();
+    void Application::Run()
+    {
+        OnLoad();
+        m_HasLoaded     = true;
+        m_LastFrameTime = static_cast<F32>(glfwGetTime());
+        OnStart();
 
-		if (m_CurrentScene != nullptr)
-			m_CurrentScene->Start();
+        if (m_CurrentScene != nullptr)
+            m_CurrentScene->Start();
 
-		auto window = Window::Get();
+        auto window = Window::Get();
 
-		while (m_Running)
-		{
-			m_CurentFrameTime = static_cast<F32>(glfwGetTime());
-			m_DeltaTime = static_cast<F32>(m_CurentFrameTime - m_LastFrameTime);
-			m_LastFrameTime = m_CurentFrameTime;
-			m_FramerateTimer += m_DeltaTime;
-			m_CurrentFramerateCounter += 1;
-			if (m_FramerateTimer >= 1.0f)
-			{
-				m_CurrentFramerate = m_CurrentFramerateCounter;
-				m_FramerateTimer = 0.0f;
-				m_CurrentFramerateCounter = 0;
-			}
+        while (m_Running) {
+            m_CurentFrameTime = static_cast<F32>(glfwGetTime());
+            m_DeltaTime       = static_cast<F32>(m_CurentFrameTime - m_LastFrameTime);
+            m_LastFrameTime   = m_CurentFrameTime;
+            m_FramerateTimer += m_DeltaTime;
+            m_CurrentFramerateCounter += 1;
+            if (m_FramerateTimer >= 1.0f) {
+                m_CurrentFramerate        = m_CurrentFramerateCounter;
+                m_FramerateTimer          = 0.0f;
+                m_CurrentFramerateCounter = 0;
+            }
 
-			if (m_NextSceneOnLoading)
-				PollForSceneChange();
-			window->Update();
+            if (m_NextSceneOnLoading)
+                PollForSceneChange();
 
-			if (m_Minimized)
-				continue;
+            window->Update();
 
-			if (m_CurrentScene != nullptr && !m_CurrentScene->IsPaused())
-				m_CurrentScene->Update();
-			OnUpdate();
+            if (m_Minimized)
+                continue;
 
-			if (m_SceneChangeRequest.has_value())
-			{
-				if (m_SceneChangeRequest.value().second)
-					ChangeSceneAsyncI(m_SceneChangeRequest.value().first);
-				else
-					ChangeSceneI(m_SceneChangeRequest.value().first);
-				m_SceneChangeRequest.reset();
-			}
-		}
+            if (m_CurrentScene != nullptr && !m_CurrentScene->IsPaused())
+                m_CurrentScene->Update();
+            OnUpdate();
 
-		if (m_CurrentScene != nullptr)
-			m_CurrentScene->End();
-		OnEnd();
+            if (m_SceneChangeRequest.has_value()) {
+                if (m_SceneChangeRequest.value().second)
+                    ChangeSceneAsyncI(m_SceneChangeRequest.value().first);
+                else
+                    ChangeSceneI(m_SceneChangeRequest.value().first);
+                m_SceneChangeRequest.reset();
+            }
+        }
 
-		if (m_CurrentScene != nullptr)
-			m_CurrentScene->Unload();
+        if (m_CurrentScene != nullptr)
+            m_CurrentScene->End();
+        OnEnd();
 
-		OnUnload();
-	}
+        if (m_CurrentScene != nullptr)
+            m_CurrentScene->Unload();
 
-	void Application::ChangeSceneI(const String &name)
-	{
-		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
+        OnUnload();
+    }
 
-		if (m_CurrentScene != nullptr)
-		{
-			m_CurrentScene->End();
-			m_CurrentScene->Unload();
-		}
+    void Application::ChangeSceneI(const String &name)
+    {
+        TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
 
-		m_CurrentScene = m_Scenes[name].get();
-		m_CurrentScene->Load(false);
-		m_CurrentScene->Start();
-		Services::PushSceneChangeEvent();
-	}
+        if (m_CurrentScene != nullptr) {
+            m_CurrentScene->End();
+            m_CurrentScene->Unload();
+        }
 
-	void Application::ChangeSceneAsyncI(const String &name)
-	{
-		TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
+        m_CurrentScene = m_Scenes[name].get();
+        m_CurrentScene->Load(false);
+        m_CurrentScene->Start();
+        Services::PushSceneChangeEvent();
+    }
 
-		if (m_NextSceneOnLoading != nullptr)
-		{
-			log::Error("Cannot load another scene while one is already loading");
-			return;
-		}
+    void Application::ChangeSceneAsyncI(const String &name)
+    {
+        TLC_ASSERT(m_Scenes.find(name) != m_Scenes.end(), "Scene not found");
 
-		if (m_CurrentScene && m_CurrentScene->GetName() == name)
-		{
-			log::Error("Cannot load the same scene again async, use ChangeScene instead");
-			return;
-		}
+        if (m_NextSceneOnLoading != nullptr) {
+            log::Error("Cannot load another scene while one is already loading");
+            return;
+        }
 
-		// First load the new scene async
-		m_NextSceneOnLoading = m_Scenes[name].get();
+        if (m_CurrentScene && m_CurrentScene->GetName() == name) {
+            log::Error("Cannot load the same scene again async, use ChangeScene instead");
+            return;
+        }
 
-		std::thread([this]() -> void
-					{ m_NextSceneOnLoading->Load(true); })
-			.detach();
-	}
+        // First load the new scene async
+        m_NextSceneOnLoading = m_Scenes[name].get();
 
-	void Application::PollForSceneChange()
-	{
-		if (m_NextSceneOnLoading != nullptr && m_NextSceneOnLoading->HasLoaded())
-		{
-			if (m_CurrentScene != nullptr)
-			{
-				m_CurrentScene->End();
-				m_CurrentScene->Unload();
-			}
+        std::thread([this]() -> void { m_NextSceneOnLoading->Load(true); })
+            .detach();
+    }
 
-			m_CurrentScene = m_NextSceneOnLoading;
-			m_NextSceneOnLoading = nullptr;
+    void Application::PollForSceneChange()
+    {
+        if (m_NextSceneOnLoading != nullptr && m_NextSceneOnLoading->HasLoaded()) {
+            if (m_CurrentScene != nullptr) {
+                m_CurrentScene->End();
+                m_CurrentScene->Unload();
+            }
 
-			m_CurrentScene->Start();
-			Services::PushSceneChangeEvent();
-		}
-	}
+            m_CurrentScene       = m_NextSceneOnLoading;
+            m_NextSceneOnLoading = nullptr;
 
-}
+            m_CurrentScene->Start();
+            Services::PushSceneChangeEvent();
+        }
+    }
+
+} // namespace tlc

@@ -7,17 +7,20 @@
 #include "vulkanapi/VulkanDevice.hpp"
 #include "vulkanapi/VulkanImage.hpp"
 
-namespace tlc {
+namespace tlc
+{
 
-    class DebugUIManager : public IService {
+    class DebugUIManager : public IService
+    {
     public:
         void Setup();
         virtual void OnStart() override;
         virtual void OnEnd() override;
         virtual void OnSceneChange() override;
-        virtual void OnEvent(const String& event, const String& eventParams) override;
+        virtual void OnEvent(const String &event, const String &eventParams) override;
 
-        inline const Raw<ImFont> GetFont(const String& name) const {
+        inline const Raw<ImFont> GetFont(const String &name) const
+        {
             auto font = m_Fonts.find(name);
             if (font != m_Fonts.end()) {
                 return font->second;
@@ -25,7 +28,8 @@ namespace tlc {
             return nullptr;
         }
 
-        inline Bool IsEditorOpen(const String& name) {
+        inline Bool IsEditorOpen(const String &name)
+        {
             auto editor = m_IsEditorOpen.find(name);
             if (editor != m_IsEditorOpen.end()) {
                 return editor->second;
@@ -34,7 +38,8 @@ namespace tlc {
             return false;
         }
 
-        inline Raw<Bool> EditorOpenPtr(const String& name) {
+        inline Raw<Bool> EditorOpenPtr(const String &name)
+        {
             auto [iterator, inserted] = m_IsEditorOpen.try_emplace(name, false);
             return &iterator->second;
         }
@@ -44,13 +49,19 @@ namespace tlc {
         void EndEditorSection();
         void EndFrame();
 
-        inline void ToggleDebugUI() { auto ptr = EditorOpenPtr("Main/DebugUI"); *ptr = !*ptr; }
-        inline Bool IsDebugUIVisible() { return IsEditorOpen("Main/DebugUI"); }
-
+        inline void ToggleDebugUI()
+        {
+            auto ptr = EditorOpenPtr("Main/DebugUI");
+            *ptr     = !*ptr;
+        }
+        inline Bool IsDebugUIVisible()
+        {
+            return IsEditorOpen("Main/DebugUI");
+        }
 
     private:
-        void UpdateBuffersIfNeeded(vk::CommandBuffer& commandBuffer, ImDrawData* imDrawData);
-        void RenderFrame(vk::CommandBuffer& commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight);
+        void UpdateBuffersIfNeeded(vk::CommandBuffer &commandBuffer, ImDrawData *imDrawData);
+        void RenderFrame(vk::CommandBuffer &commandBuffer, F32 deltaTime, U32 displayWidth, U32 displayHeight);
 
         void PrepareFontTexture();
         void CreateFontTextureDescriptors();
@@ -74,4 +85,4 @@ namespace tlc {
         Ref<VulkanBuffer> m_VertexStagingBuffer;
         Ref<VulkanBuffer> m_IndexStagingBuffer;
     };
-}
+} // namespace tlc

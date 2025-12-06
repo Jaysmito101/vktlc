@@ -1,44 +1,54 @@
 #pragma once
 #include "core/Core.hpp"
 
-namespace tlc 
+namespace tlc
 {
-    enum class AssetTags : U32
-    {
-        None                 = 0b00000000000000000000000000000000,
-        Shader               = 0b00000000000000000000000000000001,
-        Image                = 0b00000000000000000000000000000010,
-        Audio                = 0b00000000000000000000000000000100,
-        Font                 = 0b00000000000000000000000000001000,
-        VertexShader         = 0b00000000000000000000000000010000,
-        FragmentShader       = 0b00000000000000000000000000100000,
-        ComputeShader        = 0b00000000000000000000000001000000,
+    enum class AssetTags : U32 {
+        None           = 0b00000000000000000000000000000000,
+        Shader         = 0b00000000000000000000000000000001,
+        Image          = 0b00000000000000000000000000000010,
+        Audio          = 0b00000000000000000000000000000100,
+        Font           = 0b00000000000000000000000000001000,
+        VertexShader   = 0b00000000000000000000000000010000,
+        FragmentShader = 0b00000000000000000000000000100000,
+        ComputeShader  = 0b00000000000000000000000001000000,
     };
 
-    inline AssetTags operator|(AssetTags a, AssetTags b) {
+    inline AssetTags operator|(AssetTags a, AssetTags b)
+    {
         return static_cast<AssetTags>(static_cast<U32>(a) | static_cast<U32>(b));
     }
 
-    inline AssetTags operator&(AssetTags a, AssetTags b) {
+    inline AssetTags operator&(AssetTags a, AssetTags b)
+    {
         return static_cast<AssetTags>(static_cast<U32>(a) & static_cast<U32>(b));
     }
 
-    inline AssetTags operator~(AssetTags a) {
+    inline AssetTags operator~(AssetTags a)
+    {
         return static_cast<AssetTags>(~static_cast<U32>(a));
     }
 
-    inline String AssetTagsToStringSingle(AssetTags tags) {
+    inline String AssetTagsToStringSingle(AssetTags tags)
+    {
         switch (tags) {
-            case AssetTags::None: return "None";
-            case AssetTags::Image: return "Image";
-            case AssetTags::Audio: return "Audio";
-            case AssetTags::Font: return "Font";
-            case AssetTags::Shader: return "Shader";
-            default: return "Unknown";
+            case AssetTags::None:
+                return "None";
+            case AssetTags::Image:
+                return "Image";
+            case AssetTags::Audio:
+                return "Audio";
+            case AssetTags::Font:
+                return "Font";
+            case AssetTags::Shader:
+                return "Shader";
+            default:
+                return "Unknown";
         }
     }
 
-    inline String AssetTagsToString(AssetTags tags) {
+    inline String AssetTagsToString(AssetTags tags)
+    {
         String result = "";
         if (tags == AssetTags::None) {
             return "None";
@@ -58,29 +68,32 @@ namespace tlc
     }
 
     struct Asset {
-        String Path = "";
+        String Path    = "";
         String Address = "";
-        UUID UUID = UUID::Zero();
-        Raw<U8> Data = nullptr;
-        Size Offset = 0;
-        Size Size = 0;
+        UUID UUID      = UUID::Zero();
+        Raw<U8> Data   = nullptr;
+        Size Offset    = 0;
+        Size Size      = 0;
         AssetTags Tags = AssetTags::None;
-        U32 Hash = 0;
+        U32 Hash       = 0;
     };
-}
+} // namespace tlc
 
-namespace std {
+namespace std
+{
     template <>
     struct formatter<tlc::AssetTags> : formatter<string> {
-        template<typename ParseContext>
-        auto parse(ParseContext& ctx) {
+        template <typename ParseContext>
+        auto parse(ParseContext &ctx)
+        {
             return ctx.begin();
         }
 
         template <typename FormatContext>
-        auto format(const tlc::AssetTags& tags, FormatContext& ctx) const {
+        auto format(const tlc::AssetTags &tags, FormatContext &ctx) const
+        {
             return format_to(ctx.out(), "{}", tlc::AssetTagsToString(tags));
         }
     };
 
-}
+} // namespace std

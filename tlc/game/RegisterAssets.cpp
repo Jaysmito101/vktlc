@@ -1,33 +1,26 @@
 #include "game/Game.hpp"
 
-#include "services/assetmanager/AssetManager.hpp"
-#include "services/assetmanager/AssetBundler.hpp"
 #include "services/CacheManager.hpp"
-
+#include "services/assetmanager/AssetBundler.hpp"
+#include "services/assetmanager/AssetManager.hpp"
 
 namespace tlc
 {
     void GameApplication::RegisterAssets()
     {
-        
 
         // NOTE: This might seem weird(kinda is) but is very specific to the projects directory structure and how assets are managed(for now)
         auto assetsPath = String("./assets");
-        if (!utils::PathExists(assetsPath))
-        {
+        if (!utils::PathExists(assetsPath)) {
             assetsPath = "../assets";
-            if (!utils::PathExists(assetsPath))
-            {
+            if (!utils::PathExists(assetsPath)) {
                 assetsPath = "../../assets";
-                if (!utils::PathExists(assetsPath))
-                {
+                if (!utils::PathExists(assetsPath)) {
                     log::Warn("Game::RegisterAssets: Raw assets path does not exists! skipping manual asset registration!");
                     return;
                 }
             }
         }
-
-
 
         auto bundler = Services::Get<AssetBundler>();
         bundler->RegisterFromDirectory(assetsPath + "/standard", "standard");
@@ -42,6 +35,5 @@ namespace tlc
 
         auto cacheManager = Services::Get<CacheManager>();
         cacheManager->CacheShaders();
-
     }
-}
+} // namespace tlc
