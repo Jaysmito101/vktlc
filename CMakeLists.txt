@@ -14,6 +14,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(SHADERC_SKIP_TESTS ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
 # Use FindVulkan module added with CMAKE 3.7
 if(NOT CMAKE_VERSION VERSION_LESS 3.7.0)
     message(STATUS "Using module to find Vulkan")
@@ -78,7 +81,7 @@ add_executable(tlc
 # include headers (we have to do this so that Visual Studio can see them)
     ${tlc_headers}
 # core
-    ./tlc/core/Uuid.cpp
+    ./tlc/core/UUID.cpp
     ./tlc/core/Logger.cpp
     ./tlc/core/Utils.cpp
     ./tlc/core/Window.cpp
@@ -131,6 +134,12 @@ target_link_libraries(tlc
 
 
 
+if (MSVC OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    target_link_options(tlc PRIVATE /IGNORE:4099)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
+    # Clang must pass MSVC-style flags via -Xlinker
+    target_link_options(tlc PRIVATE -Xlinker /IGNORE:4099)
+endif()
 
 if (WIN32)
     target_compile_definitions(tlc
