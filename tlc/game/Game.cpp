@@ -1,5 +1,3 @@
-#pragma once
-
 #include "game/Game.hpp"
 
 #include "services/StatisticsManager.hpp"
@@ -8,7 +6,7 @@
 #include "services/renderer/VulkanManager.hpp"
 
 // TODO: use a proper input manager service here rather than using glfw directly
-#include "glfw/glfw3.h"
+#include "GLFW/glfw3.h"
 
 namespace tlc
 {
