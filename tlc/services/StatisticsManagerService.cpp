@@ -1,5 +1,3 @@
-#pragma once
-
 #include "services/StatisticsManager.hpp"
 #include "utils/Utils.hpp"
 
