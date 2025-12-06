@@ -285,7 +285,7 @@ namespace tlc
                               .setPCommandBuffers(&commandBuffer);
 
         auto fence = m_Device->CreateVkFence(vk::FenceCreateFlagBits::eSignaled);
-        m_Device->GetDevice().resetFences({fence});
+        VkCall(m_Device->GetDevice().resetFences({fence}));
         VkCall(m_Device->GetQueue(uploadSettings.queueType).submit({submitInfo}, fence));
         VkCall(m_Device->GetDevice().waitForFences({fence}, VK_TRUE, UINT64_MAX));
 
