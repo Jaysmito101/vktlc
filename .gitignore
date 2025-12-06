@@ -20,6 +20,7 @@ _deps
 *.vcproj
 *.sln
 *.spv
+.cache
 Makefile
 imgui.ini
 
